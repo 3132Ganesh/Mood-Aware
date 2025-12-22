@@ -1,0 +1,457 @@
+MoodAware: Comprehensive Mood-Based Task Recommendation App – Detailed Specification Prompt
+
+Build a mini-project application called “MoodAware: Mood-Based Task Recommendation App”. The app should support students and working professionals in managing everyday stress and mood through personalized, week‑long plans that combine mental-wellness tasks, physical-health activities, music-based actions, game-based suggestions where appropriate, user habit tracking, and a personal space for emotional notes. The app is not a clinical tool and must clearly state a non-medical disclaimer.
+
+1. Core goals
+Collect user mood, lifestyle, habits, and contextual information in a structured way.
+
+Analyze the user’s mental state using rule-based scoring and optional simple sentiment analysis.
+
+Generate a personalized, at-least 7‑day plan of small tasks (mental, physical, music, gaming) adapted to the user’s mood, occupation, habits, and preferences.
+
+Track daily task completion and mood changes, and present simple visual trends.
+
+Provide a “feelings space” where users can freely write notes to engage and reflect on their emotions.
+
+2. Technology stack
+Language: Python
+
+Frontend: Preferably Streamlit web app (clean UI, easy forms and charts).
+
+Backend / Logic: Pure Python modules for questionnaire handling, mood analysis, task planning, and habit logging.
+
+Database / Storage: SQLite (preferred) or JSON files for a simpler variant.
+
+Optional AI: Simple sentiment analysis on free-text answers and notes using any lightweight library or pre-trained model.
+
+3. User account and profile
+3.1 Sign-up & authentication
+On first use, the app must show a sign-up screen:
+
+Collect:
+
+Name
+
+Gmail address (used as username)
+
+Password (user-defined)
+
+Password must be stored hashed, not plain text.
+
+On subsequent use, a login screen allows the user to log in using Gmail + password.
+
+Store user information in a users table with fields like:
+
+user_id (primary key)
+
+name
+
+email (Gmail)
+
+password_hash
+
+created_at
+
+3.2 Extended profile information
+During or after sign-up, the app must collect:
+
+Age group: e.g., <18, 18–25, 26–35, 36+.
+
+Occupation: at minimum:
+
+Student
+
+Working professional (office/IT/etc.)
+
+Self-employed/freelancer
+
+Homemaker
+
+Other (with text field)
+
+User habits (new requirement):
+
+Daily routine patterns (multi-select or frequency-based):
+
+Study/work hours
+
+Typical sleep time (early/late)
+
+Usual wake-up time
+
+Break frequency (rarely, sometimes, often)
+
+Lifestyle habits:
+
+Caffeine intake (low/medium/high)
+
+Regular physical activity (days/week)
+
+Screen time outside work (ranges)
+
+Music usage:
+
+“Do you use music apps?” (Yes/No)
+
+If Yes:
+
+Which app: e.g., Spotify, YouTube Music, Apple Music, etc.
+
+What type of playlists do you usually listen to? (chill, upbeat, sad, focus, lofi, etc.) – allow multiple choices.
+
+Gaming habits:
+
+“Do you play games?” (Yes/No)
+
+If Yes:
+
+Platform(s): PC, Mobile, Console.
+
+Game type preference: casual, puzzle/brain, story, competitive/online rank, etc.
+
+Store this extended info in either:
+
+Extra fields in users table, or
+
+A separate user_profile(user_id, age_group, occupation, sleep_pattern, wake_pattern, break_frequency, caffeine_level, activity_level, music_app, music_moods, plays_games, game_platforms, game_types) table.
+
+4. Mood, lifestyle, and habits questionnaire
+After login, the app should guide the user to a mood + lifestyle + habits questionnaire screen. This should be user-friendly and not too long.
+
+4.1 Question types
+Use a mix of:
+
+Likert scale / sliders (1–5 or 1–10)
+
+Radio buttons / multiple choice
+
+One or two free-text questions to capture feelings in their own words.
+
+4.2 Example content to capture
+Include questions in categories like:
+
+Current mood and emotion:
+
+“How would you rate your overall mood today?” (1 = very low, 5 = very good)
+
+“Which word describes your current mood best?” (sad, anxious, stressed, okay, happy, etc.)
+
+Stress and workload:
+
+“How stressed do you feel about your work/studies right now?” (1–5)
+
+“How busy is your typical day?” (free, moderate, very busy)
+
+Sleep and energy:
+
+“How well did you sleep last night?” (1–5)
+
+“How is your energy level today?” (very low to very high)
+
+Social interaction:
+
+“How often did you talk to friends/family this week?” (rarely, sometimes, often)
+
+Screen time and gaming:
+
+“How many hours per day do you spend on phone/computer (non-work)?” (ranges)
+
+If games enabled in profile: “How many days per week do you play games?”
+
+Physical activity:
+
+“How many days this week did you do any physical activity (walk, exercise, sports)?”
+
+Habits refinement (daily-level):
+
+“Did you follow your usual routine today?” (yes/no)
+
+“Did you skip meals, or have irregular eating today?” (yes/no)
+
+Open text about feelings:
+
+“In 2–3 lines, describe how your day or week has felt emotionally.”
+
+“Is there anything specific bothering you right now?” (optional)
+
+Each questionnaire submission should be stored with:
+
+response_id
+
+user_id
+
+date
+
+All question answers (e.g., q1, q2, ...)
+
+Free-text response fields
+
+Later, computed fields like mood_index, mood_label.
+
+Use a table like responses.
+
+5. Mood analysis engine
+Design a rule-based mood analysis system with optional sentiment adjustment.
+
+5.1 Rule-based scoring
+Assign numeric scores to key answers (mood, stress, sleep, energy, etc.).
+
+Combine them into a single mood index (weighted sum/average).
+
+Define thresholds to map the index into categories:
+
+“Low Mood / Possible Sadness”
+
+“Stressed / Overloaded”
+
+“Low Energy / Tired”
+
+“Balanced / Okay”
+
+“Positive / Good mood”
+
+5.2 Optional sentiment analysis
+Run the main free-text answer(s) through a sentiment analyzer to get polarity.
+
+Slightly adjust the mood index or refine the label using this sentiment score.
+
+5.3 Using occupation, habits, and profile
+Do not change the mood index based on occupation or habits, but store: occupation, routine style (e.g., late sleeper, high screen time), physical activity frequency, music/gaming flags.
+
+These fields will strongly influence what type of tasks are suggested, especially timing, intensity, and kind of physical or digital activity.
+
+Final output per submission:
+
+mood_index
+
+mood_label
+
+sentiment_score (optional).
+
+6. Task recommendation and planning
+Build a task repository and a planner that generates at least a 7-day plan.
+
+6.1 Task repository
+Create a structured set of tasks with metadata:
+
+task_id
+
+name
+
+description
+
+category:
+
+mental_relaxation
+
+focus/productivity
+
+social_connection
+
+physical_health
+
+music_based
+
+game_based
+
+difficulty (easy/medium)
+
+estimated_duration
+
+Optional: time_hint (morning/afternoon/night) to align with user habits.
+
+Include:
+
+Mental-wellness tasks: breathing, journaling, gratitude notes, simple puzzles, social connection tasks, short reflection tasks.
+
+Physical-health tasks: walking, stretching, basic home workout, posture breaks, outdoor time.
+
+Music-based tasks: listening to chill/uplifting playlists, creating a playlist, focused listening sessions.
+
+Game-based tasks: controlled casual or puzzle games, limited-time play sessions, non-competitive modes.
+
+6.2 Using mood, occupation, habits, and preferences
+The planner must consider:
+
+mood_label (core emotional state).
+
+Occupation:
+
+Students → tasks aligned with study blocks and breaks.
+
+Office workers → tasks aligned with desk work, commute, and evenings.
+
+Habits:
+
+If user sleeps late or has high screen time, add gentle adjustments (e.g., earlier wind-down routine, offline time blocks).
+
+If user has low physical activity, prioritize very easy physical tasks initially.
+
+Music/gaming preferences:
+
+Only assign music tasks if user uses music apps.
+
+Only assign game tasks if user plays games, and adapt type to avoid over-stimulation (e.g., more casual/puzzle for stressed or low mood).
+
+Example rules:
+
+Low Mood: more gentle mental tasks, soft physical tasks, soothing music; avoid long competitive gaming.
+
+Stressed: breathing, short physical breaks, schedule hygiene, offline time; allow calming music.
+
+Balanced: mix of physical, mental, and productivity tasks to maintain well-being.
+
+6.3 Weekly plan generation
+Generate at least 7 days × 2–3 tasks/day.
+
+Tasks must be varied across mental, physical, and, if applicable, music/game categories.
+
+Store plan in a plans table:
+
+plan_id
+
+user_id
+
+day_date
+
+task_id
+
+status (pending/done)
+
+Only one primary active plan per user at a time, or clearly separate by date ranges.
+
+7. Daily tracking, mood logging, and habit logging
+7.1 Daily task view
+Show per-user today’s tasks with:
+
+Name, description, category, duration.
+
+Checkbox or toggle for done / not done.
+
+7.2 Daily mood log
+Quick daily mood rating (slider/emoji) + optional short note.
+
+Store in daily_mood:
+
+log_id
+
+user_id
+
+date
+
+mood_score
+
+note
+
+7.3 Daily habit logging (new requirement)
+Provide a lightweight habit check-in form:
+
+“Did you follow your planned routine today?” (yes/no)
+
+“Did you do any physical activity besides assigned tasks?” (yes/no)
+
+“Did your screen time stay under your goal?” (yes/no or approximate hours)
+
+Store in a daily_habits table:
+
+habit_log_id
+
+user_id
+
+date
+
+routine_followed
+
+extra_physical_activity
+
+screen_time_hours (or category)
+
+This lets you correlate habits with mood and task completion.
+
+8. Personal “feelings space” (note area)
+Introduce a dedicated “Feelings Space” where the user can express emotions in their own words beyond the structured questionnaire:
+
+Accessible as a separate section/tab (e.g., “My Feelings” or “Journal”).
+
+Features:
+
+A large text area for the user to write about their day, worries, wins, or any thoughts.
+
+Optionally allow multiple entries per day with timestamps.
+
+Store notes in a feelings_notes table:
+
+note_id
+
+user_id
+
+timestamp
+
+title (optional)
+
+content (full note text)
+
+Optional advanced feature:
+
+Run very light sentiment analysis on these notes just for user feedback (e.g., tag as generally positive/neutral/negative) and show them in analytics; make it clear it is automated and not a diagnosis.
+
+The “feelings space” is purely for user engagement and reflection; it should not replace professional help.
+
+9. Analytics and visualization
+Create an analytics/insights screen:
+
+Mood trend: line chart of mood_score and/or mood_index vs date.
+
+Task completion: bar/line chart of tasks completed per day or completion percentage.
+
+Habit correlation (optional): simple visuals showing:
+
+Mood vs days routine was followed.
+
+Mood vs physical activity level.
+
+Optionally show tags like “Most of your notes this week were slightly negative/positive” with a clear disclaimer that it is automated.
+
+10. Privacy, disclaimer, and limitations
+Add a clear disclaimer:
+
+The app is intended for self-help, reflection, and habit support only.
+
+It is not a medical device and does not provide diagnosis or emergency mental health services.
+
+Advise users to seek professional help for severe or persistent distress.
+
+Never store passwords in plain text; be cautious with emotional notes, mood logs, and personal data.
+
+11. Formal working sequence (for documentation)
+The system should be described in documentation roughly as:
+
+User registration & profile creation, including Gmail, password, occupation, habits, music and gaming preferences.
+
+Mood, lifestyle, and habits questionnaire intake.
+
+Mood analysis using scoring and optional sentiment to produce mood_index and mood_label.
+
+Personalized weekly plan generation combining:
+
+Mental-wellness tasks
+
+Physical-health tasks
+
+Music-based tasks (if applicable)
+
+Game-based tasks (if applicable)
+adjusted for occupation and habits.
+
+Daily usage: user views tasks, completes them, logs daily mood and habits.
+
+Feelings space: user writes personal emotional notes to reflect on their feelings.
+
+Analytics: system visualizes trends between mood, tasks, and basic habits, giving the user insight into their emotional patterns.
+
+Use this prompt as the complete, professional specification. All components mentioned (accounts, habits, feelings space, mood analysis, tasks, planning, tracking, and visualization) must be reflected in design, implementation, and documentation of the “MoodAware” mini project.
+
+
+
+
+
