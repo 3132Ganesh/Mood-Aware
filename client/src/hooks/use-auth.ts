@@ -54,9 +54,9 @@ export function useAuth() {
       }
       return api.auth.register.responses[201].parse(await res.json());
     },
-    onSuccess: () => {
-      // Auto login logic typically happens here, or redirect to login
-      setLocation("/auth?mode=login");
+    onSuccess: (data) => {
+      queryClient.setQueryData([api.auth.me.path], data);
+      setLocation("/onboarding");
     },
   });
 
