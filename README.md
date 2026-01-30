@@ -341,9 +341,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 **Author**: Ganesh (3132Ganesh)
 
 **Connect With Me**:
-- GitHub: [@3132Ganesh](https://github.com/3132Ganesh)
-- Email: [Your Email Here]
-- LinkedIn: [Your LinkedIn Profile]
+- GitHub:https://github.com/3132Ganesh
+- Email:meghavathganeshnayak@gmail.com
+- LinkedIn: Meghavath Ganeshnayak
 
 **Report Issues**: Please use the [GitHub Issues](https://github.com/3132Ganesh/Mood-Aware/issues) page
 
