@@ -1,7 +1,12 @@
 // modules/database.js — Complete database layer
 
 const Database = require("better-sqlite3");
-const path     = require("path");
+const { config } = require("./config");
+const logger     = require("./logger");
+
+const db = new Database(config.db.path);
+db.pragma("journal_mode = WAL");
+logger.ok("Database connected — " + config.db.path);
 
 // Create/open the database file
 const db = new Database(path.join(__dirname, "../mood_tracker.db"));
