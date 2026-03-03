@@ -86,32 +86,19 @@ Mood-Aware is an intelligent wellness application that combines mood tracking, p
    - Journal prompt suggestions
 
 ---
+## Tech Stack
+- **Backend**: Node.js + TypeScript + MCP Server
+- **Database**: SQLite + Drizzle ORM  
+- **Frontend**: React + Vite + Tailwind + shadcn/ui
+- **AI Layer**: Anthropic MCP Protocol
+```
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: React.js / Vue.js (or HTML/CSS/JavaScript)
-- **UI Library**: Material-UI / Bootstrap
-- **State Management**: Redux / Context API
-- **Charts**: Chart.js / D3.js
-
-### Backend
-- **Language**: Python 3.8+
-- **Framework**: Flask / Django / FastAPI
-- **Database**: PostgreSQL / MongoDB
-- **ORM**: SQLAlchemy
-
-### APIs & Services
-- **Authentication**: JWT
-- **Data Visualization**: Plotly / Matplotlib
-- **Machine Learning**: Scikit-learn, NLTK (for sentiment analysis)
-- **Notifications**: Email/SMS services
-
-### DevOps & Deployment
-- **Version Control**: Git/GitHub
-- **Containerization**: Docker
-- **Hosting**: AWS / Heroku / DigitalOcean
-- **Database**: PostgreSQL Cloud / MongoDB Atlas
+**2. Add a `.gitignore` entry** — make sure these are ignored:
+```
+node_modules/
+.env
+*.db
+mood_tracker.db
 
 ---
 
