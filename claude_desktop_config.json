@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "mood-aware": {
-      "command": "node",
-      "args": ["C:\\Users\\Ganeshnayak\\mood-app\\server.js"]
-    }
-  }
-}

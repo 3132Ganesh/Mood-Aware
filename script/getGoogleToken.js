@@ -75,6 +75,3 @@ server.listen(3000, () => {
   console.log("⏳ Waiting for Google authorization...");
   console.log("   (Local server running on port 3000)\n");
 });
-```
-
-```
