@@ -8,7 +8,7 @@ const crypto = require("crypto");
 
 const CLIENT_ID     = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const REDIRECT_URI  = "https://localhost:8888/callback";
+const REDIRECT_URI  = "http://127.0.0.1:3000/callback";
 
 const SCOPES = [
   "user-read-recently-played",

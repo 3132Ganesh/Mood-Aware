@@ -207,7 +207,60 @@ server.tool(
     }
   }
 );
+// ══════════════════════════════════════════════════════════════════
+// TOOL 6 — get_insights
+// "Claude, what patterns do you see in my mood data?"
+// ══════════════════════════════════════════════════════════════════
+const { generateAllInsights } = require("./modules/insights");
 
+server.tool(
+  "get_insights",
+  {},
+  async () => {
+    try {
+      const db            = global.moodDB;
+      const moodHistory   = db.getMoodHistory(30);
+      const moodSleepData = db.getMoodVsSleep(30);
+      const habits        = db.getAllHabits();
+      const habitLogs     = [];
+
+      habits.forEach(h => {
+        const streak = db.getHabitStreak(h.name);
+        for (let i = 0; i < streak.streak; i++) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          habitLogs.push({
+            name:      h.name,
+            date:      date.toISOString().split("T")[0],
+            completed: true,
+          });
+        }
+      });
+
+      const insights = generateAllInsights({ moodHistory, moodSleepData, habitLogs });
+
+      let output = `🧠 YOUR MOOD INSIGHTS\n${"═".repeat(40)}\n`;
+
+      output += `\n📈 TREND\n   ${insights.trend.insight}\n`;
+      output += `\n💤 SLEEP\n   ${insights.sleep.insight}\n`;
+      output += `\n📅 BEST DAY\n   ${insights.bestDay.insight}\n`;
+      output += `\n🏆 HABITS\n`;
+
+      if (insights.habits.impacts.length > 0) {
+        insights.habits.impacts.forEach(h => output += `   ${h.insight}\n`);
+      } else {
+        output += `   ${insights.habits.insight}\n`;
+      }
+
+      output += `\n${"═".repeat(40)}`;
+      return { content: [{ type: "text", text: output }] };
+
+    } catch (err) {
+      logger.error("get_insights failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
 // ══════════════════════════════════════════════════════════════════
 // START SERVER
 // ══════════════════════════════════════════════════════════════════
