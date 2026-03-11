@@ -1,4 +1,4 @@
-// integrations/spotify.js
+// integrations/spotify.js — Real personal Spotify data
 
 require("dotenv").config();
 const https  = require("https");
@@ -9,15 +9,19 @@ async function getAccessToken() {
     `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
   ).toString("base64");
 
+  const body = new URLSearchParams({
+    grant_type:    "refresh_token",
+    refresh_token: process.env.SPOTIFY_REFRESH_TOKEN,
+  }).toString();
+
   return new Promise((resolve, reject) => {
-    const body = "grant_type=client_credentials";
     const options = {
       hostname: "accounts.spotify.com",
       path:     "/api/token",
       method:   "POST",
       headers:  {
-        "Authorization": `Basic ${credentials}`,
-        "Content-Type":  "application/x-www-form-urlencoded",
+        "Authorization":  `Basic ${credentials}`,
+        "Content-Type":   "application/x-www-form-urlencoded",
         "Content-Length": body.length,
       },
     };
@@ -38,37 +42,82 @@ async function getAccessToken() {
   });
 }
 
-async function getMyTopTracks() {
+function spotifyGet(token, path) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: "api.spotify.com",
+      path,
+      method:  "GET",
+      headers: { "Authorization": `Bearer ${token}` },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = "";
+      res.on("data", chunk => data += chunk);
+      res.on("end", () => resolve(JSON.parse(data)));
+    });
+
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+// YOUR top artists
+async function getMyTopArtists(limit = 10) {
   try {
     const token = await getAccessToken();
-    logger.ok("Spotify token obtained");
+    const data  = await spotifyGet(token, `/v1/me/top/artists?limit=${limit}&time_range=short_term`);
 
-    // Search for mood-related playlists as a test
-    return new Promise((resolve, reject) => {
-      const options = {
-        hostname: "api.spotify.com",
-        path:     "/v1/search?q=mood&type=playlist&limit=3",
-        method:   "GET",
-        headers:  { "Authorization": `Bearer ${token}` },
-      };
-
-      const req = https.request(options, (res) => {
-        let data = "";
-        res.on("data", chunk => data += chunk);
-        res.on("end", () => {
-          const json = JSON.parse(data);
-          const playlists = json.playlists?.items?.map(p => p.name) || [];
-          resolve(playlists);
-        });
-      });
-
-      req.on("error", reject);
-      req.end();
-    });
+    return data.items?.map((artist, i) => ({
+      rank:       i + 1,
+      name:       artist.name,
+      genres:     artist.genres.slice(0, 3),
+      popularity: artist.popularity,
+    })) || [];
   } catch (err) {
-    logger.error("Spotify failed: " + err.message);
+    logger.error("getMyTopArtists failed: " + err.message);
     return [];
   }
 }
 
-module.exports = { getAccessToken, getMyTopTracks };
+// YOUR recently played tracks
+async function getRecentlyPlayed(limit = 20) {
+  try {
+    const token = await getAccessToken();
+    const data  = await spotifyGet(token, `/v1/me/player/recently-played?limit=${limit}`);
+
+    const tracks = data.items?.map(item => ({
+      track:    item.track.name,
+      artist:   item.track.artists[0].name,
+      playedAt: item.played_at,
+      duration: Math.round(item.track.duration_ms / 60000 * 10) / 10,
+    })) || [];
+
+    // Calculate total listening time
+    const totalMins = tracks.reduce((s, t) => s + t.duration, 0);
+    const totalHrs  = Math.round(totalMins / 60 * 10) / 10;
+
+    // Group by artist and count
+    const artistCounts = {};
+    tracks.forEach(t => {
+      artistCounts[t.artist] = (artistCounts[t.artist] || 0) + 1;
+    });
+
+    const topArtists = Object.entries(artistCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([artist, count], i) => ({
+        rank:   i + 1,
+        artist,
+        tracks: count,
+        estMins: Math.round(count * 3.5),
+      }));
+
+    return { tracks, totalMins: Math.round(totalMins), totalHrs, topArtists };
+  } catch (err) {
+    logger.error("getRecentlyPlayed failed: " + err.message);
+    return { tracks: [], totalMins: 0, totalHrs: 0, topArtists: [] };
+  }
+}
+
+module.exports = { getAccessToken, getMyTopArtists, getRecentlyPlayed };
