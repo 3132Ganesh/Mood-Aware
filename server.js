@@ -262,6 +262,94 @@ server.tool(
   }
 );
 // ══════════════════════════════════════════════════════════════════
+// TOOL 7 — get_learning_stats
+// "Claude, how is my learning going?"
+// ══════════════════════════════════════════════════════════════════
+const { getDuolingoStats } = require("./integrations/duolingo");
+const { getLeetCodeStats } = require("./integrations/leetcode");
+
+server.tool(
+  "get_learning_stats",
+  {},
+  async () => {
+    try {
+      const duo = await getDuolingoStats(process.env.DUOLINGO_USERNAME);
+      const lc  = await getLeetCodeStats(process.env.LEETCODE_USERNAME);
+
+      let output = `📚 LEARNING STATS\n${"═".repeat(40)}\n`;
+
+      output += `\n🦉 DUOLINGO\n`;
+      if (duo.error) {
+        output += `   ❌ ${duo.error}\n`;
+      } else {
+        output += `   Streak:    🔥 ${duo.streak} days\n`;
+        output += `   Longest:   ${duo.longestStreak} days\n`;
+        output += `   Total XP:  ${duo.totalXP?.toLocaleString()}\n`;
+        duo.courses.forEach(c => {
+          output += `   ${c.language}: ${c.xp} XP | ${c.crowns} crowns\n`;
+        });
+      }
+
+      output += `\n💻 LEETCODE\n`;
+      if (lc.error) {
+        output += `   ❌ ${lc.error}\n`;
+      } else {
+        output += `   Solved:    ${lc.solved.total} problems\n`;
+        output += `   Easy:      ${lc.solved.easy}\n`;
+        output += `   Medium:    ${lc.solved.medium}\n`;
+        output += `   Hard:      ${lc.solved.hard}\n`;
+        output += `   Streak:    ${lc.streak} days\n`;
+      }
+
+      output += `\n${"═".repeat(40)}`;
+      return { content: [{ type: "text", text: output }] };
+
+    } catch (err) {
+      logger.error("get_learning_stats failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════
+// TOOL 8 — get_spotify_stats
+// "Claude, what have I been listening to?"
+// ══════════════════════════════════════════════════════════════════
+const { getMyTopArtists, getRecentlyPlayed } = require("./integrations/spotify");
+
+server.tool(
+  "get_spotify_stats",
+  {},
+  async () => {
+    try {
+      const artists = await getMyTopArtists(5);
+      const recent  = await getRecentlyPlayed(20);
+
+      let output = `🎵 SPOTIFY STATS\n${"═".repeat(40)}\n`;
+
+      output += `\n🏆 TOP ARTISTS (last 4 weeks)\n`;
+      artists.forEach(a => {
+        output += `   ${a.rank}. ${a.name} — ${a.genres[0] || "various"}\n`;
+      });
+
+      output += `\n⏱️  RECENT LISTENING\n`;
+      output += `   Total time: ${recent.totalHrs} hours\n`;
+
+      output += `\n🎤 MOST PLAYED (recent)\n`;
+      recent.topArtists.forEach(a => {
+        output += `   ${a.rank}. ${a.artist} — ${a.tracks} tracks (~${a.estMins} mins)\n`;
+      });
+
+      output += `\n${"═".repeat(40)}`;
+      return { content: [{ type: "text", text: output }] };
+
+    } catch (err) {
+      logger.error("get_spotify_stats failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+// ══════════════════════════════════════════════════════════════════
 // START SERVER
 // ══════════════════════════════════════════════════════════════════
 async function main() {
