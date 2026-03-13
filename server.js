@@ -391,6 +391,206 @@ server.tool(
   }
 );
 // ══════════════════════════════════════════════════════════════════
+// TOOL 10 — set_goal
+// ══════════════════════════════════════════════════════════════════
+const {
+  analyzeUserPatterns,
+  generateRoadmap,
+  getDailyMotivation,
+  checkProgress,
+} = require("./modules/goalEngine");
+
+server.tool(
+  "set_goal",
+  {
+    goal:   z.string().describe("Your goal e.g. 'Data Analyst', 'Software Developer', 'AI/ML Engineer'"),
+    months: z.number().min(1).max(24).default(4).describe("Target months to achieve goal"),
+  },
+  async ({ goal, months }) => {
+    try {
+      const db       = global.moodDB;
+      const patterns = analyzeUserPatterns(db);
+      const newGoal  = db.createGoal(
+        `Become a ${goal}`,
+        `Learn all skills to get a job as a ${goal}`,
+        new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+      );
+
+      const roadmap = generateRoadmap(goal, months, patterns);
+      let totalTasks = 0;
+
+      for (const phase of roadmap) {
+        const dbPhase = db.createPhase(newGoal.id, phase.phase, phase.title, phase.weeks);
+        for (const task of phase.tasks) {
+          db.createTask(newGoal.id, dbPhase.id, task.title, "", task.mins, task.difficulty);
+          totalTasks++;
+        }
+      }
+
+      let output = `🎯 GOAL SET!\n${"═".repeat(40)}\n`;
+      output += `\n📌 Goal:        Become a ${goal}\n`;
+      output += `📅 Target:      ${newGoal.targetDate}\n`;
+      output += `⏱️  Daily time:  ${patterns.dailyMins} mins/day\n`;
+      output += `📈 Your pace:   ${patterns.learningPace}\n`;
+      output += `\n🗺️  ROADMAP (${months} months)\n`;
+      roadmap.forEach(p => {
+        output += `  Phase ${p.phase}: ${p.title} — ${p.weeks} weeks\n`;
+      });
+      output += `\n📋 Total tasks: ${totalTasks}\n`;
+      output += `\n💡 Based on your ${patterns.duoStreak}-day Duolingo streak,\n`;
+      output += `   you already have the discipline. Now aim it at ${goal}!\n`;
+      output += `\n${"═".repeat(40)}`;
+
+      return { content: [{ type: "text", text: output }] };
+    } catch (err) {
+      logger.error("set_goal failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════
+// TOOL 11 — get_daily_tasks
+// ══════════════════════════════════════════════════════════════════
+server.tool(
+  "get_daily_tasks",
+  {},
+  async () => {
+    try {
+      const db   = global.moodDB;
+      const goal = db.getActiveGoal();
+
+      if (!goal) return { content: [{ type: "text", text: "No active goal! Use set_goal first." }] };
+
+      const patterns   = analyzeUserPatterns(db);
+      const todayMood  = db.getTodayMood();
+      const moodScore  = todayMood?.score || 7;
+      const tasks      = db.getTodayTasks(goal.id);
+      const progress   = db.getTaskProgress(goal.id);
+      const motivation = getDailyMotivation(moodScore, goal.title, patterns.duoStreak, patterns);
+
+      let output = `📋 TODAY'S TASKS\n${"═".repeat(40)}\n`;
+      output += `\n🎯 Goal: ${goal.title}\n`;
+      output += `📈 Progress: ${progress.completed}/${progress.total} (${progress.percentage}%)\n`;
+      output += `\n💬 ${motivation}\n`;
+      output += `\n📝 YOUR TASKS TODAY:\n`;
+
+      if (tasks.length === 0) {
+        output += `  No tasks found — make sure your goal phases are set up!\n`;
+      } else {
+        tasks.forEach((t, i) => {
+          output += `\n  ${i + 1}. ${t.title}\n`;
+          output += `     ⏱️  ${t.estimated_mins} mins | difficulty: ${t.difficulty}\n`;
+        });
+      }
+
+      output += `\n${"═".repeat(40)}`;
+      return { content: [{ type: "text", text: output }] };
+    } catch (err) {
+      logger.error("get_daily_tasks failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════
+// TOOL 12 — complete_task
+// ══════════════════════════════════════════════════════════════════
+server.tool(
+  "complete_task",
+  {
+    task_id: z.number().describe("Task ID to mark complete"),
+    notes:   z.string().optional().describe("Any notes about completing this task"),
+  },
+  async ({ task_id, notes = "" }) => {
+    try {
+      const db        = global.moodDB;
+      const todayMood = db.getTodayMood();
+      const moodScore = todayMood?.score || 7;
+
+      db.logTask(task_id, true, moodScore, notes);
+      const goal     = db.getActiveGoal();
+      const progress = db.getTaskProgress(goal.id);
+
+      return {
+        content: [{
+          type: "text",
+          text: `✅ Task completed!\n📈 Overall progress: ${progress.percentage}%\n🎯 Keep going — ${goal.title} is getting closer!`,
+        }]
+      };
+    } catch (err) {
+      logger.error("complete_task failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════
+// TOOL 13 — get_goal_progress
+// ══════════════════════════════════════════════════════════════════
+server.tool(
+  "get_goal_progress",
+  {},
+  async () => {
+    try {
+      const db      = global.moodDB;
+      const goal    = db.getActiveGoal();
+      if (!goal) return { content: [{ type: "text", text: "No active goal! Use set_goal first." }] };
+
+      const phases   = db.getGoalPhases(goal.id);
+      const progress = db.getTaskProgress(goal.id);
+      const moodHistory = db.getMoodHistory(30);
+      const check    = checkProgress(goal, phases, progress, moodHistory);
+
+      const daysLeft = Math.ceil((new Date(goal.target_date) - new Date()) / (1000 * 60 * 60 * 24));
+
+      let output = `📊 GOAL PROGRESS\n${"═".repeat(40)}\n`;
+      output += `\n🎯 ${goal.title}\n`;
+      output += `📅 Target: ${goal.target_date} (${daysLeft} days left)\n`;
+      output += `\n📈 PROGRESS\n`;
+      output += `  Completed:  ${progress.completed}/${progress.total} tasks\n`;
+      output += `  Percentage: ${progress.percentage}%\n`;
+      output += `  Expected:   ${check.expectedProgress}%\n`;
+      output += `\n${check.message}\n`;
+      output += `\n📋 PHASES\n`;
+      phases.forEach(p => {
+        output += `  Phase ${p.phase_number}: ${p.title} — ${p.duration_weeks} weeks\n`;
+      });
+      output += `\n${"═".repeat(40)}`;
+
+      return { content: [{ type: "text", text: output }] };
+    } catch (err) {
+      logger.error("get_goal_progress failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════
+// TOOL 14 — get_motivation
+// ══════════════════════════════════════════════════════════════════
+server.tool(
+  "get_motivation",
+  {},
+  async () => {
+    try {
+      const db        = global.moodDB;
+      const goal      = db.getActiveGoal();
+      const todayMood = db.getTodayMood();
+      const moodScore = todayMood?.score || 7;
+      const patterns  = analyzeUserPatterns(db);
+
+      const goalTitle  = goal?.title || "your goal";
+      const motivation = getDailyMotivation(moodScore, goalTitle, patterns.duoStreak, patterns);
+
+      return { content: [{ type: "text", text: `💬 ${motivation}` }] };
+    } catch (err) {
+      logger.error("get_motivation failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+// ══════════════════════════════════════════════════════════════════
 // START SERVER
 // ══════════════════════════════════════════════════════════════════
 async function main() {
