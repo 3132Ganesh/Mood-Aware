@@ -6,7 +6,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle2, Circle, Sun, Moon, Music, Gamepad2, Brain, Dumbbell } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Sun, Moon, Music, Gamepad2, Brain, Dumbbell, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveContainer, LineChart, Line, XAxis, Tooltip, CartesianGrid } from "recharts";
@@ -45,9 +45,17 @@ export default function Dashboard() {
             <h2 className="text-3xl font-display font-bold">Good {new Date().getHours() < 12 ? "Morning" : "Evening"}, {user?.name?.split(' ')[0]}</h2>
             <p className="text-muted-foreground">Ready to find your balance today?</p>
           </div>
-          <Link href="/checkin">
-            <Button className="btn-primary">Daily Check-in</Button>
-          </Link>
+          <div className="flex gap-4 items-center">
+            <Link href="/immersive">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 transition-colors">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Aura View
+              </Button>
+            </Link>
+            <Link href="/checkin">
+              <Button className="btn-primary">Daily Check-in</Button>
+            </Link>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

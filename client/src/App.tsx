@@ -14,6 +14,7 @@ import Checkin from "@/pages/Checkin";
 import Feelings from "@/pages/Feelings";
 import Analytics from "@/pages/Analytics";
 import NotFound from "@/pages/not-found";
+import Immersive from "@/pages/Immersive";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -66,6 +67,9 @@ function Router() {
       </Route>
       <Route path="/analytics">
         {() => <ProtectedRoute component={Analytics} />}
+      </Route>
+      <Route path="/immersive">
+        {() => <ProtectedRoute component={Immersive} />}
       </Route>
       <Route component={NotFound} />
     </Switch>
