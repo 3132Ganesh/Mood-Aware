@@ -1,5 +1,10 @@
 // server.js — Mood-Aware MCP Server
-
+const { getDuolingoStats }               = require("./integrations/duolingo");
+const { getLeetCodeStats }               = require("./integrations/leetcode");
+const { getMyTopArtists, getRecentlyPlayed } = require("./integrations/spotify");
+const { generateAllInsights }            = require("./modules/insights");
+const { generateWeekendReport, formatWeekendReport } = require("./modules/weekendReport");
+const { analyzeUserPatterns, generateRoadmap, getDailyMotivation, checkProgress } = require("./modules/goalEngine");
 const { McpServer }          = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
 const { z }                  = require("zod");
@@ -42,6 +47,7 @@ server.tool(
     }
   }
 );
+
 
 // ══════════════════════════════════════════════════════════════════
 // TOOL 2 — get_mood_history
@@ -211,7 +217,6 @@ server.tool(
 // TOOL 6 — get_insights
 // "Claude, what patterns do you see in my mood data?"
 // ══════════════════════════════════════════════════════════════════
-const { generateAllInsights } = require("./modules/insights");
 
 server.tool(
   "get_insights",
@@ -265,8 +270,6 @@ server.tool(
 // TOOL 7 — get_learning_stats
 // "Claude, how is my learning going?"
 // ══════════════════════════════════════════════════════════════════
-const { getDuolingoStats } = require("./integrations/duolingo");
-const { getLeetCodeStats } = require("./integrations/leetcode");
 
 server.tool(
   "get_learning_stats",
@@ -315,7 +318,6 @@ server.tool(
 // TOOL 8 — get_spotify_stats
 // "Claude, what have I been listening to?"
 // ══════════════════════════════════════════════════════════════════
-const { getMyTopArtists, getRecentlyPlayed } = require("./integrations/spotify");
 
 server.tool(
   "get_spotify_stats",
@@ -350,9 +352,7 @@ server.tool(
   }
 );
 // TOOL 9 — get_weekend_report
-const { generateWeekendReport, formatWeekendReport } = require("./modules/weekendReport");
-const { getDuolingoStats } = require("./integrations/duolingo");
-const { getLeetCodeStats } = require("./integrations/leetcode");
+
 
 server.tool(
   "get_weekend_report",
@@ -393,12 +393,7 @@ server.tool(
 // ══════════════════════════════════════════════════════════════════
 // TOOL 10 — set_goal
 // ══════════════════════════════════════════════════════════════════
-const {
-  analyzeUserPatterns,
-  generateRoadmap,
-  getDailyMotivation,
-  checkProgress,
-} = require("./modules/goalEngine");
+
 
 server.tool(
   "set_goal",
@@ -586,6 +581,84 @@ server.tool(
       return { content: [{ type: "text", text: `💬 ${motivation}` }] };
     } catch (err) {
       logger.error("get_motivation failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+// ══════════════════════════════════════════════════════════════════
+// TOOL 15 — log_sweatcoin
+// "Claude, log my Sweatcoin — 9200 steps, 9.2 coins"
+// ══════════════════════════════════════════════════════════════════
+server.tool(
+  "log_sweatcoin",
+  {
+    steps: z.number().describe("Steps taken today from Sweatcoin app"),
+    coins: z.number().describe("Sweatcoins earned today"),
+    notes: z.string().optional().describe("Any notes"),
+  },
+  async ({ steps, coins, notes = "" }) => {
+    try {
+      const db = global.moodDB;
+      db.logSweatcoin(steps, coins, notes);
+
+      const history = db.getSweatcoinHistory(7);
+      const avgSteps = Math.round(
+        history.reduce((s, d) => s + d.steps, 0) / history.length
+      );
+
+      const stepsLabel = steps >= 10000 ? "🟢 Excellent!"
+        : steps >= 7500  ? "🟡 Good"
+        : steps >= 5000  ? "🟠 Moderate"
+        : "🔴 Low activity";
+
+      return {
+        content: [{
+          type: "text",
+          text: `👟 Sweatcoin logged!\n\n📊 Today:\n   Steps: ${steps.toLocaleString()} ${stepsLabel}\n   Coins: ${coins} SWC\n\n📈 7-day avg steps: ${avgSteps.toLocaleString()}`,
+        }]
+      };
+    } catch (err) {
+      logger.error("log_sweatcoin failed: " + err.message);
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════
+// TOOL 16 — get_gfg_stats
+// "Claude, show me my GeeksForGeeks progress"
+// ══════════════════════════════════════════════════════════════════
+const { getGFGStats } = require("./integrations/gfg");
+
+server.tool(
+  "get_gfg_stats",
+  {},
+  async () => {
+    try {
+      const gfg = await getGFGStats(process.env.GFG_USERNAME);
+
+      if (gfg.error) {
+        return { content: [{ type: "text", text: `❌ GFG Error: ${gfg.error}` }] };
+      }
+
+      let output = `📚 GEEKSFORGEEKS STATS\n${"═".repeat(40)}\n`;
+      output += `\n👤 ${gfg.info.name}\n`;
+      output += `🌍 Global Rank:    ${gfg.info.rank}\n`;
+      output += `🏫 Institute Rank: ${gfg.info.instituteRank}\n`;
+      output += `⭐ Coding Score:   ${gfg.info.score}\n`;
+      output += `🔥 Current Streak: ${gfg.info.streak} days\n`;
+      output += `🏆 Max Streak:     ${gfg.info.maxStreak} days\n`;
+      output += `\n📊 PROBLEMS SOLVED: ${gfg.info.totalSolved} total\n`;
+      output += `   School:  ${gfg.solved.school}\n`;
+      output += `   Basic:   ${gfg.solved.basic}\n`;
+      output += `   Easy:    ${gfg.solved.easy}\n`;
+      output += `   Medium:  ${gfg.solved.medium}\n`;
+      output += `   Hard:    ${gfg.solved.hard}\n`;
+      output += `\n${"═".repeat(40)}`;
+
+      return { content: [{ type: "text", text: output }] };
+    } catch (err) {
+      logger.error("get_gfg_stats failed: " + err.message);
       return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
     }
   }

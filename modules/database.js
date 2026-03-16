@@ -245,6 +245,13 @@ db.run(`CREATE TABLE IF NOT EXISTS task_logs (
       [days]
     );
   }
+  db.run(`CREATE TABLE IF NOT EXISTS sweatcoin_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT DEFAULT (date('now')),
+  steps INTEGER DEFAULT 0,
+  coins REAL DEFAULT 0,
+  notes TEXT
+)`);
 // ══════════════════════════════════════════════════════════════════
 // GOAL OPERATIONS
 // ══════════════════════════════════════════════════════════════════
@@ -310,11 +317,34 @@ function getTodayTasks(goalId) {
     [goalId]
   );
 }
+function logSweatcoin(steps, coins, notes = "") {
+  run(
+    `INSERT INTO sweatcoin_logs (steps, coins, notes)
+     VALUES (?, ?, ?)
+     ON CONFLICT(date) DO UPDATE SET
+       steps = excluded.steps,
+       coins = excluded.coins,
+       notes = excluded.notes`,
+    [steps, coins, notes]
+  );
+  return { steps, coins, notes };
+}
+
+function getSweatcoinHistory(days = 7) {
+  return all(
+    `SELECT * FROM sweatcoin_logs
+     WHERE date >= date('now', '-' || ? || ' days')
+     ORDER BY date DESC`,
+    [days]
+  );
+}
   return {
     logMood, getMoodHistory, getTodayMood, getAverageMood,
     logHabit, getHabitStreak, getAllHabits, getTodayHabits,
     saveFitnessLog, getFitnessHistory, getMoodVsSleep,
-    createGoal, getActiveGoal, createPhase, getGoalPhases, createTask, getTasksForPhase, logTask, getTaskProgress, getTodayTasks
+    createGoal, getActiveGoal, createPhase, getGoalPhases,
+    createTask, getTasksForPhase, logTask, getTaskProgress,
+    getTodayTasks,logSweatcoin, getSweatcoinHistory
   };
 }
 

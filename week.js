@@ -90,3 +90,4 @@ goodDays.forEach(function(entry){
 printAllMoods(WeekMoods);
 printWeeklySummary(WeekMoods);
 
+
