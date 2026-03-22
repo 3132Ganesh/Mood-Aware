@@ -1,0 +1,91 @@
+MoodAware Diagnostic Report
+Generated: 2026-03-22T14:38:55.981Z
+Node.js: v25.5.0
+Platform: win32
+
+Results: 30/33 passed
+
+
+🔍 MoodAware Phase 4 Diagnostic Suite
+
+Starting diagnostics at 2026-03-22T14:38:55.981Z
+
+============================================================
+1. ENVIRONMENT SETUP
+============================================================
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+
+============================================================
+2. DATABASE INTEGRITY
+============================================================
+✓ PASS
+✓ PASS
+✓ PASS
+✗ FAIL: db.getHabitStreaks is not a function
+
+============================================================
+8. PROJECT FILE STRUCTURE
+============================================================
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+✓ PASS
+
+============================================================
+9. CONFIGURATION
+============================================================
+✓ PASS
+✓ PASS
+
+============================================================
+10. FILE PERMISSIONS
+============================================================
+✓ PASS
+✓ PASS
+
+============================================================
+5. MCP SERVER
+============================================================
+✗ FAIL: Cannot find module 'C:\Users\Ganeshnayak\mood-app\node_modules\@modelcontextprotocol\sdk\dist\cjs\index.js'
+✗ FAIL: server.js syntax error: Cannot find module 'C:\Users\Ganeshnayak\mood-app\node_modules\@modelcontextprotocol\sdk\dist\cjs\index.js'
+✓ PASS
+
+============================================================
+6. FRONTEND
+============================================================
+✓ PASS
+✓ PASS
+✓ PASS
+
+============================================================
+4. EXTERNAL INTEGRATIONS
+============================================================
+✓ PASS
+✓ PASS
+✓ PASS
+
+============================================================
+7. GIT REPOSITORY
+============================================================
+✓ PASS
+✓ PASS
+
+============================================================
+DIAGNOSTIC SUMMARY
+============================================================
+
+30/33 tests passed
+
+3 tests failed:
+  ✗ Habits are trackable: db.getHabitStreaks is not a function
+  ✗ MCP SDK imports: Cannot find module 'C:\Users\Ganeshnayak\mood-app\node_modules\@modelcontextprotocol\sdk\dist\cjs\index.js'
+  ✗ Server.js is valid: server.js syntax error: Cannot find module 'C:\Users\Ganeshnayak\mood-app\node_modules\@modelcontextprotocol\sdk\dist\cjs\index.js'
