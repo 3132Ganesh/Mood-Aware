@@ -5,8 +5,8 @@ const { getMyTopArtists, getRecentlyPlayed } = require("./integrations/spotify")
 const { generateAllInsights }            = require("./modules/insights");
 const { generateWeekendReport, formatWeekendReport } = require("./modules/weekendReport");
 const { analyzeUserPatterns, generateRoadmap, getDailyMotivation, checkProgress } = require("./modules/goalEngine");
-const { Server }          = require("@modelcontextprotocol/sdk");
-const { StdioServerTransport } = require("@modelcontextprotocol/sdk");
+const { McpServer }          = require("@modelcontextprotocol/sdk/server/mcp.js");
+const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
 const { z }                  = require("zod");
 const { validateConfig }     = require("./modules/config");
 const logger                 = require("./modules/logger");
@@ -15,7 +15,7 @@ const { initDB } = require("./modules/database");
 validateConfig();
 
 // ── Create MCP Server ─────────────────────────────────────────────
-const server = new Server({
+const server = new McpServer({
   name:    "mood-aware",
   version: "1.0.0",
 });
@@ -60,8 +60,8 @@ server.tool(
   },
   async ({ days }) => {
     try {
-      const moods = global.moodDBgetMoodHistory(days);
-      const avg   = global.moodDBgetAverageMood(days);
+      const moods = db.getMoodHistory(days);
+      const avg   = db.getAverageMood(days);
 
       if (moods.length === 0) {
         return { content: [{ type: "text", text: "No mood entries found. Log your first mood!" }] };
@@ -101,8 +101,8 @@ server.tool(
   },
   async ({ habit_name, completed }) => {
     try {
-      const result = global.moodDBlogHabit(habit_name, completed);
-      const streak = global.moodDBgetHabitStreak(habit_name);
+      const result = db.logHabit(habit_name, completed);
+      const streak = db.getHabitStreak(habit_name);
       const status = completed ? "✅ completed" : "❌ skipped";
 
       return {
@@ -130,7 +130,7 @@ server.tool(
   async ({ habit_name }) => {
     try {
       if (habit_name) {
-        const streak = global.moodDBgetHabitStreak(habit_name);
+        const streak = db.getHabitStreak(habit_name);
         return {
           content: [{
             type: "text",
@@ -139,14 +139,14 @@ server.tool(
         };
       }
 
-      const habits = global.moodDBgetAllHabits();
+      const habits = db.getAllHabits();
       if (habits.length === 0) {
         return { content: [{ type: "text", text: "No habits logged yet. Start one today!" }] };
       }
 
       let output = "🏆 HABIT STREAKS\n" + "─".repeat(30) + "\n";
       habits.forEach(h => {
-        const streak = global.moodDBgetHabitStreak(h.name);
+        const streak = db.getHabitStreak(h.name);
         const fire   = streak.streak > 0 ? "🔥".repeat(Math.min(streak.streak, 5)) : "❌";
         output += `${fire} ${h.name}: ${streak.streak} day${streak.streak !== 1 ? "s" : ""}\n`;
       });
@@ -168,10 +168,10 @@ server.tool(
   {},
   async () => {
     try {
-      const mood    = global.moodDBgetTodayMood();
-      const avg     = global.moodDBgetAverageMood(7);
-      const habits  = global.moodDBgetTodayHabits();
-      const fitness = global.moodDBgetFitnessHistory(1)[0] || null;
+      const mood    = db.getTodayMood();
+      const avg     = db.getAverageMood(7);
+      const habits  = db.getTodayHabits();
+      const fitness = db.getFitnessHistory(1)[0] || null;
 
       let output = `📊 DAILY SNAPSHOT — ${new Date().toLocaleDateString()}\n${"═".repeat(40)}\n`;
 
@@ -224,13 +224,13 @@ server.tool(
   async () => {
     try {
       const db            = global.moodDB;
-      const moodHistory   = global.moodDBgetMoodHistory(30);
-      const moodSleepData = global.moodDBgetMoodVsSleep(30);
-      const habits        = global.moodDBgetAllHabits();
+      const moodHistory   = db.getMoodHistory(30);
+      const moodSleepData = db.getMoodVsSleep(30);
+      const habits        = db.getAllHabits();
       const habitLogs     = [];
 
       habits.forEach(h => {
-        const streak = global.moodDBgetHabitStreak(h.name);
+        const streak = db.getHabitStreak(h.name);
         for (let i = 0; i < streak.streak; i++) {
           const date = new Date();
           date.setDate(date.getDate() - i);
@@ -363,12 +363,12 @@ server.tool(
       const duo = await getDuolingoStats(process.env.DUOLINGO_USERNAME);
       const lc  = await getLeetCodeStats(process.env.LEETCODE_USERNAME);
 
-      const moodHistory = global.moodDBgetMoodHistory(14);
-      const habits      = global.moodDBgetAllHabits();
+      const moodHistory = db.getMoodHistory(14);
+      const habits      = db.getAllHabits();
       const habitLogs   = [];
 
       habits.forEach(h => {
-        const streak = global.moodDBgetHabitStreak(h.name);
+        const streak = db.getHabitStreak(h.name);
         for (let i = 0; i < Math.min(streak.streak, 14); i++) {
           const date = new Date();
           date.setDate(date.getDate() - i);
@@ -405,7 +405,7 @@ server.tool(
     try {
       const db       = global.moodDB;
       const patterns = analyzeUserPatterns(db);
-      const newGoal  = global.moodDBcreateGoal(
+      const newGoal  = db.createGoal(
         `Become a ${goal}`,
         `Learn all skills to get a job as a ${goal}`,
         new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
@@ -415,9 +415,9 @@ server.tool(
       let totalTasks = 0;
 
       for (const phase of roadmap) {
-        const dbPhase = global.moodDBcreatePhase(newGoal.id, phase.phase, phase.title, phase.weeks);
+        const dbPhase = db.createPhase(newGoal.id, phase.phase, phase.title, phase.weeks);
         for (const task of phase.tasks) {
-          global.moodDBcreateTask(newGoal.id, dbPhase.id, task.title, "", task.mins, task.difficulty);
+          db.createTask(newGoal.id, dbPhase.id, task.title, "", task.mins, task.difficulty);
           totalTasks++;
         }
       }
@@ -453,15 +453,15 @@ server.tool(
   async () => {
     try {
       const db   = global.moodDB;
-      const goal = global.moodDBgetActiveGoal();
+      const goal = db.getActiveGoal();
 
       if (!goal) return { content: [{ type: "text", text: "No active goal! Use set_goal first." }] };
 
       const patterns   = analyzeUserPatterns(db);
-      const todayMood  = global.moodDBgetTodayMood();
+      const todayMood  = db.getTodayMood();
       const moodScore  = todayMood?.score || 7;
-      const tasks      = global.moodDBgetTodayTasks(goal.id);
-      const progress   = global.moodDBgetTaskProgress(goal.id);
+      const tasks      = db.getTodayTasks(goal.id);
+      const progress   = db.getTaskProgress(goal.id);
       const motivation = getDailyMotivation(moodScore, goal.title, patterns.duoStreak, patterns);
 
       let output = `📋 TODAY'S TASKS\n${"═".repeat(40)}\n`;
@@ -500,12 +500,12 @@ server.tool(
   async ({ task_id, notes = "" }) => {
     try {
       const db        = global.moodDB;
-      const todayMood = global.moodDBgetTodayMood();
+      const todayMood = db.getTodayMood();
       const moodScore = todayMood?.score || 7;
 
-      global.moodDBlogTask(task_id, true, moodScore, notes);
-      const goal     = global.moodDBgetActiveGoal();
-      const progress = global.moodDBgetTaskProgress(goal.id);
+      db.logTask(task_id, true, moodScore, notes);
+      const goal     = db.getActiveGoal();
+      const progress = db.getTaskProgress(goal.id);
 
       return {
         content: [{
@@ -529,12 +529,12 @@ server.tool(
   async () => {
     try {
       const db      = global.moodDB;
-      const goal    = global.moodDBgetActiveGoal();
+      const goal    = db.getActiveGoal();
       if (!goal) return { content: [{ type: "text", text: "No active goal! Use set_goal first." }] };
 
-      const phases   = global.moodDBgetGoalPhases(goal.id);
-      const progress = global.moodDBgetTaskProgress(goal.id);
-      const moodHistory = global.moodDBgetMoodHistory(30);
+      const phases   = db.getGoalPhases(goal.id);
+      const progress = db.getTaskProgress(goal.id);
+      const moodHistory = db.getMoodHistory(30);
       const check    = checkProgress(goal, phases, progress, moodHistory);
 
       const daysLeft = Math.ceil((new Date(goal.target_date) - new Date()) / (1000 * 60 * 60 * 24));
@@ -570,8 +570,8 @@ server.tool(
   async () => {
     try {
       const db        = global.moodDB;
-      const goal      = global.moodDBgetActiveGoal();
-      const todayMood = global.moodDBgetTodayMood();
+      const goal      = db.getActiveGoal();
+      const todayMood = db.getTodayMood();
       const moodScore = todayMood?.score || 7;
       const patterns  = analyzeUserPatterns(db);
 
@@ -599,9 +599,9 @@ server.tool(
   async ({ steps, coins, notes = "" }) => {
     try {
       const db = global.moodDB;
-      global.moodDBlogSweatcoin(steps, coins, notes);
+      db.logSweatcoin(steps, coins, notes);
 
-      const history = global.moodDBgetSweatcoinHistory(7);
+      const history = db.getSweatcoinHistory(7);
       const avgSteps = Math.round(
         history.reduce((s, d) => s + d.steps, 0) / history.length
       );
@@ -663,6 +663,60 @@ server.tool(
     }
   }
 );
+// ========================================================================
+// TOOL 17 – log_goal_progress
+// "Claude, log my goal progress: I completed the SQL module today!"
+// ========================================================================
+server.tool(
+  "log_goal_progress",
+  {
+    note: { type: "string", description: "Your progress note or reflection" },
+    mood_score: { type: "number", description: "Mood (1-10) when writing this note (optional)" }
+  },
+  async ({ note, mood_score }) => {
+    try {
+      const db = global.moodDB;
+      db.run(
+        `INSERT INTO goal_progress_notes (note, mood_score) VALUES (?, ?)`,
+        [note, mood_score || null]
+      );
+      return { content: [{ type: "text", text: `✅ Progress note logged!\n\nNote: "${note}"${mood_score ? `\nMood: ${mood_score}/10` : ""}` }] };
+    } catch (err) {
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
+// ========================================================================
+// TOOL 18 – get_goal_progress_notes
+// "Claude, show me my goal progress notes from the last 7 days"
+// ========================================================================
+server.tool(
+  "get_goal_progress_notes",
+  {
+    days: { type: "number", description: "Get notes from last N days (default: 30)" }
+  },
+  async ({ days = 30 }) => {
+    try {
+      const db = global.moodDB;
+      const result = db.exec(
+        `SELECT * FROM goal_progress_notes WHERE date >= date('now', '-${days} days') ORDER BY date DESC`
+      );
+      const notes = result.length > 0 ? result[0].values : [];
+      if (notes.length === 0) {
+        return { content: [{ type: "text", text: `📝 No progress notes found in the last ${days} days.` }] };
+      }
+      let output = `📝 GOAL PROGRESS NOTES (Last ${days} days)\n\n`;
+      notes.forEach((note, i) => {
+        output += `${i + 1}. [${note[2]}] ${note[3]}${note[4] ? ` (Mood: ${note[4]}/10)` : ""}\n`;
+      });
+      return { content: [{ type: "text", text: output }] };
+    } catch (err) {
+      return { content: [{ type: "text", text: `❌ Error: ${err.message}` }] };
+    }
+  }
+);
+
 // ══════════════════════════════════════════════════════════════════
 // START SERVER
 // ══════════════════════════════════════════════════════════════════

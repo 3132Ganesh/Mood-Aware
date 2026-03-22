@@ -100,6 +100,16 @@ db.run(`CREATE TABLE IF NOT EXISTS task_logs (
   mood_at_completion INTEGER,
   notes TEXT
 )`);
+db.run(`
+  CREATE TABLE IF NOT EXISTS goal_progress_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    goal_id INTEGER,
+    date TEXT DEFAULT CURRENT_DATE,
+    note TEXT,
+    mood_score INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
 
   save();
   logger.ok("Database initialized — " + DB_PATH);

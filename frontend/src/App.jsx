@@ -14,6 +14,7 @@ export default function App() {
   const [insights, setInsights] = useState(null)
   const [motivation, setMotivation] = useState(null)
   const [loading, setLoading]   = useState(true)
+  
 
   useEffect(() => { fetchAll() }, [])
 
