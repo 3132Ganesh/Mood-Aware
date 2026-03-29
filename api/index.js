@@ -76,6 +76,35 @@ app.get("/api/learning", async (req, res) => {
   ]);
   res.json({ duolingo: duo, leetcode: lc });
 });
+// POST - Log goal progress note
+app.post("/api/goal-progress", (req, res) => {
+  try {
+    const { note, mood_score } = req.body;
+    const db = global.moodDB;
+    db.run(
+      `INSERT INTO goal_progress_notes (note, mood_score) VALUES (?, ?)`,
+      [note, mood_score || null]
+    );
+    res.json({ success: true, message: "Progress note logged" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET - Get goal progress notes
+app.get("/api/goal-progress", (req, res) => {
+  try {
+    const days = req.query.days || 30;
+    const db = global.moodDB;
+    const result = db.exec(
+      `SELECT * FROM goal_progress_notes WHERE date >= date('now', '-${days} days') ORDER BY date DESC`
+    );
+    const notes = result.length > 0 ? result[0].values : [];
+    res.json({ notes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get("/api/spotify", async (req, res) => {
   const [artists, recent] = await Promise.all([

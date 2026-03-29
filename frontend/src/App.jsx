@@ -14,7 +14,9 @@ export default function App() {
   const [insights, setInsights] = useState(null)
   const [motivation, setMotivation] = useState(null)
   const [loading, setLoading]   = useState(true)
-  
+  const [goalProgressNotes, setGoalProgressNotes] = useState([])
+const [newNote, setNewNote] = useState("")
+const [noteSubmitting, setNoteSubmitting] = useState(false)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -66,7 +68,6 @@ export default function App() {
     grid2:  { display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 12, marginBottom: 12 },
     grid3:  { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 10, marginBottom: 12 },
   }
-
   const navBtn = (id, label) => (
     <button key={id} onClick={() => setTab(id)} style={{
       background: tab === id ? "#5b4fff" : "none",
@@ -128,7 +129,7 @@ export default function App() {
         <div style={s.hdr}>
           <div style={s.logo}>Mood<span style={{ color: "#5b4fff" }}>Aware</span></div>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-            {["dashboard","mood","learning","music","goal","insights"].map(id =>
+            {["dashboard","mood","learning","music","goal","progress","insights"].map(id =>
               navBtn(id, id.charAt(0).toUpperCase() + id.slice(1))
             )}
           </div>
@@ -178,6 +179,7 @@ export default function App() {
                 }
               </Card>
             </div>
+            
             <div style={s.grid2}>
               <Card>
                 <div style={s.ctitle}>Top Artists</div>
@@ -581,6 +583,74 @@ export default function App() {
             )}
           </div>
         )}
+
+        {/* ── GOAL PROGRESS NOTEPAD ── */}
+{tab === "progress" && (
+  <div>
+    <Card>
+      <div style={s.ctitle}>Add Progress Note</div>
+      <textarea
+  value={newNote}
+  onChange={(e) => setNewNote(e.target.value)}
+  placeholder="What's your progress today? What did you learn?"
+  style={{
+    width: "100%", 
+    padding: 12, 
+    borderRadius: 6, 
+    border: `0.5px solid ${bord}`,
+    background: bg3, 
+    color: text, 
+    fontFamily: "'DM Mono', monospace", 
+    fontSize: 12,
+    resize: "vertical", 
+    minHeight: 80, 
+    boxSizing: "border-box"
+  }}
+/>
+      <button
+        onClick={async () => {
+          if (!newNote.trim()) return
+          setNoteSubmitting(true)
+          try {
+            await fetch(`${API}/goal-progress`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ note: newNote, mood_score: null })
+            })
+            setNewNote("")
+            const res = await fetch(`${API}/goal-progress`)
+            const data = await res.json()
+            setGoalProgressNotes(data.notes || [])
+          } catch(e) { console.error(e) }
+          setNoteSubmitting(false)
+        }}
+        style={{
+          marginTop: 10, background: "#5b4fff", color: "#fff", border: "none",
+          padding: "8px 14px", borderRadius: 6, cursor: "pointer",
+          fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 700
+        }}
+        disabled={noteSubmitting}
+      >
+        {noteSubmitting ? "Saving..." : "Save Note"}
+      </button>
+    </Card>
+
+    <Card>
+      <div style={s.ctitle}>All Progress Notes</div>
+      {goalProgressNotes.length > 0 ? (
+        goalProgressNotes.map((note, i) => (
+          <div key={i} style={{ padding: "12px 0", borderBottom: i < goalProgressNotes.length-1 ? `0.5px solid ${bord}` : "none" }}>
+            <div style={{ fontSize: 11, color: text3, marginBottom: 4 }}>{note[2]}</div>
+            <div style={{ fontSize: 12, color: text, marginBottom: 4 }}>{note[3]}</div>
+            {note[4] && <div style={{ fontSize: 10, color: text2 }}>Mood: {note[4]}/10</div>}
+          </div>
+        ))
+      ) : (
+        <div style={{ color: text3, fontSize: 12 }}>No notes yet. Start tracking!</div>
+      )}
+    </Card>
+  </div>
+)}
 
       </div>
     </div>

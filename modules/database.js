@@ -348,13 +348,33 @@ function getSweatcoinHistory(days = 7) {
     [days]
   );
 }
+// ══════════════════════════════════════════════════════════════════
+// GOAL PROGRESS NOTES OPERATIONS
+// ══════════════════════════════════════════════════════════════════
+function logProgressNote(note, moodScore = null) {
+  const result = run(
+    "INSERT INTO goal_progress_notes (note, mood_score) VALUES (?, ?)",
+    [note, moodScore]
+  );
+  return { id: result.lastInsertRowid, note, moodScore };
+}
+
+function getProgressNotes(days = 30) {
+  return all(
+    `SELECT * FROM goal_progress_notes 
+     WHERE date >= date('now', '-' || ? || ' days')
+     ORDER BY date DESC`,
+    [days]
+  );
+}
   return {
     logMood, getMoodHistory, getTodayMood, getAverageMood,
     logHabit, getHabitStreak, getAllHabits, getTodayHabits,
     saveFitnessLog, getFitnessHistory, getMoodVsSleep,
     createGoal, getActiveGoal, createPhase, getGoalPhases,
     createTask, getTasksForPhase, logTask, getTaskProgress,
-    getTodayTasks,logSweatcoin, getSweatcoinHistory
+    getTodayTasks, logSweatcoin, getSweatcoinHistory,
+    logProgressNote, getProgressNotes
   };
 }
 
