@@ -166,6 +166,21 @@ export const api = {
       },
     },
   },
+  notion: {
+    reflections: {
+      method: 'GET' as const,
+      path: '/api/notion/reflections',
+      responses: {
+        200: z.array(z.object({
+          id: z.string(),
+          date: z.string(),
+          mood: z.string(),
+          notes: z.string(),
+          tags: z.array(z.string()),
+        })),
+      },
+    },
+  },
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {

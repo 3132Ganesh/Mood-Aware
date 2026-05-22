@@ -4,20 +4,22 @@ import { useMood, useHabits } from "@/hooks/use-tracking";
 import { useNotionReflections } from "@/hooks/use-notion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend, ScatterChart, Scatter, ZAxis } from "recharts";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subDays, isSameDay } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Quote } from "lucide-react";
+import { Quote, Activity, CheckCircle2, Circle } from "lucide-react";
 
 export default function Analytics() {
   const { history: moodHistory, isLoading: moodLoading } = useMood();
   const { history: habitHistory, isLoading: habitLoading } = useHabits();
   const { reflections, isLoading: reflectionsLoading } = useNotionReflections();
 
+  // Last 30 days for habit grid
+  const last30Days = Array.from({ length: 30 }, (_, i) => subDays(new Date(), i)).reverse();
+
   // Combine or process data for charts
   const moodData = moodHistory?.map(log => {
-    // Check if there's a matching notion reflection for this date
-    const logDate = log.date; // format: yyyy-MM-dd
+    const logDate = log.date; 
     const hasReflection = reflections?.some(r => r.date === logDate);
     
     return {
@@ -27,7 +29,7 @@ export default function Analytics() {
       energy: log.energyScore,
       hasReflection: hasReflection ? 1 : 0
     };
-  }).slice(-14) || []; // Last 14 entries
+  }).slice(-14) || [];
 
   const habitData = habitHistory?.map(log => ({
     date: format(new Date(log.date), "MMM d"),
@@ -199,6 +201,87 @@ export default function Analytics() {
                     />
                   </ScatterChart>
                 </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-lg col-span-1 lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-primary" />
+                Habit Consistency (Last 30 Days)
+              </CardTitle>
+              <CardDescription>Visualizing your routine follow-through and activity</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {habitLoading ? (
+                <Skeleton className="h-48 w-full rounded-xl" />
+              ) : (
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium flex items-center justify-between">
+                      Routine Followed
+                      <span className="text-xs text-muted-foreground">
+                        {habitHistory?.filter(h => h.routineFollowed).length || 0} / 30 days
+                      </span>
+                    </h4>
+                    <div className="grid grid-cols-10 sm:grid-cols-15 md:grid-cols-30 gap-2">
+                      {last30Days.map((day, i) => {
+                        const habit = habitHistory?.find(h => isSameDay(new Date(h.date), day));
+                        const active = habit?.routineFollowed;
+                        return (
+                          <div 
+                            key={i}
+                            title={format(day, 'MMM d, yyyy')}
+                            className={`aspect-square rounded-sm border ${
+                              active 
+                                ? "bg-primary border-primary shadow-[0_0_10px_rgba(var(--primary),0.3)]" 
+                                : "bg-muted/30 border-border"
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium flex items-center justify-between">
+                      Physical Activity
+                      <span className="text-xs text-muted-foreground">
+                        {habitHistory?.filter(h => h.extraPhysicalActivity).length || 0} / 30 days
+                      </span>
+                    </h4>
+                    <div className="grid grid-cols-10 sm:grid-cols-15 md:grid-cols-30 gap-2">
+                      {last30Days.map((day, i) => {
+                        const habit = habitHistory?.find(h => isSameDay(new Date(h.date), day));
+                        const active = habit?.extraPhysicalActivity;
+                        return (
+                          <div 
+                            key={i}
+                            title={format(day, 'MMM d, yyyy')}
+                            className={`aspect-square rounded-sm border ${
+                              active 
+                                ? "bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]" 
+                                : "bg-muted/30 border-border"
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-6 pt-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="w-3 h-3 rounded-sm bg-primary" /> Routine
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="w-3 h-3 rounded-sm bg-green-500" /> Physical
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="w-3 h-3 rounded-sm bg-muted/30 border border-border" /> Inactive
+                    </div>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

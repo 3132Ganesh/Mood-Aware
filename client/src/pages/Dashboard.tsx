@@ -1,12 +1,14 @@
 import { useAuth, useProfile } from "@/hooks/use-auth";
 import { useCurrentPlan, useTasks } from "@/hooks/use-tasks";
 import { useMood } from "@/hooks/use-tracking";
+import { useNotionReflections } from "@/hooks/use-notion";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle2, Circle, Sun, Moon, Music, Gamepad2, Brain, Dumbbell, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, Sun, Moon, Music, Gamepad2, Brain, Dumbbell, Sparkles, Quote } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveContainer, LineChart, Line, XAxis, Tooltip, CartesianGrid } from "recharts";
@@ -16,12 +18,12 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const { plan, completeTask, isLoading: planLoading } = useCurrentPlan();
   const { history, isLoading: moodLoading } = useMood();
+  const { reflections, isLoading: reflectionsLoading } = useNotionReflections();
 
   const today = format(new Date(), "yyyy-MM-dd");
   
   // Filter tasks for today
   const todaysTasks = plan?.items.filter(item => {
-    // Basic date comparison logic
     const itemDate = new Date(item.dayDate).toISOString().split('T')[0];
     return itemDate === today;
   }) || [];
@@ -202,6 +204,60 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Notion Reflections Row */}
+        <div className="mt-8">
+          <Card className="border-none shadow-lg bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-muted/20">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Quote className="w-5 h-5 text-primary" />
+                Notion Reflections
+              </CardTitle>
+              <Badge variant="outline" className="font-normal">Last 5 Entries</Badge>
+            </CardHeader>
+            <CardContent className="p-0">
+              {reflectionsLoading ? (
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : reflections && reflections.length > 0 ? (
+                <div className="divide-y divide-border/50">
+                  {reflections.map((reflection) => (
+                    <div key={reflection.id} className="p-6 hover:bg-muted/30 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-bold text-primary">
+                            {format(new Date(reflection.date), 'MMM d, yyyy')}
+                          </span>
+                          <Badge variant="secondary" className="capitalize">
+                            {reflection.mood}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-1">
+                          {reflection.tags.map(tag => (
+                            <span key={tag} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed italic">
+                        "{reflection.notes || "No reflection notes for this entry."}"
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Quote className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No reflections found in your Notion database.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Reflections logged during check-in will appear here.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
       <MobileNav />

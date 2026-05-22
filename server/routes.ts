@@ -6,6 +6,7 @@ import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
 import { generatePlanWithAI, analyzeSentiment } from "./openai_helper";
 import { insertMoodLogSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema } from "@shared/schema";
+import { logToNotion, fetchFromNotion } from "./notion";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -202,6 +203,24 @@ export async function registerRoutes(
         return res.status(400).json({ message: err.errors[0].message });
       }
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // === Notion Routes ===
+  app.get(api.notion.reflections.path, requireAuth, async (req, res) => {
+    try {
+      const profile = await storage.getProfile(req.user!.id);
+      const token = profile?.notionToken || process.env.NOTION_TOKEN;
+      const dbId = profile?.notionDatabaseId || process.env.NOTION_DATABASE_ID;
+
+      if (!token || !dbId) {
+        return res.status(400).json({ message: "Notion not configured" });
+      }
+
+      const reflections = await fetchFromNotion(token, dbId);
+      res.json(reflections);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch Notion reflections" });
     }
   });
 
