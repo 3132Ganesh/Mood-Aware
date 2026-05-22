@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { PageTransition } from "@/components/PageTransition";
 
 import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
@@ -33,10 +35,15 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     return null;
   }
 
-  return <Component />;
+  return (
+    <PageTransition>
+      <Component />
+    </PageTransition>
+  );
 }
 
 function Router() {
+  const [location] = useLocation();
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
@@ -48,31 +55,41 @@ function Router() {
   }
 
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/onboarding">
-        {() => <ProtectedRoute component={Onboarding} />}
-      </Route>
-      <Route path="/dashboard">
-        {() => <ProtectedRoute component={Dashboard} />}
-      </Route>
-      <Route path="/planner">
-        {() => <ProtectedRoute component={Planner} />}
-      </Route>
-      <Route path="/checkin">
-        {() => <ProtectedRoute component={Checkin} />}
-      </Route>
-      <Route path="/feelings">
-        {() => <ProtectedRoute component={Feelings} />}
-      </Route>
-      <Route path="/analytics">
-        {() => <ProtectedRoute component={Analytics} />}
-      </Route>
-      <Route path="/immersive">
-        {() => <ProtectedRoute component={Immersive} />}
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
+    <AnimatePresence mode="wait">
+      <Switch location={location} key={location}>
+        <Route path="/">
+          <PageTransition>
+            <Landing />
+          </PageTransition>
+        </Route>
+        <Route path="/onboarding">
+          {() => <ProtectedRoute component={Onboarding} />}
+        </Route>
+        <Route path="/dashboard">
+          {() => <ProtectedRoute component={Dashboard} />}
+        </Route>
+        <Route path="/planner">
+          {() => <ProtectedRoute component={Planner} />}
+        </Route>
+        <Route path="/checkin">
+          {() => <ProtectedRoute component={Checkin} />}
+        </Route>
+        <Route path="/feelings">
+          {() => <ProtectedRoute component={Feelings} />}
+        </Route>
+        <Route path="/analytics">
+          {() => <ProtectedRoute component={Analytics} />}
+        </Route>
+        <Route path="/immersive">
+          {() => <ProtectedRoute component={Immersive} />}
+        </Route>
+        <Route>
+          <PageTransition>
+            <NotFound />
+          </PageTransition>
+        </Route>
+      </Switch>
+    </AnimatePresence>
   );
 }
 

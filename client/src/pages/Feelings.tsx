@@ -8,13 +8,27 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { Plus, BookHeart, Quote } from "lucide-react";
+import { Plus, BookHeart, Quote, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Feelings() {
   const { notes, isLoading, createNote, isCreating } = useFeelings();
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const item = {
+    hidden: { scale: 0.9, opacity: 0 },
+    show: { scale: 1, opacity: 1 }
+  };
 
   const handleSubmit = () => {
     createNote({ title, content }, {
@@ -66,9 +80,15 @@ export default function Feelings() {
           </Dialog>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div 
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           {/* Create new card inline */}
-          <button 
+          <motion.button 
+            variants={item}
             onClick={() => setIsOpen(true)}
             className="group flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition-all h-[280px]"
           >
@@ -76,28 +96,39 @@ export default function Feelings() {
               <Plus className="w-6 h-6 text-primary" />
             </div>
             <span className="font-medium text-muted-foreground">Create New Entry</span>
-          </button>
+          </motion.button>
 
-          {notes?.map((note) => (
-            <Card key={note.id} className="h-[280px] flex flex-col border-none shadow-md hover:shadow-xl transition-shadow bg-card/80 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start mb-2">
-                  <BookHeart className="w-5 h-5 text-primary/60" />
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {format(new Date(note.timestamp || ""), "MMM d, yyyy")}
-                  </span>
-                </div>
-                <CardTitle className="text-lg line-clamp-1">{note.title || "Untitled Entry"}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-hidden relative">
-                <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line line-clamp-6">
-                  {note.content}
-                </p>
-                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+          <AnimatePresence mode="popLayout">
+            {notes?.map((note) => (
+              <motion.div 
+                layout
+                key={note.id}
+                variants={item}
+                initial="hidden"
+                animate="show"
+                exit={{ scale: 0.8, opacity: 0 }}
+              >
+                <Card className="h-[280px] flex flex-col border-none shadow-md hover:shadow-xl transition-shadow bg-card/80 backdrop-blur-sm overflow-hidden group">
+                  <CardHeader className="pb-3 border-b border-border/50">
+                    <div className="flex justify-between items-start mb-2">
+                      <BookHeart className="w-5 h-5 text-primary/60 group-hover:text-primary transition-colors" />
+                      <span className="text-xs text-muted-foreground font-medium">
+                        {format(new Date(note.timestamp || ""), "MMM d, yyyy")}
+                      </span>
+                    </div>
+                    <CardTitle className="text-lg line-clamp-1">{note.title || "Untitled Entry"}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-1 overflow-hidden relative pt-4">
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line line-clamp-6 italic">
+                      "{note.content}"
+                    </p>
+                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent" />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </main>
       <MobileNav />
     </div>

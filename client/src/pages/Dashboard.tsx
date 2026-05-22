@@ -12,6 +12,7 @@ import { ArrowRight, CheckCircle2, Circle, Sun, Moon, Music, Gamepad2, Brain, Du
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveContainer, LineChart, Line, XAxis, Tooltip, CartesianGrid } from "recharts";
+import { motion } from "framer-motion";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -19,6 +20,21 @@ export default function Dashboard() {
   const { plan, completeTask, isLoading: planLoading } = useCurrentPlan();
   const { history, isLoading: moodLoading } = useMood();
   const { reflections, isLoading: reflectionsLoading } = useNotionReflections();
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { y: 20, opacity: 0 },
+    show: { y: 0, opacity: 1 }
+  };
 
   const today = format(new Date(), "yyyy-MM-dd");
   
@@ -43,11 +59,20 @@ export default function Dashboard() {
       <Sidebar />
       <main className="flex-1 lg:ml-64 p-6 pb-24 lg:pb-6 max-w-[1600px] mx-auto w-full">
         <header className="mb-8 flex justify-between items-center">
-          <div>
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <h2 className="text-3xl font-display font-bold">Good {new Date().getHours() < 12 ? "Morning" : "Evening"}, {user?.name?.split(' ')[0]}</h2>
             <p className="text-muted-foreground">Ready to find your balance today?</p>
-          </div>
-          <div className="flex gap-4 items-center">
+          </motion.div>
+          <motion.div 
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex gap-4 items-center"
+          >
             <Link href="/immersive">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 transition-colors">
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -57,20 +82,25 @@ export default function Dashboard() {
             <Link href="/checkin">
               <Button className="btn-primary">Daily Check-in</Button>
             </Link>
-          </div>
+          </motion.div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <motion.div 
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
           {/* Today's Plan Column */}
-          <div className="md:col-span-2 space-y-6">
-            <Card className="border-none shadow-lg bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
-              <CardHeader className="flex flex-row items-center justify-between">
+          <motion.div variants={item} className="md:col-span-2 space-y-6">
+            <Card className="glass-card border-none overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-border/50">
                 <CardTitle className="text-xl">Today's Focus</CardTitle>
                 <Link href="/planner" className="text-sm text-primary hover:underline flex items-center gap-1">
                   View Full Week <ArrowRight className="w-4 h-4" />
                 </Link>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {planLoading ? (
                   <div className="space-y-4">
                     <Skeleton className="h-16 w-full rounded-xl" />
@@ -131,11 +161,11 @@ export default function Dashboard() {
             </Card>
 
             {/* Mood Trends Mini Chart */}
-            <Card className="border-none shadow-lg bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
-              <CardHeader>
+            <Card className="glass-card border-none overflow-hidden">
+              <CardHeader className="border-b border-border/50">
                 <CardTitle className="text-xl">Mood Trends</CardTitle>
               </CardHeader>
-              <CardContent className="h-64">
+              <CardContent className="h-64 pt-6">
                 {moodLoading ? (
                   <Skeleton className="w-full h-full rounded-xl" />
                 ) : history && history.length > 0 ? (
@@ -152,16 +182,18 @@ export default function Dashboard() {
                       <Tooltip 
                         contentStyle={{ 
                           backgroundColor: 'var(--card)', 
-                          borderRadius: '8px', 
-                          border: '1px solid var(--border)' 
+                          borderRadius: '12px', 
+                          border: '1px solid var(--border)',
+                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                         }} 
                       />
                       <Line 
                         type="monotone" 
                         dataKey="moodScore" 
                         stroke="hsl(var(--primary))" 
-                        strokeWidth={3} 
-                        dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }} 
+                        strokeWidth={4} 
+                        dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} 
+                        activeDot={{ r: 6, strokeWidth: 0 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -173,48 +205,56 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
 
           {/* Right Column - Quick Actions / Stats */}
-          <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-none shadow-xl">
-              <CardContent className="p-6">
+          <motion.div variants={item} className="space-y-6">
+            <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-none shadow-xl shadow-primary/20 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                <Quote className="w-12 h-12" />
+              </div>
+              <CardContent className="p-6 relative z-10">
                 <h3 className="text-lg font-bold mb-2">Daily Inspiration</h3>
                 <p className="text-sm opacity-90 italic">"The greatest wealth is health."</p>
-                <p className="text-xs mt-2 opacity-70">— Virgil</p>
+                <p className="text-xs mt-4 font-medium opacity-70">— Virgil</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
-              <CardHeader>
+            <Card className="glass-card border-none overflow-hidden">
+              <CardHeader className="border-b border-border/50">
                 <CardTitle className="text-lg">Your Profile</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <CardContent className="space-y-4 pt-6">
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-transparent hover:border-primary/20 transition-colors">
                   <span className="text-sm text-muted-foreground">Sleep Goal</span>
                   <span className="font-medium">{profile?.sleepTime || "--:--"}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-transparent hover:border-primary/20 transition-colors">
                   <span className="text-sm text-muted-foreground">Activity Level</span>
                   <span className="font-medium capitalize">{profile?.physicalActivity || "Not set"}</span>
                 </div>
                 <Link href="/onboarding">
-                  <Button variant="outline" className="w-full text-xs h-8 mt-2">Update Profile</Button>
+                  <Button variant="outline" className="w-full text-xs h-9 mt-2 rounded-xl">Update Profile</Button>
                 </Link>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Notion Reflections Row */}
-        <div className="mt-8">
-          <Card className="border-none shadow-lg bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm overflow-hidden">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="mt-8"
+        >
+          <Card className="glass-card border-none overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-muted/20">
               <CardTitle className="text-xl flex items-center gap-2">
                 <Quote className="w-5 h-5 text-primary" />
                 Notion Reflections
               </CardTitle>
-              <Badge variant="outline" className="font-normal">Last 5 Entries</Badge>
+              <Badge variant="outline" className="font-normal rounded-full bg-background/50">Last 5 Entries</Badge>
             </CardHeader>
             <CardContent className="p-0">
               {reflectionsLoading ? (
