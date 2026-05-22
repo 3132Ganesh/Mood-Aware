@@ -1,22 +1,33 @@
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { useMood, useHabits } from "@/hooks/use-tracking";
+import { useNotionReflections } from "@/hooks/use-notion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend } from "recharts";
-import { format } from "date-fns";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend, ScatterChart, Scatter, ZAxis } from "recharts";
+import { format, parseISO } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Quote } from "lucide-react";
 
 export default function Analytics() {
   const { history: moodHistory, isLoading: moodLoading } = useMood();
   const { history: habitHistory, isLoading: habitLoading } = useHabits();
+  const { reflections, isLoading: reflectionsLoading } = useNotionReflections();
 
   // Combine or process data for charts
-  const moodData = moodHistory?.map(log => ({
-    date: format(new Date(log.date), "MMM d"),
-    mood: log.moodScore,
-    stress: log.stressScore,
-    energy: log.energyScore
-  })).slice(-14) || []; // Last 14 entries
+  const moodData = moodHistory?.map(log => {
+    // Check if there's a matching notion reflection for this date
+    const logDate = log.date; // format: yyyy-MM-dd
+    const hasReflection = reflections?.some(r => r.date === logDate);
+    
+    return {
+      date: format(new Date(log.date), "MMM d"),
+      mood: log.moodScore,
+      stress: log.stressScore,
+      energy: log.energyScore,
+      hasReflection: hasReflection ? 1 : 0
+    };
+  }).slice(-14) || []; // Last 14 entries
 
   const habitData = habitHistory?.map(log => ({
     date: format(new Date(log.date), "MMM d"),
@@ -118,6 +129,77 @@ export default function Analytics() {
                   </span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-lg col-span-1 lg:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Quote className="w-5 h-5 text-primary" />
+                  Notion Reflection Correlation
+                </CardTitle>
+                <CardDescription>Correlation between journaling and reported mood scores</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              {reflectionsLoading ? (
+                <Skeleton className="w-full h-full rounded-xl" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis 
+                      type="category" 
+                      dataKey="date" 
+                      name="Date" 
+                      tick={{fontSize: 10}}
+                    />
+                    <YAxis 
+                      type="number" 
+                      dataKey="mood" 
+                      name="Mood Score" 
+                      domain={[0, 5]}
+                      label={{ value: 'Mood', angle: -90, position: 'insideLeft' }}
+                    />
+                    <ZAxis type="number" dataKey="hasReflection" range={[50, 400]} />
+                    <Tooltip 
+                      cursor={{ strokeDasharray: '3 3' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-card p-3 border border-border rounded-lg shadow-xl">
+                              <p className="font-bold mb-1">{data.date}</p>
+                              <p className="text-sm text-primary">Mood: {data.mood}</p>
+                              {data.hasReflection === 1 ? (
+                                <Badge className="mt-2 bg-green-500/10 text-green-500 hover:bg-green-500/20 border-none">
+                                  Reflection Logged
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="mt-2">No Reflection</Badge>
+                              )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Scatter 
+                      name="Mood vs Journaling" 
+                      data={moodData} 
+                      fill="hsl(var(--primary))"
+                      shape={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        if (payload.hasReflection === 1) {
+                          return <path d={`M${cx},${cy-10} L${cx+10},${cy+10} L${cx-10},${cy+10} Z`} fill="hsl(var(--primary))" />;
+                        }
+                        return <circle cx={cx} cy={cy} r={6} fill="#94a3b8" />;
+                      }}
+                    />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>
