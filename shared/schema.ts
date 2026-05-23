@@ -21,6 +21,8 @@ export const userProfiles = pgTable("user_profiles", {
   caffeineIntake: text("caffeine_intake"),
   physicalActivity: text("physical_activity"),
   musicApp: text("music_app"),
+  notionToken: text("notion_token"),
+  notionDatabaseId: text("notion_database_id"),
   // Stored as JSON arrays
   musicMoods: text("music_moods").array(),
   playsGames: boolean("plays_games"),

@@ -1,72 +1,89 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type InsertUser } from "@shared/routes";
 import { useLocation } from "wouter";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 export function useAuth() {
   const queryClient = useQueryClient();
   const [_, setLocation] = useLocation();
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (_event === 'SIGNED_IN') {
+        queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
+      }
+      if (_event === 'SIGNED_OUT') {
+        queryClient.setQueryData([api.auth.me.path], null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [queryClient]);
 
   const { data: user, isLoading, error } = useQuery({
     queryKey: [api.auth.me.path],
     queryFn: async () => {
-      const res = await fetch(api.auth.me.path, { credentials: "include" });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+
+      const res = await fetch(api.auth.me.path, { 
+        headers: { "Authorization": `Bearer ${session.access_token}` },
+        credentials: "include" 
+      });
       if (res.status === 401) return null;
       if (!res.ok) throw new Error("Failed to fetch user");
       return api.auth.me.responses[200].parse(await res.json());
     },
+    enabled: !!session,
     retry: false,
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
-      const res = await fetch(api.auth.login.path, {
-        method: api.auth.login.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-        credentials: "include",
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.username,
+        password: credentials.password,
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Login failed");
-      }
-      return api.auth.login.responses[200].parse(await res.json());
+      if (error) throw error;
+      return data.user;
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData([api.auth.me.path], data);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
       setLocation("/dashboard");
     },
   });
 
   const registerMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
-      const res = await fetch(api.auth.register.path, {
-        method: api.auth.register.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-        credentials: "include",
-      });
-      if (!res.ok) {
-        if (res.status === 400) {
-          const error = await res.json();
-          throw new Error(error.message);
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            full_name: userData.name
+          }
         }
-        throw new Error("Registration failed");
-      }
-      return api.auth.register.responses[201].parse(await res.json());
+      });
+      if (error) throw error;
+      return data.user;
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData([api.auth.me.path], data);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
       setLocation("/onboarding");
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(api.auth.logout.path, { 
-        method: api.auth.logout.method,
-        credentials: "include" 
-      });
-      if (!res.ok) throw new Error("Logout failed");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.setQueryData([api.auth.me.path], null);
@@ -76,7 +93,7 @@ export function useAuth() {
 
   return {
     user,
-    isLoading,
+    isLoading: isLoading || (!!session && !user),
     error,
     login: loginMutation.mutate,
     isLoggingIn: loginMutation.isPending,

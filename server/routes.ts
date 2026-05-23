@@ -146,6 +146,17 @@ export async function registerRoutes(
     try {
       const input = insertMoodLogSchema.parse(req.body);
       const log = await storage.createMoodLog({ ...input, userId: req.user!.id });
+      
+      // Log to Notion if configured
+      const profile = await storage.getProfile(req.user!.id);
+      const token = profile?.notionToken || process.env.NOTION_TOKEN;
+      const dbId = profile?.notionDatabaseId || process.env.NOTION_DATABASE_ID;
+      
+      if (token && dbId) {
+        // We log to Notion in the background
+        logToNotion(token, dbId, log.moodScore, [], log.notes || "");
+      }
+      
       res.status(201).json(log);
     } catch (err) {
       if (err instanceof z.ZodError) {

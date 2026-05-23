@@ -1,11 +1,12 @@
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
-import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import { createClient } from "@supabase/supabase-js";
+import { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+
+// Supabase client initialization
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_ANON_KEY!;
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 declare global {
   namespace Express {
@@ -13,103 +14,61 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
-
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
-}
-
 export function setupAuth(app: Express) {
-  const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "r3pl1t_s3cr3t_k3y",
-    resave: false,
-    saveUninitialized: false,
-    store: storage.sessionStore,
+  // Middleware to verify Supabase JWT
+  const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) {
+        return res.status(401).json({ message: "Invalid or expired token" });
+      }
+
+      // Sync Supabase user with our database
+      // In a real SaaS, we'd ensure the user exists in our 'users' table
+      let localUser = await storage.getUserByUsername(user.email!);
+      if (!localUser) {
+        localUser = await storage.createUser({
+          email: user.email!,
+          password: "EXTERNAL_AUTH", // Supabase handles password
+          name: user.user_metadata.full_name || user.email!.split('@')[0],
+        });
+      }
+
+      // Attach to request
+      (req as any).user = localUser;
+      next();
+    } catch (err) {
+      next(err);
+    }
   };
 
-  if (app.get("env") === "production") {
-    app.set("trust proxy", 1);
-  }
+  app.use(verifyToken);
 
-  app.use(session(sessionSettings));
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        } else {
-          return done(null, user);
-        }
-      } catch (error) {
-        return done(error);
-      }
-    }),
-  );
-
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error);
-    }
+  // Helper for routes to check if authenticated
+  // (req.isAuthenticated is a passport helper, we'll keep it or mock it)
+  app.use((req, res, next) => {
+    req.isAuthenticated = () => !!(req as any).user;
+    next();
   });
 
-  app.post("/api/register", async (req, res, next) => {
-    try {
-      const { email, password, name } = req.body;
-      
-      const existingUser = await storage.getUserByUsername(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
-
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({
-        email,
-        password: hashedPassword,
-        name: name || email.split('@')[0],
-      });
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
-  });
-
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
-    });
-  });
-
+  // Supabase Auth typically happens on the frontend. 
+  // These routes are kept for compatibility or can be removed if strictly using Supabase SDK on client.
   app.get("/api/user", (req, res) => {
     if (req.isAuthenticated()) {
       res.json(req.user);
     } else {
       res.status(401).json(null);
     }
+  });
+
+  app.post("/api/logout", (req, res) => {
+    // Client clears local storage for Supabase, backend just acknowledges
+    res.sendStatus(200);
   });
 }

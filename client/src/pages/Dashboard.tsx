@@ -162,15 +162,26 @@ export default function Dashboard() {
 
             {/* Mood Trends Mini Chart */}
             <Card className="glass-card border-none overflow-hidden">
-              <CardHeader className="border-b border-border/50">
+              <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
                 <CardTitle className="text-xl">Mood Trends</CardTitle>
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" /> Mood
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary/30" /> Reflection
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="h-64 pt-6">
-                {moodLoading ? (
+                {moodLoading || reflectionsLoading ? (
                   <Skeleton className="w-full h-full rounded-xl" />
                 ) : history && history.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={history.slice(-7)}>
+                    <LineChart data={history.slice(0, 7).reverse().map(log => ({
+                      ...log,
+                      hasReflection: reflections?.some(r => r.date === log.date)
+                    }))}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                       <XAxis 
                         dataKey="date" 
@@ -186,14 +197,42 @@ export default function Dashboard() {
                           border: '1px solid var(--border)',
                           boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                         }} 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-card p-3 border border-border rounded-xl shadow-xl">
+                                <p className="font-bold text-sm mb-1">{format(new Date(data.date), 'MMM d, yyyy')}</p>
+                                <p className="text-sm text-primary">Mood: {data.moodScore}</p>
+                                {data.hasReflection && (
+                                  <Badge className="mt-2 bg-primary/10 text-primary border-none text-[10px] h-5">
+                                    Reflection Logged
+                                  </Badge>
+                                )}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
                       />
                       <Line 
                         type="monotone" 
                         dataKey="moodScore" 
                         stroke="hsl(var(--primary))" 
                         strokeWidth={4} 
-                        dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} 
-                        activeDot={{ r: 6, strokeWidth: 0 }}
+                        dot={(props: any) => {
+                          const { cx, cy, payload } = props;
+                          if (payload.hasReflection) {
+                            return (
+                              <g key={payload.id}>
+                                <circle cx={cx} cy={cy} r={6} fill="hsl(var(--primary))" />
+                                <circle cx={cx} cy={cy} r={10} stroke="hsl(var(--primary))" strokeWidth={1} fill="none" opacity={0.3} />
+                              </g>
+                            );
+                          }
+                          return <circle key={payload.id} cx={cx} cy={cy} r={4} fill="hsl(var(--primary))" />;
+                        }}
+                        activeDot={{ r: 8, strokeWidth: 0 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -233,6 +272,12 @@ export default function Dashboard() {
                   <span className="text-sm text-muted-foreground">Activity Level</span>
                   <span className="font-medium capitalize">{profile?.physicalActivity || "Not set"}</span>
                 </div>
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-transparent hover:border-primary/20 transition-colors">
+                  <span className="text-sm text-muted-foreground">Notion</span>
+                  <Badge variant={profile?.notionToken ? "default" : "secondary"} className="h-5 text-[10px]">
+                    {profile?.notionToken ? "Connected" : "Disconnected"}
+                  </Badge>
+                </div>
                 <Link href="/onboarding">
                   <Button variant="outline" className="w-full text-xs h-9 mt-2 rounded-xl">Update Profile</Button>
                 </Link>
@@ -254,7 +299,9 @@ export default function Dashboard() {
                 <Quote className="w-5 h-5 text-primary" />
                 Notion Reflections
               </CardTitle>
-              <Badge variant="outline" className="font-normal rounded-full bg-background/50">Last 5 Entries</Badge>
+              {reflections && reflections.length > 0 && (
+                <Badge variant="outline" className="font-normal rounded-full bg-background/50">Last 5 Entries</Badge>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               {reflectionsLoading ? (
@@ -290,15 +337,27 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-12 px-6">
                   <Quote className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-                  <p className="text-muted-foreground">No reflections found in your Notion database.</p>
-                  <p className="text-xs text-muted-foreground mt-1">Reflections logged during check-in will appear here.</p>
+                  <p className="text-muted-foreground mb-2">
+                    {!profile?.notionToken 
+                      ? "Notion integration is not set up yet." 
+                      : "No reflections found in your Notion database."}
+                  </p>
+                  {!profile?.notionToken ? (
+                    <Link href="/onboarding">
+                      <Button variant="outline" size="sm" className="mt-2">
+                        Configure Notion
+                      </Button>
+                    </Link>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Reflections logged during check-in will appear here.</p>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </main>
       <MobileNav />
     </div>

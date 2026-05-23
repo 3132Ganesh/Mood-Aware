@@ -34,21 +34,25 @@ export default function Analytics() {
   // Combine or process data for charts
   const moodData = moodHistory?.map(log => {
     const logDate = log.date; 
-    const hasReflection = reflections?.some(r => r.date === logDate);
+    const reflection = reflections?.find(r => r.date === logDate);
     
     return {
       date: format(new Date(log.date), "MMM d"),
+      fullDate: log.date,
       mood: log.moodScore,
       stress: log.stressScore,
       energy: log.energyScore,
-      hasReflection: hasReflection ? 1 : 0
+      hasReflection: reflection ? 1 : 0,
+      reflectionNotes: reflection?.notes || "",
+      reflectionTags: reflection?.tags || [],
+      notionMood: reflection?.mood || ""
     };
-  }).slice(-14) || [];
+  }).reverse() || []; // Reverse to show chronological order
 
   const habitData = habitHistory?.map(log => ({
     date: format(new Date(log.date), "MMM d"),
     screenTime: log.screenTimeHours,
-  })).slice(-14) || [];
+  })).reverse() || []; // Reverse to show chronological order
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -220,13 +224,32 @@ export default function Analytics() {
                           if (active && payload && payload.length) {
                             const data = payload[0].payload;
                             return (
-                              <div className="bg-card p-3 border border-border rounded-xl shadow-xl">
+                              <div className="bg-card p-4 border border-border rounded-xl shadow-xl max-w-[300px]">
                                 <p className="font-bold mb-1">{data.date}</p>
-                                <p className="text-sm text-primary">Mood: {data.mood}</p>
+                                <p className="text-sm text-primary mb-2">Mood Score: {data.mood}</p>
                                 {data.hasReflection === 1 ? (
-                                  <Badge className="mt-2 bg-green-500/10 text-green-500 hover:bg-green-500/20 border-none rounded-full">
-                                    Reflection Logged
-                                  </Badge>
+                                  <div className="space-y-2">
+                                    <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-none rounded-full">
+                                      Reflection Logged
+                                    </Badge>
+                                    {data.notionMood && (
+                                      <p className="text-xs font-medium">Notion Mood: <span className="text-muted-foreground">{data.notionMood}</span></p>
+                                    )}
+                                    {data.reflectionNotes && (
+                                      <p className="text-xs text-muted-foreground italic line-clamp-3">
+                                        "{data.reflectionNotes}"
+                                      </p>
+                                    )}
+                                    {data.reflectionTags.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {data.reflectionTags.map((tag: string) => (
+                                          <span key={tag} className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                                            {tag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 ) : (
                                   <Badge variant="secondary" className="mt-2 rounded-full">No Reflection</Badge>
                                 )}

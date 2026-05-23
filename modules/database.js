@@ -212,7 +212,7 @@ db.run(`
     return all("SELECT * FROM habits ORDER BY name ASC");
   }
 
-  function getTodayHabits() {
+  function getHabitStreaks() { const habits = getAllHabits(); return habits.map(h => { const { streak } = getHabitStreak(h.name); return { habit: h.name, streak }; }); } function getTodayHabits() {
     return all(
       `SELECT h.name, hl.completed FROM habit_logs hl
        JOIN habits h ON h.id = hl.habit_id
@@ -369,7 +369,7 @@ function getProgressNotes(days = 30) {
 }
   return {
     logMood, getMoodHistory, getTodayMood, getAverageMood,
-    logHabit, getHabitStreak, getAllHabits, getTodayHabits,
+    logHabit, getHabitStreak, getAllHabits, getTodayHabits, getHabitStreaks,
     saveFitnessLog, getFitnessHistory, getMoodVsSleep,
     createGoal, getActiveGoal, createPhase, getGoalPhases,
     createTask, getTasksForPhase, logTask, getTaskProgress,

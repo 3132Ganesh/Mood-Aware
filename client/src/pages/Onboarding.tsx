@@ -12,12 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Music, Gamepad2, Clock, Moon } from "lucide-react";
+import { Loader2, Music, Gamepad2, Clock, Moon, Sparkles, Quote } from "lucide-react";
 
 const steps = [
   { id: "basic", title: "About You", icon: Clock },
   { id: "lifestyle", title: "Lifestyle", icon: Moon },
   { id: "interests", title: "Interests", icon: Music },
+  { id: "integrations", title: "Integrations", icon: Sparkles },
 ];
 
 export default function Onboarding() {
@@ -40,6 +41,8 @@ export default function Onboarding() {
       playsGames: false,
       gamePlatforms: [],
       gameTypes: [],
+      notionToken: "",
+      notionDatabaseId: "",
     },
   });
 
@@ -237,6 +240,47 @@ export default function Onboarding() {
                               We'll suggest gaming breaks if checked.
                             </FormDescription>
                           </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="space-y-4">
+                    <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 mb-4">
+                      <p className="text-sm text-primary flex items-center gap-2">
+                        <Quote className="w-4 h-4" />
+                        Connect Notion to see your reflections in the app.
+                      </p>
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="notionToken"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notion Integration Token</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="secret_..." {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormDescription>
+                            Create an integration at developers.notion.com
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="notionDatabaseId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mood Reflections Database ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="32-character ID" {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormDescription>
+                            Found in the database URL.
+                          </FormDescription>
                         </FormItem>
                       )}
                     />
