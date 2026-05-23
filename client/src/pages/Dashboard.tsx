@@ -76,7 +76,7 @@ export default function Dashboard() {
             <Link href="/immersive">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 transition-colors">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Aura View
+                Immersive View
               </Button>
             </Link>
             <Link href="/checkin">

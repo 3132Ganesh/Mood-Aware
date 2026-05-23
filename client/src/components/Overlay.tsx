@@ -25,7 +25,7 @@ export default function Overlay({ moodScore, completedTasksCount, totalTaskDurat
           style={{ pointerEvents: "auto", textAlign: "center", padding: "2rem", borderRadius: "1.5rem", background: "rgba(20, 20, 25, 0.4)", backdropFilter: "blur(16px)" }}
         >
           <h1 className="gradient-text-accent text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">
-            A U R A
+            P R E S E N C E
           </h1>
           <p className="text-xl text-zinc-400 mb-8 max-w-md mx-auto">
             Your evolving digital manifestation of habits, intellect, and mood.
@@ -57,7 +57,7 @@ export default function Overlay({ moodScore, completedTasksCount, totalTaskDurat
           </div>
           <p className="text-zinc-400 leading-relaxed text-lg mb-8">
             Your intellect is expanding. Current records from your completed tasks
-            fuel the structural complexity of your aura.
+            fuel the structural complexity of your presence.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -100,7 +100,7 @@ export default function Overlay({ moodScore, completedTasksCount, totalTaskDurat
             </div>
           </div>
           <p className="text-zinc-400 leading-relaxed text-lg mb-8 text-right">
-            Your recent moods and activities sculpt your aura's movement and base frequency colors.
+            Your recent moods and activities sculpt your presence's movement and base frequency colors.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ direction: "rtl" }}>
