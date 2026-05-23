@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMood, useHabits } from "@/hooks/use-tracking";
 import { useLocation } from "wouter";
-import { Loader2, Smile, Frown, Meh, Sun, Zap } from "lucide-react";
+import { Loader2, Smile, Frown, Meh, Sun, Zap, Brain } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { FacialRecognition } from "@/components/FacialRecognition";
 
 export default function Checkin() {
   const { logMood, isLogging } = useMood();
@@ -27,6 +28,12 @@ export default function Checkin() {
   const [habitRoutine, setHabitRoutine] = useState(false);
   const [habitPhysical, setHabitPhysical] = useState(false);
   const [screenTime, setScreenTime] = useState([4]);
+
+  const handleEmotionDetected = (emotion: string, score: number) => {
+    // Only update if the user isn't actively sliding the manual mood slider
+    // This provides a "live" feel to the check-in
+    setMoodScore([score]);
+  };
 
   const handleSubmit = async () => {
     try {
@@ -69,6 +76,21 @@ export default function Checkin() {
         </header>
 
         <div className="space-y-6">
+          <Card className="border-none shadow-lg overflow-hidden">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-primary" />
+                <CardTitle className="text-xl">AI Mood Detection</CardTitle>
+              </div>
+              <CardDescription>
+                Turn on your camera to let AI estimate your current mood based on your facial expression.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FacialRecognition onEmotionDetected={handleEmotionDetected} />
+            </CardContent>
+          </Card>
+
           <Card className="border-none shadow-lg">
             <CardHeader>
               <CardTitle>How are you feeling?</CardTitle>
