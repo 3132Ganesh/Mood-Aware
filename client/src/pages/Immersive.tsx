@@ -1,10 +1,10 @@
 ﻿import { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ScrollControls, Environment, Float, Sparkles, Stars } from "@react-three/drei";
-import AuraBlob from "@/components/AuraBlob";
-import { useAuraIntelligence } from "@/hooks/use-aura-intelligence";
+import AuraBlob from "@/Aura/AuraBlob";
+import { useAuraIntelligence } from "@/Aura/use-aura-intelligence";
 import Overlay from "@/components/Overlay";
-import AuraIntelligence from "@/components/AuraIntelligence";
+import AuraIntelligence from "@/Aura/AuraIntelligence";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrentPlan } from "@/hooks/use-tasks";
 import { useMood } from "@/hooks/use-tracking";
