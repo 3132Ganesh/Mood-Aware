@@ -60,6 +60,16 @@ export function useAuth() {
     },
   });
 
+  const loginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+    if (error) throw error;
+  };
+
   const registerMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
       const { data, error } = await supabase.auth.signUp({
@@ -96,6 +106,7 @@ export function useAuth() {
     isLoading: isLoading || (!!session && !user),
     error,
     login: loginMutation.mutate,
+    loginWithGoogle,
     isLoggingIn: loginMutation.isPending,
     loginError: loginMutation.error,
     register: registerMutation.mutate,
