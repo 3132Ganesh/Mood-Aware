@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
@@ -94,6 +95,16 @@ function Router() {
 }
 
 function App() {
+  // PWA Registration
+  useRegisterSW({
+    onRegistered(r) {
+      console.log('SW Registered: ' + r);
+    },
+    onRegisterError(error) {
+      console.log('SW registration error', error);
+    }
+  });
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

@@ -69,10 +69,10 @@ export default function Checkin() {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-6 pb-24 lg:pb-6 max-w-3xl mx-auto w-full">
+      <main className="flex-1 lg:ml-64 p-4 md:p-6 pb-24 lg:pb-6 max-w-3xl mx-auto w-full">
         <header className="mb-8">
-          <h2 className="text-3xl font-display font-bold">Daily Check-in</h2>
-          <p className="text-muted-foreground">Take a moment to reflect on your day.</p>
+          <h2 className="text-2xl md:text-3xl font-display font-bold">Daily Check-in</h2>
+          <p className="text-sm md:text-base text-muted-foreground">Take a moment to reflect on your day.</p>
         </header>
 
         <div className="space-y-6">

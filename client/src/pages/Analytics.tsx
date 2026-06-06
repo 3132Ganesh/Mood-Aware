@@ -57,15 +57,15 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-6 pb-24 lg:pb-6 max-w-[1600px] mx-auto w-full">
+      <main className="flex-1 lg:ml-64 p-4 md:p-6 pb-24 lg:pb-6 max-w-[1600px] mx-auto w-full">
         <header className="mb-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-display font-bold">Your Insights</h2>
-            <p className="text-muted-foreground">Visualize your journey to better health.</p>
+            <h2 className="text-2xl md:text-3xl font-display font-bold">Your Insights</h2>
+            <p className="text-sm md:text-base text-muted-foreground">Visualize your journey to better health.</p>
           </motion.div>
         </header>
 
@@ -78,18 +78,18 @@ export default function Analytics() {
           <motion.div variants={item} className="col-span-1 lg:col-span-2">
             <Card className="glass-card border-none overflow-hidden">
               <CardHeader className="border-b border-border/50">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="text-lg md:text-xl flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   Mood & Energy Trends
                 </CardTitle>
-                <CardDescription>How you've been feeling over the last two weeks</CardDescription>
+                <CardDescription className="text-xs md:text-sm">How you've been feeling over the last two weeks</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] lg:h-[400px] pt-6">
+              <CardContent className="h-[250px] md:h-[300px] lg:h-[400px] pt-6 px-2 md:px-6">
                 {moodLoading ? (
                   <Skeleton className="w-full h-full rounded-xl" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={moodData}>
+                    <AreaChart data={moodData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorMood" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -100,18 +100,19 @@ export default function Analytics() {
                           <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis dataKey="date" tick={{fontSize: 12}} />
-                      <YAxis domain={[0, 5]} />
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+                      <XAxis dataKey="date" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 5]} tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                       <Tooltip 
                         contentStyle={{
                           backgroundColor: 'var(--card)', 
                           borderRadius: '12px', 
                           border: '1px solid var(--border)',
-                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                          fontSize: '12px'
                         }} 
                       />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                       <Area type="monotone" dataKey="mood" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorMood)" strokeWidth={3} />
                       <Area type="monotone" dataKey="energy" stroke="#F59E0B" fillOpacity={1} fill="url(#colorEnergy)" strokeWidth={3} />
                     </AreaChart>
@@ -124,24 +125,25 @@ export default function Analytics() {
           <motion.div variants={item}>
             <Card className="glass-card border-none overflow-hidden">
               <CardHeader className="border-b border-border/50">
-                <CardTitle>Screen Time Analysis</CardTitle>
-                <CardDescription>Daily hours spent on screens</CardDescription>
+                <CardTitle className="text-lg md:text-xl">Screen Time Analysis</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Daily hours spent on screens</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px] pt-6">
+              <CardContent className="h-[250px] md:h-[300px] pt-6 px-2 md:px-6">
                 {habitLoading ? (
                   <Skeleton className="w-full h-full rounded-xl" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={habitData}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis dataKey="date" tick={{fontSize: 12}} />
-                      <YAxis />
+                    <BarChart data={habitData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+                      <XAxis dataKey="date" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                      <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} />
                       <Tooltip 
                         contentStyle={{
                           backgroundColor: 'var(--card)', 
                           borderRadius: '12px', 
                           border: '1px solid var(--border)',
-                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
+                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                          fontSize: '12px'
                         }} 
                       />
                       <Bar dataKey="screenTime" name="Screen Time (hrs)" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />

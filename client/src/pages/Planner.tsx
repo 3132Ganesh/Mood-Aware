@@ -4,7 +4,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { format, addDays, startOfWeek } from "date-fns";
-import { Loader2, Plus, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
+import { Loader2, Plus, Calendar as CalendarIcon, ArrowRight, Clock } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -27,16 +27,16 @@ export default function Planner() {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-6 pb-24 lg:pb-6 max-w-[1600px] mx-auto w-full">
-        <header className="mb-8 flex justify-between items-center">
+      <main className="flex-1 lg:ml-64 p-4 md:p-6 pb-24 lg:pb-6 max-w-[1600px] mx-auto w-full">
+        <header className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-3xl font-display font-bold">Weekly Plan</h2>
-            <p className="text-muted-foreground">Balanced activities for your wellbeing.</p>
+            <h2 className="text-2xl md:text-3xl font-display font-bold">Weekly Plan</h2>
+            <p className="text-sm md:text-base text-muted-foreground">Balanced activities for your wellbeing.</p>
           </div>
           {!plan && (
-            <Button onClick={() => generatePlan()} disabled={isGenerating} className="btn-primary">
+            <Button onClick={() => generatePlan()} disabled={isGenerating} className="w-full sm:w-auto btn-primary">
               {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-              Generate New Plan
+              Generate Plan
             </Button>
           )}
         </header>

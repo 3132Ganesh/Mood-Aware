@@ -66,26 +66,28 @@ export default function Onboarding() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-2xl border-none shadow-2xl bg-card/50 backdrop-blur-xl">
         <CardHeader className="text-center pb-2">
-          <div className="flex justify-center mb-4">
-            {steps.map((s, i) => (
-              <div key={s.id} className="flex items-center">
-                <div className={`
-                  w-10 h-10 rounded-full flex items-center justify-center transition-colors
-                  ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}
-                `}>
-                  <s.icon className="w-5 h-5" />
+          <div className="flex justify-center mb-6 overflow-x-auto no-scrollbar pb-2">
+            <div className="flex items-center min-w-max px-4">
+              {steps.map((s, i) => (
+                <div key={s.id} className="flex items-center">
+                  <div className={`
+                    w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors shrink-0
+                    ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}
+                  `}>
+                    <s.icon className="w-4 h-4 md:w-5 md:h-5" />
+                  </div>
+                  {i < steps.length - 1 && (
+                    <div className={`w-8 md:w-12 h-0.5 mx-1 md:mx-2 ${i < step ? "bg-primary" : "bg-muted"}`} />
+                  )}
                 </div>
-                {i < steps.length - 1 && (
-                  <div className={`w-12 h-0.5 mx-2 ${i < step ? "bg-primary" : "bg-muted"}`} />
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          <CardTitle className="text-3xl font-display">{currentStep.title}</CardTitle>
-          <CardDescription>Let's personalize your experience.</CardDescription>
+          <CardTitle className="text-2xl md:text-3xl font-display uppercase tracking-tight">{currentStep.title}</CardTitle>
+          <CardDescription className="text-sm md:text-base">Let's personalize your experience.</CardDescription>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <motion.div
@@ -105,7 +107,7 @@ export default function Onboarding() {
                           <FormLabel>Age Group</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-11 rounded-xl">
                                 <SelectValue placeholder="Select age range" />
                               </SelectTrigger>
                             </FormControl>
@@ -127,7 +129,7 @@ export default function Onboarding() {
                           <FormLabel>Occupation Type</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-11 rounded-xl">
                                 <SelectValue placeholder="Select work type" />
                               </SelectTrigger>
                             </FormControl>
@@ -147,7 +149,7 @@ export default function Onboarding() {
 
                 {step === 1 && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="sleepTime"
@@ -155,7 +157,7 @@ export default function Onboarding() {
                           <FormItem>
                             <FormLabel>Typical Bedtime</FormLabel>
                             <FormControl>
-                              <Input type="time" {...field} value={field.value || ""} />
+                              <Input type="time" {...field} value={field.value || ""} className="h-11 rounded-xl" />
                             </FormControl>
                           </FormItem>
                         )}
@@ -167,7 +169,7 @@ export default function Onboarding() {
                           <FormItem>
                             <FormLabel>Typical Wake Time</FormLabel>
                             <FormControl>
-                              <Input type="time" {...field} value={field.value || ""} />
+                              <Input type="time" {...field} value={field.value || ""} className="h-11 rounded-xl" />
                             </FormControl>
                           </FormItem>
                         )}
@@ -181,7 +183,7 @@ export default function Onboarding() {
                           <FormLabel>Activity Level</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-11 rounded-xl">
                                 <SelectValue placeholder="How active are you?" />
                               </SelectTrigger>
                             </FormControl>

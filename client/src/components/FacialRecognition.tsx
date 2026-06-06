@@ -42,7 +42,11 @@ export const FacialRecognition: React.FC<FacialRecognitionProps> = ({ onEmotionD
     setIsLoading(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 640, height: 480, facingMode: 'user' } 
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 }, 
+          facingMode: 'user' 
+        } 
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -50,7 +54,6 @@ export const FacialRecognition: React.FC<FacialRecognitionProps> = ({ onEmotionD
       }
     } catch (error) {
       console.error("Error accessing webcam:", error);
-      // toast({ title: "Camera Error", description: "Could not access webcam.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -92,16 +95,14 @@ export const FacialRecognition: React.FC<FacialRecognitionProps> = ({ onEmotionD
 
         // Draw detection results on canvas (optional)
         const displaySize = { 
-          width: videoRef.current.videoWidth, 
-          height: videoRef.current.videoHeight 
+          width: videoRef.current.offsetWidth, 
+          height: videoRef.current.offsetHeight 
         };
         faceapi.matchDimensions(canvasRef.current, displaySize);
         const resizedDetections = faceapi.resizeResults(detections, displaySize);
         
         const ctx = canvasRef.current.getContext('2d');
         ctx?.clearRect(0, 0, displaySize.width, displaySize.height);
-        // faceapi.draw.drawDetections(canvasRef.current, resizedDetections);
-        // faceapi.draw.drawFaceExpressions(canvasRef.current, resizedDetections);
       }
     }, 500);
 
@@ -111,11 +112,11 @@ export const FacialRecognition: React.FC<FacialRecognitionProps> = ({ onEmotionD
   return (
     <Card className="overflow-hidden bg-muted/20 border-dashed border-2">
       <CardContent className="p-0">
-        <div className="relative aspect-video bg-black flex items-center justify-center">
+        <div className="relative aspect-square md:aspect-video bg-black flex items-center justify-center">
           {!isCameraActive ? (
             <div className="text-center p-6">
               <CameraOff className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-4 px-4">
                 Camera is off. Use facial recognition to set your mood.
               </p>
               <Button 
@@ -134,17 +135,18 @@ export const FacialRecognition: React.FC<FacialRecognitionProps> = ({ onEmotionD
                 ref={videoRef}
                 autoPlay
                 muted
+                playsInline
                 onPlay={handleVideoPlay}
                 className="w-full h-full object-cover"
               />
               <canvas
                 ref={canvasRef}
-                className="absolute top-0 left-0 w-full h-full"
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
               />
               <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
                 <div className="bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full border shadow-sm">
-                  <span className="text-xs font-semibold mr-2 uppercase text-muted-foreground tracking-wider">Detected:</span>
-                  <span className="text-sm font-bold text-primary">{detectedEmotion}</span>
+                  <span className="text-[10px] md:text-xs font-semibold mr-2 uppercase text-muted-foreground tracking-wider">Detected:</span>
+                  <span className="text-xs md:text-sm font-bold text-primary">{detectedEmotion}</span>
                 </div>
                 <Button 
                   size="icon" 

@@ -57,30 +57,30 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-6 pb-24 lg:pb-6 max-w-[1600px] mx-auto w-full">
-        <header className="mb-8 flex justify-between items-center">
+      <main className="flex-1 lg:ml-64 p-4 md:p-6 pb-24 lg:pb-6 max-w-[1600px] mx-auto w-full">
+        <header className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <motion.div 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-display font-bold">Good {new Date().getHours() < 12 ? "Morning" : "Evening"}, {user?.name?.split(' ')[0]}</h2>
-            <p className="text-muted-foreground">Ready to find your balance today?</p>
+            <h2 className="text-2xl md:text-3xl font-display font-bold">Good {new Date().getHours() < 12 ? "Morning" : "Evening"}, {user?.name?.split(' ')[0]}</h2>
+            <p className="text-sm md:text-base text-muted-foreground">Ready to find your balance today?</p>
           </motion.div>
           <motion.div 
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="flex gap-4 items-center"
+            className="flex flex-wrap gap-2 md:gap-4 items-center w-full sm:w-auto"
           >
-            <Link href="/immersive">
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 transition-colors">
+            <Link href="/immersive" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10 transition-colors">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Immersive View
+                Immersive
               </Button>
             </Link>
-            <Link href="/checkin">
-              <Button className="btn-primary">Daily Check-in</Button>
+            <Link href="/checkin" className="flex-1 sm:flex-none">
+              <Button className="w-full btn-primary">Check-in</Button>
             </Link>
           </motion.div>
         </header>
