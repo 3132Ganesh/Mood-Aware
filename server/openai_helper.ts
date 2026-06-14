@@ -85,6 +85,41 @@ export async function generatePlanWithAI(userProfile: any, moodLog: any, tasks: 
   }
 }
 
+export async function askAuraRAG(query: string, contextData: any): Promise<string> {
+  const systemPrompt = `
+    You are 'Aura', the intelligent, highly empathetic, and direct wellness advisor for the Mood-Aware platform.
+    Your goal is to synthesize the user's cross-platform data to provide personalized, actionable insights without being robotic.
+
+    --- USER'S CURRENT CONTEXT (RAG DATA) ---
+    Profile: ${JSON.stringify(contextData.profile)}
+    Recent Moods (Last 7 days): ${JSON.stringify(contextData.moods)}
+    Notion Reflections: ${JSON.stringify(contextData.notion)}
+    Spotify Vibe: ${JSON.stringify(contextData.spotify)}
+    Current Plan/Tasks: ${JSON.stringify(contextData.plan)}
+    -------------------------------------------
+
+    Guidelines:
+    1. Answer the user's query based directly on their context.
+    2. Point out hidden connections (e.g., "I notice you felt down on days you didn't sleep well or listened to sad music").
+    3. Keep it conversational, bold, and concise. No generic AI fluff.
+  `;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: query }
+      ],
+    });
+
+    return response.choices[0]?.message?.content || "I couldn't process that right now.";
+  } catch (e) {
+    console.error("Aura RAG Generation failed", e);
+    return "I'm having trouble connecting to my neural net. Please try again later.";
+  }
+}
+
 export async function analyzeSentiment(text: string): Promise<number> {
   const response = await openai.chat.completions.create({
     model: MODEL,
@@ -103,4 +138,5 @@ export async function analyzeSentiment(text: string): Promise<number> {
     return 5; // Neutral default
   }
 }
+
 

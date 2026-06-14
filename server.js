@@ -1,7 +1,7 @@
 // server.js — Mood-Aware MCP Server
 const { getDuolingoStats }               = require("./integrations/duolingo");
 const { getLeetCodeStats }               = require("./integrations/leetcode");
-const { getMyTopArtists, getRecentlyPlayed } = require("./integrations/spotify");
+const { getMyTopArtists, getRecentlyPlayed, getRecentlyPlayedMood } = require("./integrations/spotify");
 const { generateAllInsights }            = require("./modules/insights");
 const { generateWeekendReport, formatWeekendReport } = require("./modules/weekendReport");
 const { analyzeUserPatterns, generateRoadmap, getDailyMotivation, checkProgress } = require("./modules/goalEngine");
@@ -362,6 +362,7 @@ server.tool(
       const db  = global.moodDB;
       const duo = await getDuolingoStats(process.env.DUOLINGO_USERNAME);
       const lc  = await getLeetCodeStats(process.env.LEETCODE_USERNAME);
+      const spotifyMood = await getRecentlyPlayedMood(20);
 
       const moodHistory = db.getMoodHistory(14);
       const habits      = db.getAllHabits();
@@ -380,7 +381,7 @@ server.tool(
         }
       });
 
-      const report    = generateWeekendReport({ moodHistory, habitLogs, duoStats: duo, lcStats: lc });
+      const report    = generateWeekendReport({ moodHistory, habitLogs, duoStats: duo, lcStats: lc, spotifyMood });
       const formatted = formatWeekendReport(report);
 
       return { content: [{ type: "text", text: formatted }] };

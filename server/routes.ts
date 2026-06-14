@@ -1,19 +1,22 @@
+import bcrypt from "bcryptjs";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
-import { generatePlanWithAI, analyzeSentiment } from "./openai_helper";
+import { generatePlanWithAI, analyzeSentiment, askAuraRAG } from "./openai_helper";
 import { insertMoodLogSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema } from "@shared/schema";
 import { logToNotion, fetchFromNotion } from "./notion";
+// @ts-ignore
+const { getRecentlyPlayedMood } = require("../integrations/spotify");
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   // Set up authentication
-  setupAuth(app);
+  await setupAuth(app);
 
   // Helper middleware to check if user is authenticated
   const requireAuth = (req: any, res: any, next: any) => {
@@ -22,6 +25,72 @@ export async function registerRoutes(
     }
     res.status(401).json({ message: "Unauthorized" });
   };
+
+  // === RAG / Aura AI Route ===
+  app.post("/api/rag/ask", requireAuth, async (req, res) => {
+    try {
+      const { query } = req.body;
+      const userId = req.user!.id;
+
+      // 1. Retrieve all necessary context for the user
+      const profile = await storage.getProfile(userId);
+      const moods = await storage.getMoodLogs(userId, 7); // Last 7 days
+      const plan = await storage.getActivePlan(userId);
+      
+      let notion = [];
+      if (profile?.notionToken && profile?.notionDatabaseId) {
+        notion = await fetchFromNotion(profile.notionToken, profile.notionDatabaseId);
+      }
+
+      let spotify = null;
+      try {
+        spotify = await getRecentlyPlayedMood(20);
+      } catch (e) {
+        // Spotify might not be configured, fail gracefully
+      }
+
+      // 2. Compile context
+      const contextData = {
+        profile,
+        moods,
+        notion,
+        spotify,
+        plan
+      };
+
+      // 3. Generate Augmented Response
+      const responseText = await askAuraRAG(query, contextData);
+
+      res.json({ response: responseText });
+    } catch (err) {
+      console.error("RAG flow error:", err);
+      res.status(500).json({ message: "Internal server error during RAG processing." });
+    }
+  });
+
+  // === Registration Route ===
+  app.post("/api/register", async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+      const existing = await storage.getUserByUsername(email);
+      if (existing) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+      
+      const { randomUUID } = require("crypto");
+      
+      const user = await storage.createUser({
+        id: randomUUID(),
+        email,
+        password: bcrypt.hashSync(password, 10),
+        name: name || email.split('@')[0],
+      });
+      res.status(201).json(user);
+    } catch (err) {
+      console.error("Registration error:", err);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
 
   // === Profile Routes ===
   app.get(api.profile.get.path, requireAuth, async (req, res) => {
@@ -235,8 +304,23 @@ export async function registerRoutes(
     }
   });
 
+  // === Spotify Routes ===
+  app.get(api.spotify.mood.path, requireAuth, async (req, res) => {
+    try {
+      const moodData = await getRecentlyPlayedMood(20);
+      res.json(moodData);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch Spotify mood" });
+    }
+  });
+
   // Seed tasks on startup
-  await storage.seedTasks();
+  try {
+    await storage.seedTasks();
+  } catch (err) {
+    console.error("Failed to seed tasks (database might be paused):", err);
+  }
 
   return httpServer;
 }
+

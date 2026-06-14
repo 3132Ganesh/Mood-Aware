@@ -1,12 +1,56 @@
-import { Suspense, useMemo } from "react";
-import { Canvas } from "@react-three/fiber";
-import { ScrollControls, Environment, Sparkles, Stars } from "@react-three/drei";
+import { Suspense, useMemo, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { ScrollControls, Environment, Sparkles, Stars, MeshDistortMaterial, Sphere } from "@react-three/drei";
 import Overlay from "@/components/Overlay";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrentPlan } from "@/hooks/use-tasks";
 import { useMood } from "@/hooks/use-tracking";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
+import * as THREE from "three";
+
+// The reactive 3D Blob representing the user's "Aura"
+function AuraBlob({ moodScore, completedTasksCount }: { moodScore: number, completedTasksCount: number }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  // Calculate dynamic properties based on user stats
+  // Mood (1-10) -> Color (Red/Warm to Blue/Cool to Gold/Vibrant)
+  const baseColor = useMemo(() => {
+    if (moodScore >= 8) return "#fbbf24"; // Gold/Amber - Excellent
+    if (moodScore >= 6) return "#3b82f6"; // Blue - Good
+    if (moodScore >= 4) return "#8b5cf6"; // Purple - Okay
+    return "#f43f5e"; // Rose - Struggling
+  }, [moodScore]);
+
+  // Tasks -> Energy/Distortion
+  const distortAmount = Math.min(0.8, 0.3 + (completedTasksCount * 0.05));
+  const speedAmount = Math.min(4, 1 + (completedTasksCount * 0.5));
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = state.clock.getElapsedTime() * 0.2;
+      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.3;
+      
+      // Gentle floating animation
+      meshRef.current.position.y = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.2;
+    }
+  });
+
+  return (
+    <Sphere ref={meshRef} args={[1.5, 64, 64]} position={[0, 0, 0]}>
+      <MeshDistortMaterial 
+        color={baseColor}
+        envMapIntensity={1} 
+        clearcoat={0.8} 
+        clearcoatRoughness={0.1} 
+        metalness={0.2} 
+        roughness={0.1}
+        distort={distortAmount}
+        speed={speedAmount}
+      />
+    </Sphere>
+  );
+}
 
 export default function Immersive() {
   const { user } = useAuth();
@@ -59,8 +103,8 @@ export default function Immersive() {
   }
 
   return (
-    <div className="w-screen h-screen bg-black overflow-hidden relative">
-      <Canvas camera={{ position: [0, 0, 7], fov: 45 }}>
+    <div className="w-screen h-screen bg-[#050505] overflow-hidden relative">
+      <Canvas camera={{ position: [0, 0, 7], fov: 45 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}>
         <color attach="background" args={["#050505"]} />
         
         <ambientLight intensity={0.5} />
@@ -76,7 +120,9 @@ export default function Immersive() {
             
             <Sparkles count={150} scale={12} size={2} speed={0.4} opacity={0.5} color="#8b5cf6" />
             <Sparkles count={50} scale={10} size={4} speed={0.6} opacity={0.3} color="#f43f5e" />
-            <Sparkles count={100} scale={15} size={1} speed={0.2} opacity={0.6} color="#10b981" />
+            
+            {/* The reactive 3D element */}
+            <AuraBlob moodScore={moodScore} completedTasksCount={completedTasksCount} />
             
             <Overlay 
               moodScore={moodScore} 

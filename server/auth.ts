@@ -1,12 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
-import { Express, Request, Response, NextFunction } from "express";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
+import { ExpressAuth, getSession } from "@auth/express";
+import { Express, Request, Response, NextFunction } from "express";
 import { User as SelectUser } from "@shared/schema";
 
-// Supabase client initialization
+// Supabase configuration
 const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_ANON_KEY!;
-export const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Required for the adapter
 
 declare global {
   namespace Express {
@@ -14,61 +14,82 @@ declare global {
   }
 }
 
-export function setupAuth(app: Express) {
-  // Middleware to verify Supabase JWT
-  const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return next();
-    }
+export async function setupAuth(app: Express) {
+  // Dynamic imports for ESM compatibility
+  const { SupabaseAdapter } = await import("@auth/supabase-adapter");
+  const Google = (await import("@auth/express/providers/google")).default;
+  const Credentials = (await import("@auth/express/providers/credentials")).default;
 
-    const token = authHeader.split(" ")[1];
+  // Auth.js configuration
+  const authConfig: any = {
+    trustHost: true,
+    skipCSRFCheck: require("@auth/core").skipCSRFCheck,
+    providers: [
+      Google({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      }),
+      Credentials({
+        name: "Credentials",
+        credentials: {
+          username: { label: "Email", type: "text" },
+          password: { label: "Password", type: "password" }
+        },
+        async authorize(credentials: any) {
+          const user = await storage.getUserByUsername(credentials.username);
+          if (user && user.password && bcrypt.compareSync(credentials.password, user.password)) {
+            return user;
+          }
+          return null;
+        }
+      })
+    ],
+    adapter: SupabaseAdapter({
+      url: supabaseUrl,
+      secret: supabaseServiceKey,
+    }),
+    secret: process.env.AUTH_SECRET,
+    callbacks: {
+      async session({ session, user }: any) {
+        if (session.user) {
+          session.user.id = user.id;
+        }
+        return session;
+      },
+    },
+  };
+
+  // Auth.js middleware
+  app.use("/api/auth", ExpressAuth(authConfig));
+
+  // Middleware to attach Auth.js session to Express req.user
+  const attachUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (error || !user) {
-        return res.status(401).json({ message: "Invalid or expired token" });
+      const session = await getSession(req, authConfig);
+      if (session?.user) {
+        // Mock req.user for backward compatibility with Passport patterns
+        (req as any).user = session.user;
+        (req as any).isAuthenticated = () => true;
+      } else {
+        (req as any).user = null;
+        (req as any).isAuthenticated = () => false;
       }
-
-      // Sync Supabase user with our database
-      // In a real SaaS, we'd ensure the user exists in our 'users' table
-      let localUser = await storage.getUserByUsername(user.email!);
-      if (!localUser) {
-        localUser = await storage.createUser({
-          email: user.email!,
-          password: "EXTERNAL_AUTH", // Supabase handles password
-          name: user.user_metadata.full_name || user.email!.split('@')[0],
-        });
-      }
-
-      // Attach to request
-      (req as any).user = localUser;
       next();
     } catch (err) {
-      next(err);
+      console.error("Auth.js session error:", err);
+      next();
     }
   };
 
-  app.use(verifyToken);
+  app.use(attachUser);
 
-  // Helper for routes to check if authenticated
-  // (req.isAuthenticated is a passport helper, we'll keep it or mock it)
-  app.use((req, res, next) => {
-    req.isAuthenticated = () => !!(req as any).user;
-    next();
-  });
-
-  // Supabase Auth typically happens on the frontend. 
-  // These routes are kept for compatibility or can be removed if strictly using Supabase SDK on client.
+  // Helper route to get current user
   app.get("/api/user", (req, res) => {
-    if (req.isAuthenticated()) {
+    if ((req as any).isAuthenticated()) {
       res.json(req.user);
     } else {
       res.status(401).json(null);
     }
   });
-
-  app.post("/api/logout", (req, res) => {
-    // Client clears local storage for Supabase, backend just acknowledges
-    res.sendStatus(200);
-  });
 }
+

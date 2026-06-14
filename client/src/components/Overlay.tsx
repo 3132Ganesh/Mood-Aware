@@ -1,8 +1,10 @@
 import { Scroll } from "@react-three/drei";
 import { motion } from "framer-motion";
-import { Brain, Code, Activity, Music, TrendingUp, Sparkles, Droplets, Zap, Dumbbell } from "lucide-react";
+import { Brain, Code, Activity, Music, TrendingUp, Sparkles, Droplets, Zap, Dumbbell, MessageSquare, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
+import { useState } from "react";
 
 interface OverlayProps {
   moodScore: number;
@@ -12,6 +14,38 @@ interface OverlayProps {
 }
 
 export default function Overlay({ moodScore, completedTasksCount, totalTaskDuration, recentMoodLogsCount }: OverlayProps) {
+  const [query, setQuery] = useState("");
+  const [response, setResponse] = useState("");
+  const [isAsking, setIsAsking] = useState(false);
+
+  const handleAskAura = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    
+    setIsAsking(true);
+    setResponse("");
+    
+    try {
+      const res = await fetch("/api/rag/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+        credentials: "include",
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        setResponse(data.response);
+      } else {
+        setResponse(data.message || "Communication failed.");
+      }
+    } catch (err) {
+      setResponse("Aura is currently unreachable.");
+    } finally {
+      setIsAsking(false);
+    }
+  };
+
   return (
     <Scroll html style={{ width: "100vw" }}>
       {/* 1. Hero Section */}
@@ -120,6 +154,56 @@ export default function Overlay({ moodScore, completedTasksCount, totalTaskDurat
               </div>
             </div>
           </div>
+        </motion.div>
+      </section>
+
+      {/* 4. Aura RAG Chat Section */}
+      <section className="scroll-section chat-section flex flex-col justify-center items-center h-[100vh] pointer-events-none px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.8 }}
+          className="glass-card w-full max-w-[700px] pointer-events-auto p-6 md:p-8 rounded-[1.5rem] bg-zinc-900/60 backdrop-blur-2xl border border-purple-500/20 shadow-2xl shadow-purple-900/20 flex flex-col"
+        >
+          <div className="flex items-center gap-4 mb-6 border-b border-white/10 pb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center bg-purple-500 text-white shadow-lg shadow-purple-500/20">
+              <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Aura Neural Link</h2>
+              <p className="text-sm text-zinc-400">Connected to your Moods, Habits, Notion & Spotify</p>
+            </div>
+          </div>
+          
+          <div className="flex-1 min-h-[150px] mb-6 overflow-y-auto">
+            {response ? (
+              <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-xl text-zinc-200 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                {response}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-zinc-500 italic text-center px-4">
+                "Ask me to analyze your recent moods, summarize your Notion reflections, or see how your music matches your habits."
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleAskAura} className="flex gap-2">
+            <Input 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="E.g., Why was my mood low yesterday?"
+              className="bg-black/50 border-white/10 text-white placeholder:text-zinc-600 h-12 rounded-xl focus-visible:ring-purple-500"
+              disabled={isAsking}
+            />
+            <Button 
+              type="submit" 
+              disabled={isAsking || !query.trim()}
+              className="h-12 w-12 shrink-0 rounded-xl bg-purple-600 hover:bg-purple-500 text-white"
+            >
+              {isAsking ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            </Button>
+          </form>
         </motion.div>
       </section>
     </Scroll>

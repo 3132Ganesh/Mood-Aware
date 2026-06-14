@@ -26,14 +26,15 @@ export function useMood() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.mood.history.path] });
+      queryClient.invalidateQueries({ queryKey: [api.notion.reflections.path] });
     },
   });
 
-  return { 
-    history: history.data, 
-    isLoading: history.isLoading, 
+  return {
+    history: history.data,
+    isLoading: history.isLoading,
     logMood: logMood.mutate,
-    isLogging: logMood.isPending 
+    isLogging: logMood.isPending
   };
 }
 

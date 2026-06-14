@@ -183,28 +183,56 @@ db.run(`
   // ══════════════════════════════════════════════════════════════
   // HABIT OPERATIONS
   // ══════════════════════════════════════════════════════════════
-  function logHabit(habitName, completed = true) {
+  function logHabit(habitName, completed = true, date = null) {
+    const targetDate = date || new Date().toLocaleDateString('en-CA');
     let habit = get("SELECT id FROM habits WHERE name = ?", [habitName]);
     if (!habit) {
       const result = run("INSERT INTO habits (name) VALUES (?)", [habitName]);
       habit = { id: result.lastInsertRowid };
     }
-    run("INSERT INTO habit_logs (habit_id, completed) VALUES (?, ?)", [habit.id, completed ? 1 : 0]);
-    return { habit: habitName, completed };
+    // Use the provided date instead of relying on SQLite default
+    run("INSERT INTO habit_logs (habit_id, completed, date) VALUES (?, ?, ?)", 
+      [habit.id, completed ? 1 : 0, targetDate]
+    );
+    return { habit: habitName, completed, date: targetDate };
   }
 
   function getHabitStreak(habitName) {
+    // Get unique daily logs, sorted by date DESC
     const rows = all(
-      `SELECT hl.date, hl.completed FROM habit_logs hl
+      `SELECT date, MAX(completed) as completed FROM habit_logs hl
        JOIN habits h ON h.id = hl.habit_id
-       WHERE h.name = ? ORDER BY hl.date DESC LIMIT 30`,
+       WHERE h.name = ? 
+       GROUP BY date
+       ORDER BY date DESC LIMIT 30`,
       [habitName]
     );
+
+    if (rows.length === 0) return { habit: habitName, streak: 0 };
+
+    const today = new Date().toLocaleDateString('en-CA');
+    const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA');
+
     let streak = 0;
-    for (const row of rows) {
-      if (row.completed) streak++;
-      else break;
+    let expectedDate = rows[0].date;
+
+    // If the latest log is older than yesterday, the streak is already broken
+    if (expectedDate !== today && expectedDate !== yesterday) {
+      return { habit: habitName, streak: 0 };
     }
+
+    for (const row of rows) {
+      // If we find a gap in dates or a non-completed day, the streak ends
+      if (row.date !== expectedDate || !row.completed) {
+        break;
+      }
+      streak++;
+      // Set expectedDate to the day before
+      const current = new Date(row.date);
+      current.setDate(current.getDate() - 1);
+      expectedDate = current.toLocaleDateString('en-CA');
+    }
+
     return { habit: habitName, streak };
   }
 
@@ -212,11 +240,21 @@ db.run(`
     return all("SELECT * FROM habits ORDER BY name ASC");
   }
 
-  function getHabitStreaks() { const habits = getAllHabits(); return habits.map(h => { const { streak } = getHabitStreak(h.name); return { habit: h.name, streak }; }); } function getTodayHabits() {
+  function getHabitStreaks() { 
+    const habits = getAllHabits(); 
+    return habits.map(h => { 
+      const { streak } = getHabitStreak(h.name); 
+      return { habit: h.name, streak }; 
+    }); 
+  } 
+
+  function getTodayHabits() {
+    const today = new Date().toLocaleDateString('en-CA');
     return all(
       `SELECT h.name, hl.completed FROM habit_logs hl
        JOIN habits h ON h.id = hl.habit_id
-       WHERE hl.date = date('now')`
+       WHERE hl.date = ?`,
+      [today]
     );
   }
 

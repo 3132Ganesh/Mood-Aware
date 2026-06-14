@@ -216,6 +216,7 @@ export default function Landing() {
                 </Form>
               </TabsContent>
             </Tabs>
+            </div>
           </CardContent>
         </Card>
       </div>

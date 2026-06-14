@@ -166,6 +166,20 @@ export const api = {
       },
     },
   },
+  spotify: {
+    mood: {
+      method: 'GET' as const,
+      path: '/api/spotify/mood',
+      responses: {
+        200: z.object({
+          valence: z.number().nullable(),
+          energy: z.number().nullable(),
+          inferredMood: z.string(),
+          tracksAnalyzed: z.number().optional(),
+        }),
+      },
+    },
+  },
   notion: {
     reflections: {
       method: 'GET' as const,

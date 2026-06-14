@@ -14,16 +14,14 @@ import { pool } from "./db";
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
-  sessionStore: session.Store;
-  
   // User
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser & { name: string }): Promise<User>;
+  createUser(user: InsertUser & { id: string; name: string }): Promise<User>;
   
   // Profile
-  getProfile(userId: number): Promise<UserProfile | undefined>;
-  createOrUpdateProfile(userId: number, profile: Partial<InsertUserProfile>): Promise<UserProfile>;
+  getProfile(userId: string): Promise<UserProfile | undefined>;
+  createOrUpdateProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile>;
   
   // Tasks (Repo)
   getAllTasks(): Promise<Task[]>;
@@ -31,38 +29,29 @@ export interface IStorage {
   
   // Mood
   createMoodLog(log: MoodLog): Promise<MoodLog>;
-  getMoodLogs(userId: number, limit?: number): Promise<MoodLog[]>;
-  getLastMoodLog(userId: number): Promise<MoodLog | undefined>;
+  getMoodLogs(userId: string, limit?: number): Promise<MoodLog[]>;
+  getLastMoodLog(userId: string): Promise<MoodLog | undefined>;
   
   // Plans
   createPlan(plan: Plan): Promise<Plan>;
   createPlanItems(items: PlanItem[]): Promise<PlanItem[]>;
-  getActivePlan(userId: number): Promise<PlanWithItems | undefined>;
+  getActivePlan(userId: string): Promise<PlanWithItems | undefined>;
   completePlanItem(itemId: number, isCompleted: boolean): Promise<PlanItem>;
   
   // Habits
   createHabitLog(log: DailyHabit): Promise<DailyHabit>;
-  getHabitLogs(userId: number, limit?: number): Promise<DailyHabit[]>;
+  getHabitLogs(userId: string, limit?: number): Promise<DailyHabit[]>;
   
   // Notes
   createNote(note: FeelingsNote): Promise<FeelingsNote>;
-  getNotes(userId: number): Promise<FeelingsNote[]>;
+  getNotes(userId: string): Promise<FeelingsNote[]>;
   
   // Seeding
   seedTasks(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.Store;
-
-  constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true,
-    });
-  }
-
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -72,17 +61,17 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(insertUser: InsertUser & { name: string }): Promise<User> {
+  async createUser(insertUser: InsertUser & { id: string; name: string }): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
-  async getProfile(userId: number): Promise<UserProfile | undefined> {
+  async getProfile(userId: string): Promise<UserProfile | undefined> {
     const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
     return profile;
   }
 
-  async createOrUpdateProfile(userId: number, profile: Partial<InsertUserProfile>): Promise<UserProfile> {
+  async createOrUpdateProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile> {
     const existing = await this.getProfile(userId);
     if (existing) {
       const [updated] = await db.update(userProfiles)
@@ -111,7 +100,7 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getMoodLogs(userId: number, limit = 14): Promise<MoodLog[]> {
+  async getMoodLogs(userId: string, limit = 14): Promise<MoodLog[]> {
     return db.select()
       .from(moodLogs)
       .where(eq(moodLogs.userId, userId))
@@ -119,7 +108,7 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async getLastMoodLog(userId: number): Promise<MoodLog | undefined> {
+  async getLastMoodLog(userId: string): Promise<MoodLog | undefined> {
     const [log] = await db.select()
       .from(moodLogs)
       .where(eq(moodLogs.userId, userId))
@@ -142,7 +131,7 @@ export class DatabaseStorage implements IStorage {
     return db.insert(planItems).values(items).returning();
   }
 
-  async getActivePlan(userId: number): Promise<PlanWithItems | undefined> {
+  async getActivePlan(userId: string): Promise<PlanWithItems | undefined> {
     const [plan] = await db.select()
       .from(plans)
       .where(and(eq(plans.userId, userId), eq(plans.isActive, true)));
@@ -178,7 +167,7 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getHabitLogs(userId: number, limit = 14): Promise<DailyHabit[]> {
+  async getHabitLogs(userId: string, limit = 14): Promise<DailyHabit[]> {
     return db.select()
       .from(dailyHabits)
       .where(eq(dailyHabits.userId, userId))
@@ -191,7 +180,7 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getNotes(userId: number): Promise<FeelingsNote[]> {
+  async getNotes(userId: string): Promise<FeelingsNote[]> {
     return db.select()
       .from(feelingsNotes)
       .where(eq(feelingsNotes.userId, userId))

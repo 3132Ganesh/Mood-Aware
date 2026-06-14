@@ -7,52 +7,37 @@ import { useEffect, useState } from "react";
 export function useAuth() {
   const queryClient = useQueryClient();
   const [_, setLocation] = useLocation();
-  const [session, setSession] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (_event === 'SIGNED_IN') {
-        queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
-      }
-      if (_event === 'SIGNED_OUT') {
-        queryClient.setQueryData([api.auth.me.path], null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [queryClient]);
 
   const { data: user, isLoading, error } = useQuery({
     queryKey: [api.auth.me.path],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return null;
-
-      const res = await fetch(api.auth.me.path, { 
-        headers: { "Authorization": `Bearer ${session.access_token}` },
-        credentials: "include" 
-      });
+      const res = await fetch(api.auth.me.path, { credentials: "include" });
       if (res.status === 401) return null;
       if (!res.ok) throw new Error("Failed to fetch user");
       return api.auth.me.responses[200].parse(await res.json());
     },
-    enabled: !!session,
     retry: false,
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.username,
-        password: credentials.password,
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          username: credentials.username,
+          password: credentials.password,
+          redirect: "false",
+        }),
       });
-      if (error) throw error;
-      return data.user;
+      
+      const data = await res.json().catch(() => ({}));
+      
+      if (!res.ok || data.error || (data.url && data.url.includes("error="))) {
+        throw new Error("Invalid email or password");
+      }
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
@@ -60,40 +45,32 @@ export function useAuth() {
     },
   });
 
-  const loginWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`
-      }
-    });
-    if (error) throw error;
+  const loginWithGoogle = () => {
+    // Auth.js handles the OAuth flow via redirects
+    window.location.href = "/api/auth/signin/google";
   };
 
   const registerMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          data: {
-            full_name: userData.name
-          }
-        }
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
       });
-      if (error) throw error;
-      return data.user;
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Registration failed");
+      }
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
       setLocation("/onboarding");
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await fetch("/api/auth/signout", { method: "POST" });
     },
     onSuccess: () => {
       queryClient.setQueryData([api.auth.me.path], null);
@@ -103,7 +80,7 @@ export function useAuth() {
 
   return {
     user,
-    isLoading: isLoading || (!!session && !user),
+    isLoading,
     error,
     login: loginMutation.mutate,
     loginWithGoogle,

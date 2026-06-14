@@ -3,16 +3,48 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey(), // Using text to accommodate Supabase UUIDs/Auth.js IDs
+  name: text("name"),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  name: text("name").notNull(),
+  emailVerified: timestamp("email_verified"),
+  image: text("image"),
+  password: text("password"), // Keeping for local/legacy auth if needed
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const accounts = pgTable("accounts", {
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  provider: text("provider").notNull(),
+  providerAccountId: text("provider_account_id").notNull(),
+  refresh_token: text("refresh_token"),
+  access_token: text("access_token"),
+  expires_at: integer("expires_at"),
+  token_type: text("token_type"),
+  scope: text("scope"),
+  id_token: text("id_token"),
+  session_state: text("session_state"),
+}, (table) => ({
+  pk: serial("id").primaryKey(),
+}));
+
+export const sessions = pgTable("sessions", {
+  sessionToken: text("session_token").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires").notNull(),
+});
+
+export const verificationTokens = pgTable("verification_tokens", {
+  identifier: text("identifier").notNull(),
+  token: text("token").notNull(),
+  expires: timestamp("expires").notNull(),
+}, (table) => ({
+  pk: serial("id").primaryKey(),
+}));
+
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => users.id),
   ageGroup: text("age_group"),
   occupation: text("occupation"),
   sleepTime: text("sleep_time"),
@@ -42,7 +74,7 @@ export const tasks = pgTable("tasks", {
 
 export const moodLogs = pgTable("mood_logs", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => users.id),
   date: date("date").notNull(),
   moodScore: integer("mood_score").notNull(),
   moodLabel: text("mood_label"),
@@ -54,7 +86,7 @@ export const moodLogs = pgTable("mood_logs", {
 
 export const plans = pgTable("plans", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => users.id),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   isActive: boolean("is_active").default(true),
@@ -70,7 +102,7 @@ export const planItems = pgTable("plan_items", {
 
 export const dailyHabits = pgTable("daily_habits", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => users.id),
   date: date("date").notNull(),
   routineFollowed: boolean("routine_followed"),
   extraPhysicalActivity: boolean("extra_physical_activity"),
@@ -79,7 +111,7 @@ export const dailyHabits = pgTable("daily_habits", {
 
 export const feelingsNotes = pgTable("feelings_notes", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => users.id),
   timestamp: timestamp("timestamp").defaultNow(),
   title: text("title"),
   content: text("content").notNull(),

@@ -32,7 +32,7 @@ function average(arr) {
 }
 
 function generateWeekendReport(data) {
-  const { moodHistory, habitLogs, duoStats, lcStats, spotifyRecent } = data;
+  const { moodHistory, habitLogs, duoStats, lcStats, spotifyMood } = data;
 
   const thisWeek = getWeekRange(0);
   const lastWeek = getWeekRange(1);
@@ -99,6 +99,7 @@ function generateWeekendReport(data) {
       lcSolved,
       lcStreak,
     },
+    spotify: spotifyMood,
     generatedAt: new Date().toISOString(),
   };
 
@@ -106,7 +107,7 @@ function generateWeekendReport(data) {
 }
 
 function formatWeekendReport(report) {
-  const { mood, habits, learning, period } = report;
+  const { mood, habits, learning, spotify, period } = report;
 
   let out = `\n📊 WEEKEND REPORT\n${"═".repeat(45)}\n`;
   out += `📅 ${period.thisWeek.start} → ${period.thisWeek.end}\n`;
@@ -137,6 +138,16 @@ function formatWeekendReport(report) {
   out += `  🦉 Total XP:         ${learning.duoXP?.toLocaleString()}\n`;
   out += `  💻 LeetCode solved:  ${learning.lcSolved} problems\n`;
   out += `  💻 LeetCode streak:  ${learning.lcStreak} days\n`;
+
+  // Spotify section
+  out += `\n🎵 SPOTIFY MOOD\n${"─".repeat(30)}\n`;
+  if (spotify && spotify.inferredMood && spotify.inferredMood !== "No data") {
+    out += `  Inferred Mood:   ${spotify.inferredMood}\n`;
+    out += `  Music Valence:   ${spotify.valence}/1.0\n`;
+    out += `  Music Energy:    ${spotify.energy}/1.0\n`;
+  } else {
+    out += `  No Spotify mood data available.\n`;
+  }
 
   // Weekly verdict
   out += `\n🏆 WEEKLY VERDICT\n${"─".repeat(30)}\n`;
