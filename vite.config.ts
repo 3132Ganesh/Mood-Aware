@@ -1,23 +1,44 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   plugins: [
     react(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.png", "robots.txt", "apple-touch-icon.png"],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5000000 // 5 MB
+      },
+      manifest: {
+        name: "Mood-Aware",
+        short_name: "MoodAware",
+        description: "Personal Intelligence & Wellness Platform",
+        theme_color: "#09090b",
+        background_color: "#09090b",
+        display: "standalone",
+        icons: [
+          {
+            src: "favicon.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "favicon.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "favicon.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+        ],
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -27,11 +48,19 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
+  envDir: path.resolve(import.meta.dirname, "."),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
   server: {
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],

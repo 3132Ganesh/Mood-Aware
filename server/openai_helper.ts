@@ -1,10 +1,38 @@
 import OpenAI from "openai";
 
-// The integration sets these env vars automatically
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+const apiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+
+// Mock OpenAI if no API key is provided
+let openai: any;
+if (apiKey) {
+  openai = new OpenAI({
+    apiKey: apiKey,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+} else {
+  console.warn("⚠️ OPENAI_API_KEY is missing. AI features will be mocked.");
+  openai = {
+    chat: {
+      completions: {
+        create: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                days: Array.from({ length: 7 }, (_, i) => ({
+                  dayOffset: i,
+                  taskIds: [1, 2, 3] // Mock IDs
+                })),
+                score: 7
+              })
+            }
+          }]
+        })
+      }
+    }
+  };
+}
+
+const MODEL = process.env.AI_INTEGRATIONS_OPENAI_MODEL || "nvidia/nemotron-3-super-120b-a12b:free"; // Changed from gpt-5.1 to a valid model
 
 export async function generatePlanWithAI(userProfile: any, moodLog: any, tasks: any[]) {
   const prompt = `
@@ -39,7 +67,7 @@ export async function generatePlanWithAI(userProfile: any, moodLog: any, tasks: 
   `;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-5.1",
+    model: MODEL,
     messages: [
       { role: "system", content: "You are a wellness planner. Return JSON only." },
       { role: "user", content: prompt }
@@ -57,9 +85,44 @@ export async function generatePlanWithAI(userProfile: any, moodLog: any, tasks: 
   }
 }
 
+export async function askAuraRAG(query: string, contextData: any): Promise<string> {
+  const systemPrompt = `
+    You are 'Aura', the intelligent, highly empathetic, and direct wellness advisor for the Mood-Aware platform.
+    Your goal is to synthesize the user's cross-platform data to provide personalized, actionable insights without being robotic.
+
+    --- USER'S CURRENT CONTEXT (RAG DATA) ---
+    Profile: ${JSON.stringify(contextData.profile)}
+    Recent Moods (Last 7 days): ${JSON.stringify(contextData.moods)}
+    Notion Reflections: ${JSON.stringify(contextData.notion)}
+    Spotify Vibe: ${JSON.stringify(contextData.spotify)}
+    Current Plan/Tasks: ${JSON.stringify(contextData.plan)}
+    -------------------------------------------
+
+    Guidelines:
+    1. Answer the user's query based directly on their context.
+    2. Point out hidden connections (e.g., "I notice you felt down on days you didn't sleep well or listened to sad music").
+    3. Keep it conversational, bold, and concise. No generic AI fluff.
+  `;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: query }
+      ],
+    });
+
+    return response.choices[0]?.message?.content || "I couldn't process that right now.";
+  } catch (e) {
+    console.error("Aura RAG Generation failed", e);
+    return "I'm having trouble connecting to my neural net. Please try again later.";
+  }
+}
+
 export async function analyzeSentiment(text: string): Promise<number> {
   const response = await openai.chat.completions.create({
-    model: "gpt-5.1",
+    model: MODEL,
     messages: [
       { role: "system", content: "Analyze sentiment of the text. Return a score from 1 (very negative) to 10 (very positive). Return JSON: {\"score\": 5}" },
       { role: "user", content: text }
@@ -75,3 +138,5 @@ export async function analyzeSentiment(text: string): Promise<number> {
     return 5; // Neutral default
   }
 }
+
+

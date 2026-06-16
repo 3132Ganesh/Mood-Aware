@@ -12,12 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Music, Gamepad2, Clock, Moon } from "lucide-react";
+import { Loader2, Music, Gamepad2, Clock, Moon, Sparkles, Quote } from "lucide-react";
 
 const steps = [
   { id: "basic", title: "About You", icon: Clock },
   { id: "lifestyle", title: "Lifestyle", icon: Moon },
   { id: "interests", title: "Interests", icon: Music },
+  { id: "integrations", title: "Integrations", icon: Sparkles },
 ];
 
 export default function Onboarding() {
@@ -40,6 +41,8 @@ export default function Onboarding() {
       playsGames: false,
       gamePlatforms: [],
       gameTypes: [],
+      notionToken: "",
+      notionDatabaseId: "",
     },
   });
 
@@ -60,49 +63,67 @@ export default function Onboarding() {
   const currentStep = steps[step];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-2xl border-none shadow-2xl bg-card/50 backdrop-blur-xl">
-        <CardHeader className="text-center pb-2">
-          <div className="flex justify-center mb-4">
-            {steps.map((s, i) => (
-              <div key={s.id} className="flex items-center">
-                <div className={`
-                  w-10 h-10 rounded-full flex items-center justify-center transition-colors
-                  ${i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}
-                `}>
-                  <s.icon className="w-5 h-5" />
-                </div>
-                {i < steps.length - 1 && (
-                  <div className={`w-12 h-0.5 mx-2 ${i < step ? "bg-primary" : "bg-muted"}`} />
-                )}
+    <div className="min-h-screen flex items-center justify-center bg-[#fdfdfc] dark:bg-background p-6">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full max-w-2xl bg-white dark:bg-card border-2 border-black/10 dark:border-white/10 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.05)] rounded-2xl overflow-hidden"
+      >
+        <div className="p-8 md:p-12">
+          <div className="text-center mb-10">
+            <div className="flex justify-center mb-8 overflow-x-auto no-scrollbar pb-2">
+              <div className="flex items-center min-w-max">
+                {steps.map((s, i) => (
+                  <div key={s.id} className="flex items-center">
+                    <motion.div 
+                      whileHover={{ scale: 1.05 }}
+                      className={`
+                      w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 font-bold border-2
+                      ${i === step ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white" : 
+                        i < step ? "bg-black/5 text-black border-black/20 dark:bg-white/5 dark:text-white dark:border-white/20" : 
+                        "bg-transparent text-muted-foreground border-muted"}
+                    `}>
+                      <s.icon className="w-5 h-5 md:w-6 md:h-6" />
+                    </motion.div>
+                    {i < steps.length - 1 && (
+                      <div className={`w-8 md:w-16 h-[2px] mx-2 ${i < step ? "bg-black/20 dark:bg-white/20" : "bg-muted"}`} />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            <motion.h1 
+              key={`title-${step}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-3xl md:text-5xl font-black uppercase tracking-tighter"
+            >
+              {currentStep.title}
+            </motion.h1>
+            <p className="text-muted-foreground mt-2 font-medium">Let's personalize your baseline.</p>
           </div>
-          <CardTitle className="text-3xl font-display">{currentStep.title}</CardTitle>
-          <CardDescription>Let's personalize your experience.</CardDescription>
-        </CardHeader>
-        
-        <CardContent>
+          
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <motion.div
                 key={step}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 {step === 0 && (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <FormField
                       control={form.control}
                       name="ageGroup"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Age Group</FormLabel>
+                          <FormLabel className="font-bold text-sm uppercase tracking-wider">Age Group</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-14 rounded-xl border-2 border-input focus:border-primary bg-transparent text-lg">
                                 <SelectValue placeholder="Select age range" />
                               </SelectTrigger>
                             </FormControl>
@@ -121,10 +142,10 @@ export default function Onboarding() {
                       name="occupation"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Occupation Type</FormLabel>
+                          <FormLabel className="font-bold text-sm uppercase tracking-wider">Occupation Type</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-14 rounded-xl border-2 border-input focus:border-primary bg-transparent text-lg">
                                 <SelectValue placeholder="Select work type" />
                               </SelectTrigger>
                             </FormControl>
@@ -143,16 +164,16 @@ export default function Onboarding() {
                 )}
 
                 {step === 1 && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="sleepTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Typical Bedtime</FormLabel>
+                            <FormLabel className="font-bold text-sm uppercase tracking-wider">Typical Bedtime</FormLabel>
                             <FormControl>
-                              <Input type="time" {...field} value={field.value || ""} />
+                              <Input type="time" {...field} value={field.value || ""} className="h-14 rounded-xl border-2 text-lg" />
                             </FormControl>
                           </FormItem>
                         )}
@@ -162,9 +183,9 @@ export default function Onboarding() {
                         name="wakeTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Typical Wake Time</FormLabel>
+                            <FormLabel className="font-bold text-sm uppercase tracking-wider">Typical Wake Time</FormLabel>
                             <FormControl>
-                              <Input type="time" {...field} value={field.value || ""} />
+                              <Input type="time" {...field} value={field.value || ""} className="h-14 rounded-xl border-2 text-lg" />
                             </FormControl>
                           </FormItem>
                         )}
@@ -175,10 +196,10 @@ export default function Onboarding() {
                       name="physicalActivity"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Activity Level</FormLabel>
+                          <FormLabel className="font-bold text-sm uppercase tracking-wider">Activity Level</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-14 rounded-xl border-2 border-input focus:border-primary bg-transparent text-lg">
                                 <SelectValue placeholder="How active are you?" />
                               </SelectTrigger>
                             </FormControl>
@@ -202,10 +223,10 @@ export default function Onboarding() {
                       name="musicApp"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Preferred Music App</FormLabel>
+                          <FormLabel className="font-bold text-sm uppercase tracking-wider">Preferred Music App</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-14 rounded-xl border-2 border-input focus:border-primary bg-transparent text-lg">
                                 <SelectValue placeholder="Select app" />
                               </SelectTrigger>
                             </FormControl>
@@ -224,17 +245,18 @@ export default function Onboarding() {
                       control={form.control}
                       name="playsGames"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                        <FormItem className="flex flex-row items-start space-x-4 space-y-0 rounded-xl border-2 p-6 shadow-sm cursor-pointer hover:bg-muted/50 transition-colors">
                           <FormControl>
                             <Checkbox
+                              className="w-6 h-6 rounded-md border-2"
                               checked={field.value || false}
                               onCheckedChange={field.onChange}
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>I play video games to relax</FormLabel>
-                            <FormDescription>
-                              We'll suggest gaming breaks if checked.
+                            <FormLabel className="font-bold text-lg cursor-pointer">I play video games to relax</FormLabel>
+                            <FormDescription className="text-sm">
+                              We'll integrate gaming breaks into your AI planner.
                             </FormDescription>
                           </div>
                         </FormItem>
@@ -242,31 +264,71 @@ export default function Onboarding() {
                     />
                   </div>
                 )}
+
+                {step === 3 && (
+                  <div className="space-y-6">
+                    <div className="bg-black text-white dark:bg-white dark:text-black p-6 rounded-xl mb-6">
+                      <p className="font-bold flex items-center gap-3 text-lg">
+                        <Sparkles className="w-5 h-5" />
+                        Optional Integrations
+                      </p>
+                      <p className="opacity-80 mt-2 text-sm">Connect external apps to enrich your mood data.</p>
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="notionToken"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold text-sm uppercase tracking-wider">Notion Integration Token</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="secret_..." {...field} value={field.value || ""} className="h-14 rounded-xl border-2" />
+                          </FormControl>
+                          <FormDescription>
+                            Create an integration at developers.notion.com
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="notionDatabaseId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold text-sm uppercase tracking-wider">Notion Database ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="32-character ID" {...field} value={field.value || ""} className="h-14 rounded-xl border-2" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </motion.div>
 
-              <div className="flex justify-between pt-4">
+              <div className="flex justify-between pt-8 border-t-2 mt-8">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setStep(Math.max(0, step - 1))}
                   disabled={step === 0}
+                  className="h-14 px-8 rounded-xl font-bold uppercase tracking-wide border-2 hover:bg-muted"
                 >
                   Back
                 </Button>
-                <Button type="submit" className="btn-primary">
+                <Button type="submit" className="h-14 px-10 rounded-xl font-bold uppercase tracking-wide bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)] transition-all">
                   {updateProfile.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 
                   ) : step === steps.length - 1 ? (
                     "Complete Setup"
                   ) : (
-                    "Next"
+                    "Next Step"
                   )}
                 </Button>
               </div>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+        </div>
+      </motion.div>
     </div>
   );
 }

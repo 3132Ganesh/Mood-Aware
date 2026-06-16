@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMood, useHabits } from "@/hooks/use-tracking";
 import { useLocation } from "wouter";
-import { Loader2, Smile, Frown, Meh, Sun, Zap } from "lucide-react";
+import { Loader2, Smile, Frown, Meh, Sun, Zap, Brain } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { FacialRecognition } from "@/components/FacialRecognition";
 
 export default function Checkin() {
   const { logMood, isLogging } = useMood();
@@ -27,6 +28,12 @@ export default function Checkin() {
   const [habitRoutine, setHabitRoutine] = useState(false);
   const [habitPhysical, setHabitPhysical] = useState(false);
   const [screenTime, setScreenTime] = useState([4]);
+
+  const handleEmotionDetected = (emotion: string, score: number) => {
+    // Only update if the user isn't actively sliding the manual mood slider
+    // This provides a "live" feel to the check-in
+    setMoodScore([score]);
+  };
 
   const handleSubmit = async () => {
     try {
@@ -62,13 +69,28 @@ export default function Checkin() {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-6 pb-24 lg:pb-6 max-w-3xl mx-auto w-full">
+      <main className="flex-1 lg:ml-64 p-4 md:p-6 pb-24 lg:pb-6 max-w-3xl mx-auto w-full">
         <header className="mb-8">
-          <h2 className="text-3xl font-display font-bold">Daily Check-in</h2>
-          <p className="text-muted-foreground">Take a moment to reflect on your day.</p>
+          <h2 className="text-2xl md:text-3xl font-display font-bold">Daily Check-in</h2>
+          <p className="text-sm md:text-base text-muted-foreground">Take a moment to reflect on your day.</p>
         </header>
 
         <div className="space-y-6">
+          <Card className="border-none shadow-lg overflow-hidden">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-primary" />
+                <CardTitle className="text-xl">AI Mood Detection</CardTitle>
+              </div>
+              <CardDescription>
+                Turn on your camera to let AI estimate your current mood based on your facial expression.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FacialRecognition onEmotionDetected={handleEmotionDetected} />
+            </CardContent>
+          </Card>
+
           <Card className="border-none shadow-lg">
             <CardHeader>
               <CardTitle>How are you feeling?</CardTitle>

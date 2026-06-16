@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type InsertUser } from "@shared/routes";
 import { useLocation } from "wouter";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 export function useAuth() {
   const queryClient = useQueryClient();
@@ -19,54 +21,56 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
-      const res = await fetch(api.auth.login.path, {
-        method: api.auth.login.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-        credentials: "include",
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          username: credentials.username,
+          password: credentials.password,
+          redirect: "false",
+        }),
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Login failed");
+      
+      const data = await res.json().catch(() => ({}));
+      
+      if (!res.ok || data.error || (data.url && data.url.includes("error="))) {
+        throw new Error("Invalid email or password");
       }
-      return api.auth.login.responses[200].parse(await res.json());
+      
+      return data;
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData([api.auth.me.path], data);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
       setLocation("/dashboard");
     },
   });
 
+  const loginWithGoogle = () => {
+    // Auth.js handles the OAuth flow via redirects
+    window.location.href = "/api/auth/signin/google";
+  };
+
   const registerMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
-      const res = await fetch(api.auth.register.path, {
-        method: api.auth.register.method,
+      const res = await fetch("/api/register", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
-        credentials: "include",
       });
       if (!res.ok) {
-        if (res.status === 400) {
-          const error = await res.json();
-          throw new Error(error.message);
-        }
-        throw new Error("Registration failed");
+        const error = await res.json();
+        throw new Error(error.message || "Registration failed");
       }
-      return api.auth.register.responses[201].parse(await res.json());
+      return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData([api.auth.me.path], data);
+    onSuccess: () => {
       setLocation("/onboarding");
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(api.auth.logout.path, { 
-        method: api.auth.logout.method,
-        credentials: "include" 
-      });
-      if (!res.ok) throw new Error("Logout failed");
+      await fetch("/api/auth/signout", { method: "POST" });
     },
     onSuccess: () => {
       queryClient.setQueryData([api.auth.me.path], null);
@@ -79,6 +83,7 @@ export function useAuth() {
     isLoading,
     error,
     login: loginMutation.mutate,
+    loginWithGoogle,
     isLoggingIn: loginMutation.isPending,
     loginError: loginMutation.error,
     register: registerMutation.mutate,

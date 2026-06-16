@@ -1,11 +1,12 @@
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
-import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
+import { ExpressAuth, getSession } from "@auth/express";
+import { Express, Request, Response, NextFunction } from "express";
 import { User as SelectUser } from "@shared/schema";
+
+// Supabase configuration
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Required for the adapter
 
 declare global {
   namespace Express {
@@ -13,103 +14,82 @@ declare global {
   }
 }
 
-const scryptAsync = promisify(scrypt);
+export async function setupAuth(app: Express) {
+  // Dynamic imports for ESM compatibility
+  const { SupabaseAdapter } = await import("@auth/supabase-adapter");
+  const Google = (await import("@auth/express/providers/google")).default;
+  const Credentials = (await import("@auth/express/providers/credentials")).default;
 
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
-
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
-}
-
-export function setupAuth(app: Express) {
-  const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "r3pl1t_s3cr3t_k3y",
-    resave: false,
-    saveUninitialized: false,
-    store: storage.sessionStore,
+  // Auth.js configuration
+  const authConfig: any = {
+    trustHost: true,
+    skipCSRFCheck: require("@auth/core").skipCSRFCheck,
+    providers: [
+      Google({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      }),
+      Credentials({
+        name: "Credentials",
+        credentials: {
+          username: { label: "Email", type: "text" },
+          password: { label: "Password", type: "password" }
+        },
+        async authorize(credentials: any) {
+          const user = await storage.getUserByUsername(credentials.username);
+          if (user && user.password && bcrypt.compareSync(credentials.password, user.password)) {
+            return user;
+          }
+          return null;
+        }
+      })
+    ],
+    adapter: SupabaseAdapter({
+      url: supabaseUrl,
+      secret: supabaseServiceKey,
+    }),
+    secret: process.env.AUTH_SECRET,
+    callbacks: {
+      async session({ session, user }: any) {
+        if (session.user) {
+          session.user.id = user.id;
+        }
+        return session;
+      },
+    },
   };
 
-  if (app.get("env") === "production") {
-    app.set("trust proxy", 1);
-  }
+  // Auth.js middleware
+  app.use("/api/auth", ExpressAuth(authConfig));
 
-  app.use(session(sessionSettings));
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        } else {
-          return done(null, user);
-        }
-      } catch (error) {
-        return done(error);
-      }
-    }),
-  );
-
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
+  // Middleware to attach Auth.js session to Express req.user
+  const attachUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error);
-    }
-  });
-
-  app.post("/api/register", async (req, res, next) => {
-    try {
-      const { email, password, name } = req.body;
-      
-      const existingUser = await storage.getUserByUsername(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already exists" });
+      const session = await getSession(req, authConfig);
+      if (session?.user) {
+        // Mock req.user for backward compatibility with Passport patterns
+        (req as any).user = session.user;
+        (req as any).isAuthenticated = () => true;
+      } else {
+        (req as any).user = null;
+        (req as any).isAuthenticated = () => false;
       }
-
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({
-        email,
-        password: hashedPassword,
-        name: name || email.split('@')[0],
-      });
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
-    } catch (error) {
-      next(error);
+      next();
+    } catch (err) {
+      console.error("Auth.js session error:", err);
+      next();
     }
-  });
+  };
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
-  });
+  app.use(attachUser);
 
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
-    });
-  });
-
+  // Helper route to get current user
   app.get("/api/user", (req, res) => {
-    if (req.isAuthenticated()) {
+    if ((req as any).isAuthenticated()) {
       res.json(req.user);
     } else {
       res.status(401).json(null);
     }
   });
 }
+
