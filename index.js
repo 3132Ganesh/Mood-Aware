@@ -1,7 +1,5 @@
-// index.js — Main entry point, brings everything together
-
-const { weekMoods, getAverageMood, getBestDay, getWorstDay, getHighDays } = require("./modules/mood");
-const { fetchFitnessData, analyzeFitness } = require("./modules/fitness");
+import { weekMoods, getAverageMood, getBestDay, getWorstDay, getHighDays } from "./modules/mood.js";
+import { fetchFitnessData, analyzeFitness } from "./modules/fitness.js";
 
 async function runDailyReport() {
   console.log("\n╔══════════════════════════════════════╗");

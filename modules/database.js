@@ -1,7 +1,8 @@
-// modules/database.js — Complete database layer
+import Database from "better-sqlite3";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const Database = require("better-sqlite3");
-const path     = require("path");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Create/open the database file
 const db = new Database(path.join(__dirname, "../mood_tracker.db"));
@@ -115,18 +116,38 @@ function logHabit(habitName, completed = true) {
 
 function getHabitStreak(habitName) {
   const rows = db.prepare(`
-    SELECT hl.date, hl.completed
+    SELECT hl.date, MAX(hl.completed) as completed
     FROM habit_logs hl
     JOIN habits h ON h.id = hl.habit_id
     WHERE h.name = ?
+    GROUP BY hl.date
     ORDER BY hl.date DESC
     LIMIT 30
   `).all(habitName);
 
   let streak = 0;
+  if (rows.length === 0) return { habit: habitName, streak: 0, history: [] };
+
+  const today = new Date().toISOString().split("T")[0];
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterday = yesterdayDate.toISOString().split("T")[0];
+
+  // If the most recent log is neither today nor yesterday, streak is reset
+  const latestDate = rows[0].date;
+  if (latestDate !== today && latestDate !== yesterday) {
+    return { habit: habitName, streak: 0, history: rows };
+  }
+
+  let expectedDate = new Date(latestDate);
   for (const row of rows) {
-    if (row.completed) streak++;
-    else break;
+    const expectedStr = expectedDate.toISOString().split("T")[0];
+    if (row.date === expectedStr && row.completed === 1) {
+      streak++;
+      expectedDate.setDate(expectedDate.getDate() - 1);
+    } else {
+      break;
+    }
   }
   return { habit: habitName, streak, history: rows };
 }
@@ -181,7 +202,7 @@ function getMoodVsSleep(days = 14) {
 }
 
 // ── Export everything ─────────────────────────────────────────────
-module.exports = {
+export {
   db,
   logMood,
   getMoodHistory,

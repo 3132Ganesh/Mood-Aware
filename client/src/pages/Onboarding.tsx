@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useProfile } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Music, Gamepad2, Clock, Moon } from "lucide-react";
+import { Loader2, Music, Gamepad2, Clock, Moon, Sparkles, Check } from "lucide-react";
 
 const steps = [
   { id: "basic", title: "About You", icon: Clock },
@@ -23,7 +23,7 @@ const steps = [
 export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [_, setLocation] = useLocation();
-  const { updateProfile } = useProfile();
+  const { profile, updateProfile } = useProfile();
   
   const form = useForm({
     resolver: zodResolver(insertUserProfileSchema),
@@ -36,12 +36,31 @@ export default function Onboarding() {
       caffeineIntake: "",
       physicalActivity: "",
       musicApp: "",
-      musicMoods: [],
+      musicMoods: [] as string[],
       playsGames: false,
-      gamePlatforms: [],
-      gameTypes: [],
+      gamePlatforms: [] as string[],
+      gameTypes: [] as string[],
     },
   });
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        ageGroup: profile.ageGroup || "",
+        occupation: profile.occupation || "",
+        sleepTime: profile.sleepTime || "",
+        wakeTime: profile.wakeTime || "",
+        breakFrequency: profile.breakFrequency || "",
+        caffeineIntake: profile.caffeineIntake || "",
+        physicalActivity: profile.physicalActivity || "",
+        musicApp: profile.musicApp || "",
+        musicMoods: (profile.musicMoods as string[]) || [],
+        playsGames: profile.playsGames || false,
+        gamePlatforms: (profile.gamePlatforms as string[]) || [],
+        gameTypes: (profile.gameTypes as string[]) || [],
+      });
+    }
+  }, [profile, form]);
 
   const onSubmit = async (data: any) => {
     if (step < steps.length - 1) {

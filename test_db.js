@@ -1,6 +1,4 @@
-// test_db.js — Test every database operation
-
-const db = require("./modules/database");
+import * as db from "./modules/database.js";
 
 console.log("\n🗄️  DATABASE TEST — mood_tracker.db\n");
 console.log("═".repeat(45));

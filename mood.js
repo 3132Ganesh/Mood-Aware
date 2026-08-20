@@ -8,8 +8,8 @@ function printMoodSummary(entry){
     console.log("---------------------------------");
     console.log(`📅 Date: ${entry.date}`);
     console.log(`📈 Score: ${entry.score}`);
-    console.log(`💭 Emotions:{entry.emotions.join(", ")}`);
-    console.log(`📝 Notes:${entry.notes}`);
+    console.log(`💭 Emotions: ${entry.emotions.join(", ")}`);
+    console.log(`📝 Notes: ${entry.notes}`);
     console.log("---------------------------------");
 }
 printMoodSummary(moodentry);

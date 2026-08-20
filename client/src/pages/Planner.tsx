@@ -4,7 +4,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { format, addDays, startOfWeek } from "date-fns";
-import { Loader2, Plus, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
+import { Loader2, Plus, Calendar as CalendarIcon, ArrowRight, Clock, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -17,10 +17,10 @@ export default function Planner() {
     return d;
   });
 
-  // Filter tasks for selected date
+  // Filter tasks for selected date (timezone-safe string comparison)
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const tasksForDay = plan?.items.filter(item => {
-    const itemDate = new Date(item.dayDate).toISOString().split('T')[0];
+    const itemDate = String(item.dayDate).split('T')[0];
     return itemDate === selectedDateStr;
   }) || [];
 
@@ -108,7 +108,7 @@ export default function Planner() {
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{item.task.description}</p>
                     
                     <Button 
-                      onClick={() => completeTask({ planId: item.planId, taskId: item.taskId, isCompleted: !item.isCompleted })}
+                      onClick={() => completeTask({ planId: item.planId, taskId: item.id, isCompleted: !item.isCompleted })}
                       variant={item.isCompleted ? "outline" : "default"}
                       className={cn(
                         "w-full transition-all",

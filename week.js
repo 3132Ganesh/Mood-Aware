@@ -1,7 +1,5 @@
 // week.js — My first week of mood data
 
-const { get } = require("mongoose");
-
 const WeekMoods = [
   { date: "2025-02-22", score: 6, emotions: ["tired", "okay"],           notes: "Slow start to the week" },
   { date: "2025-02-23", score: 8, emotions: ["focused", "energetic"],    notes: "Got a lot done today" },

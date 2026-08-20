@@ -27,8 +27,7 @@ function getHighDays(moods) {
   return moods.filter(entry => entry.score >= 7);
 }
 
-// ← THIS is how you share code between files
-module.exports = {
+export {
   weekMoods,
   getAverageMood,
   getBestDay,

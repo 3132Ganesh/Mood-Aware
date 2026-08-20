@@ -120,18 +120,16 @@ export async function registerRoutes(
 
   app.patch(api.plans.completeTask.path, requireAuth, async (req, res) => {
     try {
-      const { id, taskId } = req.params; // id is planId, but we might not need it if we trust item ID logic or have direct item update
-      // Wait, my route path is /api/plans/:id/tasks/:taskId/complete
-      // But my storage method completePlanItem takes itemId (the plan_item id).
-      // Let's assume the frontend passes the plan_item id as taskId or I need to find it.
-      // Actually, looking at the route definition: /api/plans/:id/tasks/:taskId/complete
-      // Ideally I should just have /api/plan-items/:id/complete. 
-      // But let's stick to the route def. taskId here likely refers to plan_item.id if the frontend follows standard REST for "item in plan".
-      // OR it refers to the actual task ID and I need to find the plan item for today?
-      // Let's assume the :taskId param in the URL is actually the plan_item.id for simplicity given the storage method.
-      
+      const { id, taskId } = req.params;
+      const planId = parseInt(id);
       const planItemId = parseInt(taskId);
-      const isCompleted = req.body.isCompleted;
+      const isCompleted = Boolean(req.body.isCompleted);
+
+      // Verify the active plan belongs to the logged-in user (prevents IDOR)
+      const userPlan = await storage.getActivePlan(req.user!.id);
+      if (!userPlan || userPlan.id !== planId) {
+        return res.status(403).json({ message: "Forbidden: You cannot modify another user's plan" });
+      }
 
       const updated = await storage.completePlanItem(planItemId, isCompleted);
       res.json(updated);

@@ -1,32 +1,18 @@
 {
-<<<<<<< HEAD
-  "name": "mood-app",
-  "version": "1.0.0",
-  "description": "",
-  "main": "async.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "better-sqlite3": "^12.6.2",
-    "chalk": "^5.6.2"
-=======
-  "name": "rest-express",
+  "name": "mood-aware",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev": "tsx server/index.ts",
     "build": "tsx script/build.ts",
-    "start": "NODE_ENV=production node dist/index.cjs",
-    "check": "tsc",
+    "start": "node dist/index.cjs",
+    "check": "tsc --noEmit",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "chalk": "^5.6.2",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@radix-ui/react-accordion": "^1.2.4",
@@ -127,6 +113,5 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
->>>>>>> c4357386233361b4184ba4b155f6d443f2539372
   }
 }

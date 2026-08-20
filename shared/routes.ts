@@ -7,9 +7,26 @@ import {
   insertPlanSchema, plans, 
   insertPlanItemSchema, planItems, 
   insertDailyHabitSchema, dailyHabits, 
-  insertFeelingsNoteSchema, feelingsNotes 
+  insertFeelingsNoteSchema, feelingsNotes,
+  type InsertUser,
+  type InsertUserProfile,
+  type InsertMoodLog,
+  type InsertDailyHabit,
+  type InsertFeelingsNote,
+  type InsertPlan,
+  type InsertPlanItem
 } from './schema';
 import * as chatSchema from './models/chat';
+
+export type {
+  InsertUser,
+  InsertUserProfile,
+  InsertMoodLog,
+  InsertDailyHabit,
+  InsertFeelingsNote,
+  InsertPlan,
+  InsertPlanItem
+};
 
 export const errorSchemas = {
   validation: z.object({

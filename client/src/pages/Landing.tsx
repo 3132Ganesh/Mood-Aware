@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -15,18 +15,20 @@ import { Loader2 } from "lucide-react";
 
 // Schema for login form (subset of insertUserSchema)
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"), // schema says username but auth uses email... wait schema changed to email
-  // Actually schema has `email`, `password`, `name`. Let's assume login uses email.
-  // Wait, backend route /api/login expects { username, password } but users table has email.
-  // The provided code snippet in `shared/routes.ts` says `username` in input but user table has `email`. 
-  // I will follow the `shared/routes.ts` contract exactly: { username, password }.
+  username: z.string().min(1, "Email is required"),
   password: z.string().min(1, "Password is required"),
 });
 
 export default function Landing() {
   const [activeTab, setActiveTab] = useState("login");
-  const { login, register, isLoggingIn, isRegistering, loginError, registerError } = useAuth();
+  const { user, login, register, isLoggingIn, isRegistering, loginError, registerError } = useAuth();
   const [_, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      setLocation("/dashboard");
+    }
+  }, [user, setLocation]);
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),

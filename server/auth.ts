@@ -29,14 +29,22 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  const isProd = app.get("env") === "production";
+
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "r3pl1t_s3cr3t_k3y",
+    secret: process.env.SESSION_SECRET || "mood_aware_default_dev_secret_change_in_production",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      httpOnly: true, // Prevents XSS cookie theft
+      secure: isProd, // Requires HTTPS in production
+      sameSite: "lax", // Protects against Cross-Site Request Forgery (CSRF)
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    }
   };
 
-  if (app.get("env") === "production") {
+  if (isProd) {
     app.set("trust proxy", 1);
   }
 
@@ -47,9 +55,10 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        const normalizedUsername = username.trim().toLowerCase();
+        const user = await storage.getUserByUsername(normalizedUsername);
         if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
+          return done(null, false, { message: "Invalid email or password" });
         } else {
           return done(null, user);
         }
@@ -69,25 +78,35 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Helper to strip sensitive password hash before sending to client
+  const sanitizeUser = (user: SelectUser) => {
+    const { password: _, ...safeUser } = user;
+    return safeUser;
+  };
+
   app.post("/api/register", async (req, res, next) => {
     try {
       const { email, password, name } = req.body;
-      
-      const existingUser = await storage.getUserByUsername(email);
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const existingUser = await storage.getUserByUsername(normalizedEmail);
       if (existingUser) {
         return res.status(400).json({ message: "Email already exists" });
       }
 
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
-        name: name || email.split('@')[0],
+        name: name?.trim() || normalizedEmail.split('@')[0],
       });
 
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(user);
+        res.status(201).json(sanitizeUser(user));
       });
     } catch (error) {
       next(error);
@@ -95,19 +114,22 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+    res.status(200).json(sanitizeUser(req.user as SelectUser));
   });
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
-      res.sendStatus(200);
+      req.session.destroy((destroyErr) => {
+        res.clearCookie("connect.sid");
+        res.sendStatus(200);
+      });
     });
   });
 
   app.get("/api/user", (req, res) => {
-    if (req.isAuthenticated()) {
-      res.json(req.user);
+    if (req.isAuthenticated() && req.user) {
+      res.json(sanitizeUser(req.user as SelectUser));
     } else {
       res.status(401).json(null);
     }

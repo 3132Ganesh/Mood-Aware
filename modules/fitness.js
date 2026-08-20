@@ -36,7 +36,7 @@ function analyzeFitness(data) {
   return insights;
 }
 
-module.exports = {
+export {
   fetchFitnessData,
   analyzeFitness,
 };

@@ -106,3 +106,13 @@ export type DailyHabit = typeof dailyHabits.$inferSelect;
 export type FeelingsNote = typeof feelingsNotes.$inferSelect;
 
 export type PlanWithItems = Plan & { items: (PlanItem & { task: Task })[] };
+
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type InsertMoodLog = z.infer<typeof insertMoodLogSchema>;
+export type InsertPlan = z.infer<typeof insertPlanSchema>;
+export type InsertPlanItem = z.infer<typeof insertPlanItemSchema>;
+export type InsertDailyHabit = z.infer<typeof insertDailyHabitSchema>;
+export type InsertFeelingsNote = z.infer<typeof insertFeelingsNoteSchema>;
+
+export * from "./models/chat";
