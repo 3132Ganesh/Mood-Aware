@@ -85,6 +85,16 @@ export const feelingsNotes = pgTable("feelings_notes", {
   sentimentScore: integer("sentiment_score"),
 });
 
+export const timeCapsules = pgTable("time_capsules", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  message: text("message").notNull(),
+  moodScore: integer("mood_score").notNull(), // Mood score when written (e.g. 5)
+  isDelivered: boolean("is_delivered").default(false),
+  deliveredAt: timestamp("delivered_at"),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, userId: true });
@@ -94,6 +104,7 @@ export const insertPlanSchema = createInsertSchema(plans).omit({ id: true, userI
 export const insertPlanItemSchema = createInsertSchema(planItems).omit({ id: true });
 export const insertDailyHabitSchema = createInsertSchema(dailyHabits).omit({ id: true, userId: true });
 export const insertFeelingsNoteSchema = createInsertSchema(feelingsNotes).omit({ id: true, userId: true, timestamp: true });
+export const insertTimeCapsuleSchema = createInsertSchema(timeCapsules).omit({ id: true, userId: true, createdAt: true, isDelivered: true, deliveredAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -105,6 +116,7 @@ export type Plan = typeof plans.$inferSelect;
 export type PlanItem = typeof planItems.$inferSelect;
 export type DailyHabit = typeof dailyHabits.$inferSelect;
 export type FeelingsNote = typeof feelingsNotes.$inferSelect;
+export type TimeCapsule = typeof timeCapsules.$inferSelect;
 
 export type PlanWithItems = Plan & { items: (PlanItem & { task: Task })[] };
 
@@ -115,5 +127,6 @@ export type InsertPlan = z.infer<typeof insertPlanSchema>;
 export type InsertPlanItem = z.infer<typeof insertPlanItemSchema>;
 export type InsertDailyHabit = z.infer<typeof insertDailyHabitSchema>;
 export type InsertFeelingsNote = z.infer<typeof insertFeelingsNoteSchema>;
+export type InsertTimeCapsule = z.infer<typeof insertTimeCapsuleSchema>;
 
 export * from "./models/chat";

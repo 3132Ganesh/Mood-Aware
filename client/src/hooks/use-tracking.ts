@@ -108,3 +108,67 @@ export function useFeelings() {
     isCreating: createNote.isPending
   };
 }
+
+export function useCapsules() {
+  const queryClient = useQueryClient();
+
+  const capsules = useQuery({
+    queryKey: [api.capsules.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.capsules.list.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch time capsules");
+      return api.capsules.list.responses[200].parse(await res.json());
+    },
+  });
+
+  const undelivered = useQuery({
+    queryKey: [api.capsules.undelivered.path],
+    queryFn: async () => {
+      const res = await fetch(api.capsules.undelivered.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch undelivered capsule");
+      return api.capsules.undelivered.responses[200].parse(await res.json());
+    },
+  });
+
+  const createCapsule = useMutation({
+    mutationFn: async (data: { message: string; moodScore: number }) => {
+      const res = await fetch(api.capsules.create.path, {
+        method: api.capsules.create.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to create time capsule");
+      return api.capsules.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.capsules.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.capsules.undelivered.path] });
+    },
+  });
+
+  const markDelivered = useMutation({
+    mutationFn: async (id: number) => {
+      const path = api.capsules.markDelivered.path.replace(":id", String(id));
+      const res = await fetch(path, {
+        method: api.capsules.markDelivered.method,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to mark capsule delivered");
+      return api.capsules.markDelivered.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.capsules.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.capsules.undelivered.path] });
+    },
+  });
+
+  return {
+    capsules: capsules.data,
+    undeliveredCapsule: undelivered.data,
+    createCapsule: createCapsule.mutate,
+    isCreating: createCapsule.isPending,
+    markDelivered: markDelivered.mutate,
+  };
+}
+

@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useMood, useHabits } from "@/hooks/use-tracking";
-import { useLocation } from "wouter";
-import { Loader2, Smile, Frown, Meh, Sparkles, Zap, Heart, CheckCircle2 } from "lucide-react";
+import { useMood, useHabits, useCapsules } from "@/hooks/use-tracking";
+import { useLocation, Link } from "wouter";
+import { Loader2, Smile, Frown, Meh, Sparkles, Zap, Heart, CheckCircle2, Wind, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ const MOOD_OPTIONS = [
 export default function Checkin() {
   const { logMood, isLogging } = useMood();
   const { logHabit } = useHabits();
+  const { createCapsule } = useCapsules();
   const [_, setLocation] = useLocation();
 
   const [moodScore, setMoodScore] = useState<number>(4);
@@ -36,6 +38,10 @@ export default function Checkin() {
   const [habitRoutine, setHabitRoutine] = useState(true);
   const [habitPhysical, setHabitPhysical] = useState(true);
   const [screenTime, setScreenTime] = useState<number[]>([4]);
+
+  // Future self time capsule
+  const [capsuleMessage, setCapsuleMessage] = useState("");
+  const [saveCapsule, setSaveCapsule] = useState(false);
 
   const selectedMood = MOOD_OPTIONS.find(m => m.value === moodScore) || MOOD_OPTIONS[3];
 
@@ -58,7 +64,15 @@ export default function Checkin() {
         screenTimeHours: screenTime[0]
       });
 
-      toast({ title: "Check-in Complete! ✨", description: "Your mood and habits have been saved." });
+      // Save time capsule if written
+      if (saveCapsule && capsuleMessage.trim()) {
+        createCapsule({
+          message: capsuleMessage.trim(),
+          moodScore: moodScore,
+        });
+      }
+
+      toast({ title: "Check-in Complete! ✨", description: "Your mood, habits, and reflections have been recorded." });
       setLocation("/dashboard");
     } catch (e) {
       toast({ title: "Error", description: "Failed to save check-in.", variant: "destructive" });
@@ -79,7 +93,7 @@ export default function Checkin() {
 
         <div className="space-y-5">
           {/* Mood Selector Card */}
-          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm overflow-hidden">
+          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm overflow-hidden rounded-3xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">How are you feeling right now?</CardTitle>
               <CardDescription>Tap an emoji that best matches your emotional state</CardDescription>
@@ -100,54 +114,90 @@ export default function Checkin() {
                           : "border-border/60 bg-muted/20 hover:bg-muted/40 hover:border-border"
                       )}
                     >
-                      <span className="text-2xl sm:text-3xl filter drop-shadow-sm">{option.emoji}</span>
-                      <span className="text-[11px] font-bold mt-1.5">{option.label}</span>
+                      <span className="text-2xl sm:text-3xl filter drop-shadow-sm select-none">{option.emoji}</span>
+                      <span className="text-xs font-semibold mt-1.5">{option.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Stress and Energy Quick Sliders */}
-              <div className="pt-4 border-t border-border/50 space-y-5">
+              {/* Stress, Energy, Sleep Sliders */}
+              <div className="space-y-4 pt-3 border-t border-border/40">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm">
-                    <Label className="font-medium text-foreground">Stress Level</Label>
-                    <span className={cn(
-                      "font-bold px-2 py-0.5 rounded-lg text-xs",
-                      stressScore[0] <= 2 ? "bg-emerald-500/10 text-emerald-600" :
-                      stressScore[0] <= 3 ? "bg-amber-500/10 text-amber-600" : "bg-rose-500/10 text-rose-600"
-                    )}>
-                      {stressScore[0] === 1 ? "Very Low" : stressScore[0] === 2 ? "Mild" : stressScore[0] === 3 ? "Moderate" : stressScore[0] === 4 ? "High" : "Extreme"} ({stressScore[0]}/5)
-                    </span>
+                    <Label className="text-xs font-semibold">Stress Level (1 = Calm, 5 = High Stress)</Label>
+                    <span className="font-bold text-xs">{stressScore[0]} / 5</span>
                   </div>
-                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-2" />
+                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-1" />
+                </div>
+
+                {/* High Stress Alert & Breathing Prompt */}
+                {stressScore[0] >= 4 && (
+                  <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 animate-in fade-in">
+                    <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 font-medium">
+                      <Wind className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                      <span>Stress is elevated. Take a quick 60s breathing break.</span>
+                    </div>
+                    <Link href="/breathing">
+                      <Button size="sm" variant="outline" className="rounded-xl h-7 text-xs border-amber-500/40 text-amber-700 dark:text-amber-300">
+                        Breathe Now
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <Label className="text-xs font-semibold">Energy Level (1 = Exhausted, 5 = Energized)</Label>
+                    <span className="font-bold text-xs">{energyScore[0]} / 5</span>
+                  </div>
+                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-1" />
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm">
-                    <Label className="font-medium text-foreground">Energy Level</Label>
-                    <span className="font-bold text-xs px-2 py-0.5 rounded-lg bg-yellow-500/10 text-yellow-600">
-                      {energyScore[0]}/5
-                    </span>
+                    <Label className="text-xs font-semibold">Hours of Sleep</Label>
+                    <span className="font-bold text-xs">{sleepScore[0]} hours</span>
                   </div>
-                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-2" />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <Label className="font-medium text-foreground">Sleep Duration (Last Night)</Label>
-                    <span className="font-bold text-xs px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-600">
-                      {sleepScore[0]} hours
-                    </span>
-                  </div>
-                  <Slider value={sleepScore} onValueChange={setSleepScore} min={2} max={12} step={0.5} className="py-2" />
+                  <Slider value={sleepScore} onValueChange={setSleepScore} min={2} max={12} step={1} className="py-1" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Habits & Screen Time Card */}
-          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm">
+          {/* Future Self Time Capsule Card (Offered on High Mood Days 4 or 5) */}
+          {moodScore >= 4 && (
+            <Card className="border border-purple-200 dark:border-purple-900 bg-purple-500/5 backdrop-blur-sm rounded-3xl shadow-sm overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 text-[11px] font-bold">
+                    <Mail className="w-3.5 h-3.5" /> Future Self Time Capsule
+                  </div>
+                  <Checkbox 
+                    checked={saveCapsule} 
+                    onCheckedChange={(c) => setSaveCapsule(!!c)} 
+                  />
+                </div>
+                <CardTitle className="text-sm font-bold mt-1">Send a message to your future self?</CardTitle>
+                <CardDescription className="text-xs">
+                  You're in high spirits! Write a 1-sentence reminder. We'll automatically deliver it when you have a low-energy day.
+                </CardDescription>
+              </CardHeader>
+              {saveCapsule && (
+                <CardContent className="pt-1">
+                  <Textarea
+                    placeholder="e.g. Remember you've conquered tough challenges before! Take a break, drink water, you've got this."
+                    className="text-xs rounded-2xl min-h-[70px] resize-none"
+                    value={capsuleMessage}
+                    onChange={(e) => setCapsuleMessage(e.target.value)}
+                  />
+                </CardContent>
+              )}
+            </Card>
+          )}
+
+          {/* Daily Habits & Routine Card */}
+          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Habits & Routine</CardTitle>
             </CardHeader>
@@ -155,7 +205,7 @@ export default function Checkin() {
               <div 
                 onClick={() => setHabitRoutine(!habitRoutine)}
                 className={cn(
-                  "flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer",
+                  "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
                   habitRoutine ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
                 )}
               >
@@ -173,7 +223,7 @@ export default function Checkin() {
               <div 
                 onClick={() => setHabitPhysical(!habitPhysical)}
                 className={cn(
-                  "flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer",
+                  "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
                   habitPhysical ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
                 )}
               >
@@ -198,15 +248,21 @@ export default function Checkin() {
             </CardContent>
           </Card>
 
-          {/* Quick Journal Notes */}
-          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Quick Note (Optional)</CardTitle>
+          {/* Quick Journal Notes with Voice Dictation */}
+          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Quick Note (Optional)</CardTitle>
+                <CardDescription>Type or speak your thoughts</CardDescription>
+              </div>
+              <VoiceRecorder 
+                onTranscript={(spokenText) => setNotes((prev) => prev ? `${prev} ${spokenText}` : spokenText)} 
+              />
             </CardHeader>
             <CardContent>
               <Textarea 
-                placeholder="What made you smile or stressed today?" 
-                className="min-h-[90px] resize-none text-sm rounded-xl"
+                placeholder="What made you smile or stressed today? (Or tap Voice Record to speak)" 
+                className="min-h-[90px] resize-none text-sm rounded-2xl leading-relaxed"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -218,7 +274,7 @@ export default function Checkin() {
             className="w-full btn-primary h-12 text-base font-semibold rounded-2xl shadow-lg shadow-primary/25"
             disabled={isLogging}
           >
-            {isLogging ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Save Check-in"}
+            {isLogging ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Save Check-in 🌿"}
           </Button>
         </div>
       </main>

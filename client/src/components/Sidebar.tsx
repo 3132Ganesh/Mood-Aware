@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, LogOut, User as UserIcon } from "lucide-react";
+import { LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, Wind, LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ export function Sidebar() {
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
     { icon: Calendar, label: "My Plan", href: "/planner" },
     { icon: Heart, label: "Daily Check-in", href: "/checkin" },
+    { icon: Wind, label: "Breathwork", href: "/breathing" },
     { icon: BookHeart, label: "Feelings Space", href: "/feelings" },
     { icon: BarChart2, label: "Analytics", href: "/analytics" },
   ];

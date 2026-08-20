@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
 import { generatePlanWithAI, analyzeSentiment } from "./openai_helper";
-import { insertMoodLogSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema } from "@shared/schema";
+import { insertMoodLogSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema, insertTimeCapsuleSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -199,6 +199,46 @@ export async function registerRoutes(
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });
       }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // === Capsules Routes ===
+  app.get(api.capsules.list.path, requireAuth, async (req, res) => {
+    const capsules = await storage.getTimeCapsules(req.user!.id);
+    res.json(capsules);
+  });
+
+  app.post(api.capsules.create.path, requireAuth, async (req, res) => {
+    try {
+      const input = insertTimeCapsuleSchema.parse(req.body);
+      const capsule = await storage.createTimeCapsule({
+        ...input,
+        userId: req.user!.id,
+      });
+      res.status(201).json(capsule);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get(api.capsules.undelivered.path, requireAuth, async (req, res) => {
+    const capsule = await storage.getUndeliveredCapsule(req.user!.id);
+    res.json(capsule || null);
+  });
+
+  app.patch(api.capsules.markDelivered.path, requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.markCapsuleDelivered(id);
+      if (!updated) {
+        return res.status(404).json({ message: "Capsule not found" });
+      }
+      res.json(updated);
+    } catch (err) {
       res.status(500).json({ message: "Internal server error" });
     }
   });

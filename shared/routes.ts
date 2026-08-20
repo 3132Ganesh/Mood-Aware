@@ -8,11 +8,13 @@ import {
   insertPlanItemSchema, planItems, 
   insertDailyHabitSchema, dailyHabits, 
   insertFeelingsNoteSchema, feelingsNotes,
+  insertTimeCapsuleSchema, timeCapsules,
   type InsertUser,
   type InsertUserProfile,
   type InsertMoodLog,
   type InsertDailyHabit,
   type InsertFeelingsNote,
+  type InsertTimeCapsule,
   type InsertPlan,
   type InsertPlanItem
 } from './schema';
@@ -24,6 +26,7 @@ export type {
   InsertMoodLog,
   InsertDailyHabit,
   InsertFeelingsNote,
+  InsertTimeCapsule,
   InsertPlan,
   InsertPlanItem
 };
@@ -180,6 +183,37 @@ export const api = {
       input: insertFeelingsNoteSchema,
       responses: {
         201: z.custom<typeof feelingsNotes.$inferSelect>(),
+      },
+    },
+  },
+  capsules: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/capsules',
+      responses: {
+        200: z.array(z.custom<typeof timeCapsules.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/capsules',
+      input: insertTimeCapsuleSchema,
+      responses: {
+        201: z.custom<typeof timeCapsules.$inferSelect>(),
+      },
+    },
+    undelivered: {
+      method: 'GET' as const,
+      path: '/api/capsules/undelivered',
+      responses: {
+        200: z.custom<typeof timeCapsules.$inferSelect | null>(),
+      },
+    },
+    markDelivered: {
+      method: 'PATCH' as const,
+      path: '/api/capsules/:id/delivered',
+      responses: {
+        200: z.custom<typeof timeCapsules.$inferSelect>(),
       },
     },
   },

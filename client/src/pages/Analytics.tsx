@@ -6,6 +6,7 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, Activity, Monitor, Smile, Sparkles } from "lucide-react";
+import { PredictiveInsights } from "@/components/PredictiveInsights";
 
 export default function Analytics() {
   const { history: moodHistory, isLoading: moodLoading } = useMood();
@@ -103,6 +104,11 @@ export default function Analytics() {
               <p className="text-2xl font-bold text-foreground">{avgScreenTime} <span className="text-xs text-muted-foreground">hrs/day</span></p>
             </div>
           </Card>
+        </div>
+
+        {/* Predictive Insights Engine */}
+        <div className="mb-6">
+          <PredictiveInsights moods={moodHistory || []} habits={habitHistory || []} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -1,9 +1,9 @@
 import { 
   User, InsertUser, 
   UserProfile, InsertUserProfile, 
-  Task, MoodLog, Plan, PlanItem, DailyHabit, FeelingsNote,
-  InsertMoodLog, InsertDailyHabit, InsertFeelingsNote, InsertPlan, InsertPlanItem,
-  users, userProfiles, tasks, moodLogs, plans, planItems, dailyHabits, feelingsNotes,
+  Task, MoodLog, Plan, PlanItem, DailyHabit, FeelingsNote, TimeCapsule,
+  InsertMoodLog, InsertDailyHabit, InsertFeelingsNote, InsertPlan, InsertPlanItem, InsertTimeCapsule,
+  users, userProfiles, tasks, moodLogs, plans, planItems, dailyHabits, feelingsNotes, timeCapsules,
   PlanWithItems
 } from "@shared/schema";
 import { db, pool } from "./db";
@@ -61,6 +61,12 @@ export interface IStorage {
   createNote(note: InsertFeelingsNote & { userId: number; sentimentScore?: number | null; timestamp?: Date | null }): Promise<FeelingsNote>;
   getNotes(userId: number): Promise<FeelingsNote[]>;
   
+  // Time Capsules
+  createTimeCapsule(capsule: InsertTimeCapsule & { userId: number }): Promise<TimeCapsule>;
+  getTimeCapsules(userId: number): Promise<TimeCapsule[]>;
+  getUndeliveredCapsule(userId: number): Promise<TimeCapsule | undefined>;
+  markCapsuleDelivered(id: number): Promise<TimeCapsule | undefined>;
+  
   // Seeding
   seedTasks(): Promise<void>;
 }
@@ -75,6 +81,7 @@ export class MemStorage implements IStorage {
   private planItems: Map<number, PlanItem> = new Map();
   private dailyHabits: Map<number, DailyHabit> = new Map();
   private feelingsNotes: Map<number, FeelingsNote> = new Map();
+  private timeCapsules: Map<number, TimeCapsule> = new Map();
 
   private currentUserId = 1;
   private currentProfileId = 1;
@@ -84,6 +91,7 @@ export class MemStorage implements IStorage {
   private currentPlanItemId = 1;
   private currentHabitId = 1;
   private currentNoteId = 1;
+  private currentCapsuleId = 1;
 
   constructor() {
     this.sessionStore = new MemoryStore({
@@ -303,6 +311,44 @@ export class MemStorage implements IStorage {
       .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   }
 
+  async createTimeCapsule(capsule: InsertTimeCapsule & { userId: number }): Promise<TimeCapsule> {
+    const id = this.currentCapsuleId++;
+    const created: TimeCapsule = {
+      id,
+      userId: capsule.userId,
+      message: capsule.message,
+      moodScore: capsule.moodScore,
+      createdAt: new Date(),
+      isDelivered: false,
+      deliveredAt: null,
+    };
+    this.timeCapsules.set(id, created);
+    return created;
+  }
+
+  async getTimeCapsules(userId: number): Promise<TimeCapsule[]> {
+    return Array.from(this.timeCapsules.values())
+      .filter(c => c.userId === userId)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async getUndeliveredCapsule(userId: number): Promise<TimeCapsule | undefined> {
+    return Array.from(this.timeCapsules.values())
+      .find(c => c.userId === userId && !c.isDelivered);
+  }
+
+  async markCapsuleDelivered(id: number): Promise<TimeCapsule | undefined> {
+    const capsule = this.timeCapsules.get(id);
+    if (!capsule) return undefined;
+    const updated: TimeCapsule = {
+      ...capsule,
+      isDelivered: true,
+      deliveredAt: new Date(),
+    };
+    this.timeCapsules.set(id, updated);
+    return updated;
+  }
+
   async seedTasks(): Promise<void> {
     // Seeded in constructor
   }
@@ -457,6 +503,34 @@ export class DatabaseStorage implements IStorage {
       .from(feelingsNotes)
       .where(eq(feelingsNotes.userId, userId))
       .orderBy(desc(feelingsNotes.timestamp));
+  }
+
+  async createTimeCapsule(capsule: InsertTimeCapsule & { userId: number }): Promise<TimeCapsule> {
+    const [created] = await db.insert(timeCapsules).values(capsule as any).returning();
+    return created;
+  }
+
+  async getTimeCapsules(userId: number): Promise<TimeCapsule[]> {
+    return db.select()
+      .from(timeCapsules)
+      .where(eq(timeCapsules.userId, userId))
+      .orderBy(desc(timeCapsules.createdAt));
+  }
+
+  async getUndeliveredCapsule(userId: number): Promise<TimeCapsule | undefined> {
+    const [found] = await db.select()
+      .from(timeCapsules)
+      .where(and(eq(timeCapsules.userId, userId), eq(timeCapsules.isDelivered, false)))
+      .limit(1);
+    return found;
+  }
+
+  async markCapsuleDelivered(id: number): Promise<TimeCapsule | undefined> {
+    const [updated] = await db.update(timeCapsules)
+      .set({ isDelivered: true, deliveredAt: new Date() })
+      .where(eq(timeCapsules.id, id))
+      .returning();
+    return updated;
   }
 
   async seedTasks() {

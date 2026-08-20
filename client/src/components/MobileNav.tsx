@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, LogOut, User as UserIcon } from "lucide-react";
+import { LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, Wind, LogOut, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -52,6 +52,12 @@ export function MobileNav() {
               <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/breathing" className="flex items-center gap-2 px-2 py-2 rounded-xl text-sm cursor-pointer text-primary font-medium">
+                <Wind className="w-4 h-4 text-primary" />
+                Breathwork Sanctuary
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/onboarding" className="flex items-center gap-2 px-2 py-2 rounded-xl text-sm cursor-pointer">
                 <UserIcon className="w-4 h-4 text-muted-foreground" />

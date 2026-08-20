@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { useAuth, useProfile } from "@/hooks/use-auth";
 import { useCurrentPlan } from "@/hooks/use-tasks";
-import { useMood } from "@/hooks/use-tracking";
+import { useMood, useHabits, useCapsules } from "@/hooks/use-tracking";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
+import { MoodGarden } from "@/components/MoodGarden";
+import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle2, Circle, Sun, Music, Gamepad2, Brain, Dumbbell, Sparkles, Heart, Plus, BookHeart, TrendingUp } from "lucide-react";
+import { 
+  ArrowRight, CheckCircle2, Circle, Sun, Music, Gamepad2, Brain, 
+  Dumbbell, Sparkles, Heart, Plus, BookHeart, TrendingUp, Wind, Mail, X, Check
+} from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveContainer, LineChart, Line, XAxis, Tooltip, CartesianGrid } from "recharts";
@@ -23,6 +29,10 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const { plan, completeTask, isLoading: planLoading, generatePlan, isGenerating } = useCurrentPlan();
   const { history, isLoading: moodLoading } = useMood();
+  const { history: habitHistory } = useHabits();
+  const { undeliveredCapsule, markDelivered } = useCapsules();
+
+  const [dismissedCapsule, setDismissedCapsule] = useState(false);
 
   const today = format(new Date(), "yyyy-MM-dd");
   
@@ -36,6 +46,7 @@ export default function Dashboard() {
   const progressPercent = todaysTasks.length > 0 ? Math.round((completedTodayCount / todaysTasks.length) * 100) : 0;
 
   const quote = QUOTES[new Date().getDate() % QUOTES.length];
+  const totalLogs = history?.length || 0;
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -47,12 +58,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleDismissCapsule = (id: number) => {
+    markDelivered(id);
+    setDismissedCapsule(true);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-4 sm:p-6 pb-28 lg:pb-8 max-w-[1400px] mx-auto w-full">
-        {/* Header with greeting */}
-        <header className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 pb-28 lg:pb-8 max-w-[1400px] mx-auto w-full space-y-6">
+        {/* Header with greeting & quick actions */}
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
               <Sparkles className="w-3.5 h-3.5" /> Welcome Back
@@ -60,25 +76,60 @@ export default function Dashboard() {
             <h2 className="text-2xl sm:text-3xl font-display font-bold">
               Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}, {user?.name?.split(' ')[0] || "Friend"}
             </h2>
-            <p className="text-sm text-muted-foreground">Here is your daily wellness snapshot.</p>
+            <p className="text-sm text-muted-foreground">Here is your daily wellness sanctuary.</p>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/breathing">
+              <Button variant="outline" className="rounded-2xl text-xs sm:text-sm font-semibold h-11 flex items-center gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                <Wind className="w-4 h-4" /> Quick Calm
+              </Button>
+            </Link>
             <Link href="/checkin">
-              <Button className="btn-primary rounded-xl text-sm font-semibold shadow-md shadow-primary/20 flex items-center gap-2">
+              <Button className="btn-primary rounded-2xl text-xs sm:text-sm font-semibold h-11 shadow-md shadow-primary/25 flex items-center gap-2">
                 <Heart className="w-4 h-4" /> Daily Check-in
               </Button>
             </Link>
           </div>
         </header>
 
-        {/* Quick Summary Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        {/* Future Self Time Capsule Delivery Banner (Shows when a capsule is available) */}
+        {undeliveredCapsule && !dismissedCapsule && (
+          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-purple-500/15 via-pink-500/10 to-primary/15 border-2 border-purple-300 dark:border-purple-800 shadow-xl backdrop-blur-md relative animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">
+                    💌 Letter From Your Past Self ({undeliveredCapsule.moodScore}/5 Mood Day)
+                  </span>
+                  <p className="text-sm sm:text-base font-semibold text-foreground mt-0.5 italic leading-relaxed">
+                    "{undeliveredCapsule.message}"
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDismissCapsule(undeliveredCapsule.id)}
+                className="rounded-full h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Thank You <Check className="w-3.5 h-3.5 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Summary Metric Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <Link href="/checkin" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
             <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <Heart className="w-4 h-4" />
             </div>
-            <span className="text-xs text-muted-foreground font-medium">Latest Mood</span>
-            <p className="text-lg font-bold mt-0.5 text-foreground">
+            <span className="text-xs text-muted-foreground font-medium">Today's Mood</span>
+            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground truncate">
               {history && history.length > 0 ? `${history[0].moodScore}/5 (${history[0].moodLabel || "Logged"})` : "Not logged"}
             </p>
           </Link>
@@ -88,9 +139,17 @@ export default function Dashboard() {
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span className="text-xs text-muted-foreground font-medium">Today's Focus</span>
-            <p className="text-lg font-bold mt-0.5 text-foreground">
+            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground">
               {todaysTasks.length > 0 ? `${completedTodayCount}/${todaysTasks.length} Done` : "0 Tasks"}
             </p>
+          </Link>
+
+          <Link href="/breathing" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+              <Wind className="w-4 h-4" />
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">Breathwork</span>
+            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground">Sanctuary</p>
           </Link>
 
           <Link href="/feelings" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
@@ -98,23 +157,16 @@ export default function Dashboard() {
               <BookHeart className="w-4 h-4" />
             </div>
             <span className="text-xs text-muted-foreground font-medium">Feelings Space</span>
-            <p className="text-lg font-bold mt-0.5 text-foreground">Journal</p>
-          </Link>
-
-          <Link href="/analytics" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-            <span className="text-xs text-muted-foreground font-medium">Insights</span>
-            <p className="text-lg font-bold mt-0.5 text-foreground">Analytics</p>
+            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground">Journal</p>
           </Link>
         </div>
 
+        {/* Main Grid: Left column (Tasks + Predictive Insights + Trends), Right Column (MoodGarden + Quote + Profile) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Today's Focus Card */}
-            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm">
+            {/* Today's Focus Action Card */}
+            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm rounded-3xl">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <div>
                   <CardTitle className="text-lg sm:text-xl font-bold">Today's Wellness Activities</CardTitle>
@@ -190,13 +242,16 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
+            {/* Predictive Insights Component */}
+            <PredictiveInsights moods={history || []} habits={habitHistory || []} />
+
             {/* Mood Trends Mini Chart */}
-            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm">
+            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm rounded-3xl">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg sm:text-xl font-bold">Recent Mood Trend</CardTitle>
-                <CardDescription>Visualizing your past check-ins</CardDescription>
+                <CardDescription>Visualizing emotional changes over time</CardDescription>
               </CardHeader>
-              <CardContent className="h-56 sm:h-64 pt-2">
+              <CardContent className="h-52 sm:h-60 pt-2">
                 {moodLoading ? (
                   <Skeleton className="w-full h-full rounded-2xl" />
                 ) : history && history.length > 0 ? (
@@ -240,10 +295,16 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Right Sidebar Column */}
+          {/* Right Sidebar Column: MoodGarden + Quote + Profile */}
           <div className="space-y-6">
+            {/* Living Mood Garden Component */}
+            <MoodGarden 
+              totalCheckins={totalLogs} 
+              currentStreak={totalLogs > 0 ? Math.min(totalLogs, 7) : 0} 
+            />
+
             {/* Daily Quote Card */}
-            <Card className="bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground border-none shadow-xl rounded-2xl">
+            <Card className="bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground border-none shadow-xl rounded-3xl">
               <CardContent className="p-5 sm:p-6">
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-semibold mb-3">
                   ✨ Daily Inspiration
@@ -256,7 +317,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Profile Snapshot Card */}
-            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm">
+            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm rounded-3xl">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-bold">Wellness Profile</CardTitle>
               </CardHeader>
