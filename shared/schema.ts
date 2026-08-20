@@ -26,6 +26,7 @@ export const userProfiles = pgTable("user_profiles", {
   playsGames: boolean("plays_games"),
   gamePlatforms: text("game_platforms").array(),
   gameTypes: text("game_types").array(),
+  feedback: text("feedback"),
 });
 
 export const tasks = pgTable("tasks", {

@@ -143,6 +143,7 @@ export class MemStorage implements IStorage {
         playsGames: profile.playsGames ?? null,
         gamePlatforms: (profile.gamePlatforms as string[]) || null,
         gameTypes: (profile.gameTypes as string[]) || null,
+        feedback: profile.feedback || null,
       };
       this.userProfiles.set(id, created);
       return created;
