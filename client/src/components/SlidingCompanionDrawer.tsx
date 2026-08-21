@@ -12,6 +12,7 @@ import {
   X, Sparkles, Wind, Volume2, VolumeX, CloudRain, Waves, Trees, 
   Bell, Play, Pause, Zap, Check, ChevronLeft, ChevronRight, BookOpen, Heart
 } from "lucide-react";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { cn } from "@/lib/utils";
 
 export function SlidingCompanionDrawer() {
@@ -384,7 +385,10 @@ export function SlidingCompanionDrawer() {
                     <BookOpen className="w-4 h-4 text-purple-600" />
                     <span className="text-xs font-bold text-foreground">Quick Scratchpad</span>
                   </div>
-                  <span className="text-[9px] text-muted-foreground">Auto-saved</span>
+                  <VoiceRecorder 
+                    compact 
+                    onTranscript={(text) => handleScratchpadChange(scratchpad ? `${scratchpad} ${text}` : text)} 
+                  />
                 </div>
                 <Textarea
                   placeholder="Drop a quick thought, gratitude note, or reminder here..."
