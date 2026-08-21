@@ -66,9 +66,12 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex w-full">
+    <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row w-full">
       {/* Desktop Sidebar */}
       <Sidebar />
+
+      {/* Mobile Top App Bar & Navigation */}
+      <MobileNav />
 
       {/* Main Container */}
       <main className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full pb-32 lg:pb-12">
@@ -530,9 +533,6 @@ export default function Dashboard() {
           currentMoodScore={todaysMoodLog?.moodScore || 3}
         />
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileNav />
     </div>
   );
 }

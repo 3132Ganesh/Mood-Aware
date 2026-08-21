@@ -63,10 +63,14 @@ export default function Feelings() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row w-full">
+      {/* Desktop Sidebar */}
       <Sidebar />
 
-      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
+      {/* Mobile Top App Bar & Navigation */}
+      <MobileNav />
+
+      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full pb-32 lg:pb-12">
 
         {/* ========================================================================= */}
         {/* 1. LAPTOP SCREEN UI (CSS Grid 12-col panel rearrangement + Flexbox cards) */}
@@ -393,8 +397,6 @@ export default function Feelings() {
           </DialogContent>
         </Dialog>
       </main>
-
-      <MobileNav />
     </div>
   );
 }

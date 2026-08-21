@@ -152,8 +152,8 @@ export function SlidingCompanionDrawer() {
         whileHover={{ scale: 1.06, x: -4 }}
         whileTap={{ scale: 0.94 }}
         className={cn(
-          "fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-2 pl-3.5 pr-2 py-3 rounded-l-2xl shadow-2xl transition-all duration-300 border-y border-l",
-          isOpen ? "hidden" : "flex",
+          "fixed right-0 top-1/2 -translate-y-1/2 z-40 items-center gap-2 pl-3.5 pr-2 py-3 rounded-l-2xl shadow-2xl transition-all duration-300 border-y border-l",
+          isOpen ? "hidden" : "hidden lg:flex",
           activeSound 
             ? "bg-gradient-to-l from-primary to-accent text-white border-primary/40 shadow-primary/30 animate-pulse" 
             : "bg-card/95 backdrop-blur-md text-foreground border-border/80 hover:bg-card hover:border-primary/50"
