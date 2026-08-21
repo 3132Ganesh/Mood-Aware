@@ -9,10 +9,12 @@ import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { MoodSwingDialog } from "@/components/MoodSwingDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { 
   ArrowRight, CheckCircle2, Circle, Sun, Music, Gamepad2, Brain, 
-  Dumbbell, Sparkles, Heart, Plus, BookHeart, TrendingUp, Wind, Mail, X, Check, Zap
+  Dumbbell, Sparkles, Heart, Plus, BookHeart, TrendingUp, Wind, Mail, X, Check, Zap,
+  Laptop, Smartphone, SlidersHorizontal, Calendar as CalendarIcon, Flame, ChevronRight
 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,6 +38,7 @@ export default function Dashboard() {
 
   const [dismissedCapsule, setDismissedCapsule] = useState(false);
   const [swingDialogOpen, setSwingDialogOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"tasks" | "garden" | "insights">("tasks");
 
   const today = format(new Date(), "yyyy-MM-dd");
   const { swings: todaySwings } = useMoodSwings(today);
@@ -70,310 +73,462 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-background text-foreground flex">
+      {/* Desktop Sidebar */}
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-4 sm:p-6 pb-28 lg:pb-8 max-w-[1400px] mx-auto w-full space-y-6">
-        {/* Header with greeting & quick actions */}
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5" /> Welcome Back
+
+      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
+
+        {/* ========================================================================= */}
+        {/* 1. LAPTOP SCREEN UI (Visible on screens >= 1024px)                        */}
+        {/* ========================================================================= */}
+        <div className="hidden lg:block p-8 max-w-7xl w-full mx-auto space-y-8">
+          
+          {/* Laptop Header */}
+          <header className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
+                  <Laptop className="w-3 h-3" />
+                  Laptop Dashboard
+                </Badge>
+              </div>
+              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1">
+                Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}, {user?.name?.split(' ')[0] || "Friend"} 🌿
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Your daily wellness overview, AI predictive guidance, and personalized action items.
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-display font-bold">
-              Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 18 ? "Afternoon" : "Evening"}, {user?.name?.split(' ')[0] || "Friend"}
-            </h2>
-            <p className="text-sm text-muted-foreground">Here is your daily wellness sanctuary.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/breathing">
-              <Button variant="outline" className="rounded-2xl text-xs sm:text-sm font-semibold h-11 flex items-center gap-2 border-primary/30 text-primary hover:bg-primary/10">
-                <Wind className="w-4 h-4" /> Quick Calm
-              </Button>
-            </Link>
-            {hasCheckedInToday && (
-              <Button 
-                variant="outline" 
-                onClick={() => setSwingDialogOpen(true)}
-                className="rounded-2xl text-xs sm:text-sm font-semibold h-11 flex items-center gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20"
-              >
-                <Zap className="w-4 h-4 text-amber-500" /> Mood Shift
-              </Button>
-            )}
-            <Link href="/checkin">
-              {hasCheckedInToday ? (
-                <Button variant="outline" className="rounded-2xl text-xs sm:text-sm font-semibold h-11 flex items-center gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Checked In Today
+
+            <div className="flex items-center gap-3">
+              <Link href="/breathing">
+                <Button variant="outline" className="rounded-2xl text-xs font-semibold h-11 border-primary/30 text-primary hover:bg-primary/10 gap-2 px-4">
+                  <Wind className="w-4 h-4" /> Quick Calm
                 </Button>
-              ) : (
-                <Button className="btn-primary rounded-2xl text-xs sm:text-sm font-semibold h-11 shadow-md shadow-primary/25 flex items-center gap-2">
-                  <Heart className="w-4 h-4" /> Daily Check-in
+              </Link>
+              {hasCheckedInToday && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSwingDialogOpen(true)}
+                  className="rounded-2xl text-xs font-semibold h-11 flex items-center gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 px-4"
+                >
+                  <Zap className="w-4 h-4 text-amber-500" /> Log Mood Shift
                 </Button>
               )}
+              <Link href="/checkin">
+                {hasCheckedInToday ? (
+                  <Button variant="outline" className="rounded-2xl text-xs font-semibold h-11 flex items-center gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-4">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Checked In Today
+                  </Button>
+                ) : (
+                  <Button className="btn-primary rounded-2xl text-xs font-semibold h-11 shadow-lg shadow-primary/25 flex items-center gap-2 px-5">
+                    <Heart className="w-4 h-4" /> Complete Daily Check-in
+                  </Button>
+                )}
+              </Link>
+            </div>
+          </header>
+
+          {/* Time Capsule Banner (if available) */}
+          {undeliveredCapsule && !dismissedCapsule && (
+            <div className="p-5 rounded-3xl bg-gradient-to-r from-purple-500/15 via-pink-500/10 to-primary/15 border-2 border-purple-300 dark:border-purple-800 shadow-xl backdrop-blur-md relative animate-in fade-in duration-300">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-purple-500/20 text-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-purple-600">
+                      💌 Letter From Your Past Self ({undeliveredCapsule.moodScore}/5 Mood Day)
+                    </span>
+                    <p className="text-base font-semibold text-foreground mt-0.5 italic leading-relaxed">
+                      "{undeliveredCapsule.message}"
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDismissCapsule(undeliveredCapsule.id)}
+                  className="rounded-full h-8 px-3.5 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Thank You <Check className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Laptop 4 Metric Cards */}
+          <div className="grid grid-cols-4 gap-4">
+            <Link href="/checkin" className="p-4 rounded-3xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all hover:shadow-md active:scale-98 group">
+              <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform", hasCheckedInToday ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-primary/10 text-primary")}>
+                {hasCheckedInToday ? <CheckCircle2 className="w-5 h-5" /> : <Heart className="w-5 h-5" />}
+              </div>
+              <span className="text-xs text-muted-foreground font-semibold">Today's Mood Log</span>
+              <p className="text-lg font-bold mt-0.5 text-foreground truncate">
+                {hasCheckedInToday && todaysMoodLog
+                  ? `${todaysMoodLog.moodScore}/5 (${todaysMoodLog.moodLabel || "Logged"})`
+                  : "Pending Check-in"}
+              </p>
+            </Link>
+
+            <Link href="/planner" className="p-4 rounded-3xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all hover:shadow-md active:scale-98 group">
+              <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <span className="text-xs text-muted-foreground font-semibold">Today's Plan Focus</span>
+              <p className="text-lg font-bold mt-0.5 text-foreground">
+                {todaysTasks.length > 0 ? `${completedTodayCount}/${todaysTasks.length} Completed` : "Plan Complete"}
+              </p>
+            </Link>
+
+            <Link href="/breathing" className="p-4 rounded-3xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all hover:shadow-md active:scale-98 group">
+              <div className="w-9 h-9 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                <Wind className="w-5 h-5" />
+              </div>
+              <span className="text-xs text-muted-foreground font-semibold">Breathwork Sanctuary</span>
+              <p className="text-lg font-bold mt-0.5 text-foreground">Zen Breathing</p>
+            </Link>
+
+            <Link href="/feelings" className="p-4 rounded-3xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all hover:shadow-md active:scale-98 group">
+              <div className="w-9 h-9 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                <BookHeart className="w-5 h-5" />
+              </div>
+              <span className="text-xs text-muted-foreground font-semibold">Feelings Space</span>
+              <p className="text-lg font-bold mt-0.5 text-foreground">AI Sentiment Journal</p>
             </Link>
           </div>
-        </header>
 
-        {/* Future Self Time Capsule Delivery Banner (Shows when a capsule is available) */}
-        {undeliveredCapsule && !dismissedCapsule && (
-          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-purple-500/15 via-pink-500/10 to-primary/15 border-2 border-purple-300 dark:border-purple-800 shadow-xl backdrop-blur-md relative animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">
-                    💌 Letter From Your Past Self ({undeliveredCapsule.moodScore}/5 Mood Day)
-                  </span>
-                  <p className="text-sm sm:text-base font-semibold text-foreground mt-0.5 italic leading-relaxed">
-                    "{undeliveredCapsule.message}"
+          {/* Laptop 12-Column Grid */}
+          <div className="grid grid-cols-12 gap-8 items-start">
+            
+            {/* Left 8 Columns: Today's Action Plan + Predictive Insights + 7-Day Chart */}
+            <div className="col-span-8 space-y-6">
+              
+              {/* Today's Wellness Tasks Card */}
+              <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                  <div>
+                    <CardTitle className="text-xl font-bold">Today's Wellness Activities</CardTitle>
+                    <CardDescription className="text-xs">
+                      {todaysTasks.length > 0 ? `${completedTodayCount} of ${todaysTasks.length} tasks completed (${progressPercent}%)` : "Personalized daily action plan"}
+                    </CardDescription>
+                  </div>
+                  <Link href="/planner">
+                    <Button variant="ghost" size="sm" className="rounded-xl text-xs font-semibold text-primary hover:underline gap-1">
+                      Full 7-Day Plan <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  {planLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-16 w-full rounded-2xl" />
+                      <Skeleton className="h-16 w-full rounded-2xl" />
+                    </div>
+                  ) : todaysTasks.length > 0 ? (
+                    <div className="space-y-3">
+                      {todaysTasks.map((item) => (
+                        <div 
+                          key={item.id}
+                          onClick={() => completeTask({ 
+                            planId: item.planId, 
+                            taskId: item.id, 
+                            isCompleted: !item.isCompleted 
+                          })}
+                          className={cn(
+                            "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
+                            item.isCompleted 
+                              ? "bg-muted/40 border-transparent opacity-60" 
+                              : "bg-card border-border/80 hover:border-primary/50 hover:shadow-md active:scale-[0.99]"
+                          )}
+                        >
+                          <button type="button" className="text-primary focus:outline-none">
+                            {item.isCompleted ? (
+                              <CheckCircle2 className="w-6 h-6 fill-primary/20 text-primary" />
+                            ) : (
+                              <Circle className="w-6 h-6 text-muted-foreground hover:text-primary transition-colors" />
+                            )}
+                          </button>
+                          
+                          <div className="flex-1 min-w-0">
+                            <h4 className={cn("font-bold text-base truncate", item.isCompleted && "line-through text-muted-foreground")}>
+                              {item.task.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{item.task.description}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider",
+                              item.task.category === 'mental' && "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+                              item.task.category === 'physical' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+                              item.task.category === 'music' && "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",
+                              item.task.category === 'game' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+                            )}>
+                              {item.task.category}
+                            </span>
+                            <span className="text-xs text-muted-foreground font-semibold">
+                              {item.task.duration}m
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 space-y-3">
+                      <p className="text-sm font-semibold text-foreground">All caught up for today!</p>
+                      <p className="text-xs text-muted-foreground">You have finished your scheduled tasks or need to generate your weekly schedule.</p>
+                      <Button onClick={() => generatePlan()} disabled={isGenerating} className="btn-primary rounded-xl text-xs font-semibold">
+                        {isGenerating ? "Generating..." : "Generate Fresh Plan"}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Predictive Insights AI Component */}
+              <PredictiveInsights 
+                moods={history || []} 
+                habits={habitHistory || []} 
+              />
+
+            </div>
+
+            {/* Right 4 Columns (Sticky Sidebar Widgets) */}
+            <div className="col-span-4 sticky top-6 space-y-6">
+              
+              {/* Mood Garden Interactive Visualization */}
+              <MoodGarden totalCheckins={totalLogs} currentStreak={Math.min(totalLogs, 7)} />
+
+              {/* Daily Quote Card */}
+              <Card className="bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground border-none shadow-xl rounded-3xl">
+                <CardContent className="p-6">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-semibold mb-3">
+                    ✨ Daily Inspiration
+                  </div>
+                  <p className="text-sm font-medium opacity-95 italic leading-relaxed">
+                    "{quote.text}"
                   </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDismissCapsule(undeliveredCapsule.id)}
-                className="rounded-full h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
-              >
-                Thank You <Check className="w-3.5 h-3.5 ml-1" />
-              </Button>
+                  <p className="text-xs mt-3 opacity-80 font-semibold">— {quote.author}</p>
+                </CardContent>
+              </Card>
+
+              {/* Profile Snapshot & Quick Link Card */}
+              <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base font-bold">Wellness Preferences</CardTitle>
+                    <Link href="/profile" className="text-xs font-semibold text-primary hover:underline">
+                      Edit
+                    </Link>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-xl">
+                    <span className="text-muted-foreground font-medium">Sleep Schedule</span>
+                    <span className="font-bold text-foreground">{profile?.sleepTime || "22:30"} - {profile?.wakeTime || "07:00"}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-xl">
+                    <span className="text-muted-foreground font-medium">Activity Level</span>
+                    <span className="font-bold text-foreground capitalize">{profile?.physicalActivity || "Moderate"}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-xl">
+                    <span className="text-muted-foreground font-medium">Music Sanctuary</span>
+                    <span className="font-bold text-foreground capitalize">{profile?.musicApp || "Spotify"}</span>
+                  </div>
+                  <Link href="/profile">
+                    <Button variant="outline" className="w-full text-xs h-9 mt-1 rounded-xl font-semibold">
+                      Open Profile & Settings
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
             </div>
+
           </div>
-        )}
 
-        {/* Quick Summary Metric Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <Link href="/checkin" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
-            <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform", hasCheckedInToday ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-primary/10 text-primary")}>
-              {hasCheckedInToday ? <CheckCircle2 className="w-4 h-4" /> : <Heart className="w-4 h-4" />}
-            </div>
-            <span className="text-xs text-muted-foreground font-medium">Today's Mood</span>
-            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground truncate">
-              {hasCheckedInToday && todaysMoodLog
-                ? `${todaysMoodLog.moodScore}/5 (${todaysMoodLog.moodLabel || "Logged"})`
-                : "Not logged yet"}
-            </p>
-          </Link>
-
-          <Link href="/planner" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <span className="text-xs text-muted-foreground font-medium">Today's Focus</span>
-            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground">
-              {todaysTasks.length > 0 ? `${completedTodayCount}/${todaysTasks.length} Done` : "0 Tasks"}
-            </p>
-          </Link>
-
-          <Link href="/breathing" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-              <Wind className="w-4 h-4" />
-            </div>
-            <span className="text-xs text-muted-foreground font-medium">Breathwork</span>
-            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground">Sanctuary</p>
-          </Link>
-
-          <Link href="/feelings" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-              <BookHeart className="w-4 h-4" />
-            </div>
-            <span className="text-xs text-muted-foreground font-medium">Feelings Space</span>
-            <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground">Journal</p>
-          </Link>
         </div>
 
-        {/* Main Grid: Left column (Tasks + Predictive Insights + Trends), Right Column (MoodGarden + Quote + Profile) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Today's Focus Action Card */}
-            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm rounded-3xl">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <div>
-                  <CardTitle className="text-lg sm:text-xl font-bold">Today's Wellness Activities</CardTitle>
-                  <CardDescription>
-                    {todaysTasks.length > 0 ? `${completedTodayCount} of ${todaysTasks.length} tasks completed (${progressPercent}%)` : "Personalized daily action plan"}
-                  </CardDescription>
-                </div>
-                <Link href="/planner" className="text-xs sm:text-sm font-semibold text-primary hover:underline flex items-center gap-1">
-                  Full Week <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {planLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-16 w-full rounded-2xl" />
-                    <Skeleton className="h-16 w-full rounded-2xl" />
+
+        {/* ========================================================================= */}
+        {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
+        {/* ========================================================================= */}
+        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+          
+          {/* Mobile Header Banner */}
+          <div className="flex items-center justify-between pb-1">
+            <div>
+              <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
+                <Smartphone className="w-2.5 h-2.5" />
+                Mobile View
+              </Badge>
+              <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Hey, {user?.name?.split(' ')[0] || "Friend"}! 👋
+              </h1>
+            </div>
+
+            <Link href="/checkin">
+              <Button size="sm" className="btn-primary rounded-xl text-xs font-semibold h-8 px-3 shadow-sm gap-1.5">
+                <Heart className="w-3.5 h-3.5" />
+                Check In
+              </Button>
+            </Link>
+          </div>
+
+          {/* Mobile Action Cards Row */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <Link href="/checkin" className="p-3 rounded-2xl bg-card border border-border/70 shadow-sm active:scale-95 transition-all">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-foreground">Daily Mood</span>
+                {hasCheckedInToday ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Heart className="w-4 h-4 text-primary" />}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {hasCheckedInToday && todaysMoodLog ? `${todaysMoodLog.moodScore}/5 ${todaysMoodLog.moodLabel || ""}` : "Not logged today"}
+              </p>
+            </Link>
+
+            <button 
+              type="button"
+              onClick={() => setSwingDialogOpen(true)}
+              className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left shadow-sm active:scale-95 transition-all"
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-300">Mood Shift</span>
+                <Zap className="w-4 h-4 text-amber-500" />
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {todaySwings && todaySwings.length > 0 ? `${todaySwings.length} intraday shifts` : "Log quick change"}
+              </p>
+            </button>
+          </div>
+
+          {/* Mobile Segmented Filter Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+            <button
+              type="button"
+              onClick={() => setMobileTab("tasks")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "tasks" ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              🎯 Today's Tasks ({todaysTasks.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("garden")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "garden" ? "bg-emerald-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              🌿 Mood Garden
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("insights")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "insights" ? "bg-purple-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              ✨ AI Insights
+            </button>
+          </div>
+
+          {/* Mobile Tab Content */}
+          <div className="space-y-3">
+            {mobileTab === "tasks" && (
+              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">Action Tasks</h3>
+                    <p className="text-[11px] text-muted-foreground">{completedTodayCount} of {todaysTasks.length} done ({progressPercent}%)</p>
                   </div>
-                ) : todaysTasks.length > 0 ? (
-                  <div className="space-y-2.5">
+                  <Link href="/planner">
+                    <Button variant="ghost" size="sm" className="text-xs text-primary font-semibold h-7 px-2">
+                      Full Week →
+                    </Button>
+                  </Link>
+                </div>
+
+                {todaysTasks.length > 0 ? (
+                  <div className="space-y-2">
                     {todaysTasks.map((item) => (
-                      <div 
+                      <div
                         key={item.id}
                         onClick={() => completeTask({ 
                           planId: item.planId, 
                           taskId: item.id, 
                           isCompleted: !item.isCompleted 
                         })}
-                        className={`
-                          flex items-center gap-3.5 p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer
-                          ${item.isCompleted 
-                            ? "bg-muted/40 border-transparent opacity-60" 
-                            : "bg-card border-border/80 hover:border-primary/50 hover:shadow-md active:scale-[0.99]"
-                          }
-                        `}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-2xl border transition-all active:scale-98",
+                          item.isCompleted ? "bg-muted/30 border-transparent opacity-60" : "bg-card border-border/70"
+                        )}
                       >
-                        <button 
-                          type="button"
-                          className="text-primary focus:outline-none"
-                        >
-                          {item.isCompleted ? (
-                            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 fill-primary/20 text-primary" />
-                          ) : (
-                            <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground hover:text-primary transition-colors" />
-                          )}
+                        <button type="button" className="text-primary">
+                          {item.isCompleted ? <CheckCircle2 className="w-5 h-5 text-primary" /> : <Circle className="w-5 h-5 text-muted-foreground" />}
                         </button>
-                        
                         <div className="flex-1 min-w-0">
-                          <h4 className={`font-medium text-sm sm:text-base truncate ${item.isCompleted && "line-through text-muted-foreground"}`}>
+                          <p className={cn("text-xs font-bold truncate", item.isCompleted && "line-through text-muted-foreground")}>
                             {item.task.title}
-                          </h4>
-                          <p className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                            {getCategoryIcon(item.task.category)}
-                            <span className="capitalize">{item.task.category}</span>
-                            <span>•</span>
-                            <span>{item.task.duration} min</span>
                           </p>
+                          <p className="text-[10px] text-muted-foreground">{item.task.duration}m • {item.task.category}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-10 bg-muted/20 rounded-2xl border border-dashed border-border/80 p-4">
-                    <p className="text-sm text-muted-foreground mb-3">No active plan generated yet.</p>
-                    <Button 
-                      onClick={() => generatePlan()} 
-                      disabled={isGenerating}
-                      className="btn-primary rounded-xl text-xs sm:text-sm"
-                    >
-                      {isGenerating ? "Generating..." : "Generate AI Wellness Plan"}
-                    </Button>
+                  <div className="text-center py-6">
+                    <p className="text-xs text-muted-foreground">No tasks scheduled for today.</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </Card>
+            )}
 
-            {/* Predictive Insights Component */}
-            <PredictiveInsights moods={history || []} habits={habitHistory || []} />
+            {mobileTab === "garden" && (
+              <MoodGarden totalCheckins={totalLogs} currentStreak={Math.min(totalLogs, 7)} />
+            )}
 
-            {/* Mood Trends Mini Chart */}
-            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm rounded-3xl">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg sm:text-xl font-bold">Recent Mood Trend</CardTitle>
-                <CardDescription>Visualizing emotional changes over time</CardDescription>
-              </CardHeader>
-              <CardContent className="h-52 sm:h-60 pt-2">
-                {moodLoading ? (
-                  <Skeleton className="w-full h-full rounded-2xl" />
-                ) : history && history.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={history.slice(-7)}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(d) => format(new Date(d), 'EEE')}
-                        tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'var(--card)', 
-                          borderRadius: '12px', 
-                          border: '1px solid var(--border)',
-                          fontSize: '12px',
-                        }} 
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="moodScore" 
-                        name="Mood (1-5)"
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={3} 
-                        dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }} 
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm">
-                    <p>No check-in logs yet.</p>
-                    <Link href="/checkin" className="mt-2 text-primary font-medium hover:underline">
-                      Log your first check-in
-                    </Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {mobileTab === "insights" && (
+              <PredictiveInsights 
+                moods={history || []} 
+                habits={habitHistory || []} 
+              />
+            )}
           </div>
 
-          {/* Right Sidebar Column: MoodGarden + Quote + Profile */}
-          <div className="space-y-6">
-            {/* Living Mood Garden Component */}
-            <MoodGarden 
-              totalCheckins={totalLogs} 
-              currentStreak={totalLogs > 0 ? Math.min(totalLogs, 7) : 0} 
-            />
+          {/* Quick Breathwork Bar */}
+          <Link href="/breathing">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/15 via-primary/10 to-blue-500/15 border border-blue-500/30 flex items-center justify-between active:scale-98 transition-all">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-600 flex items-center justify-center">
+                  <Wind className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-foreground">Breathwork Sanctuary</p>
+                  <p className="text-[10px] text-muted-foreground">Tap for a 2-minute box breathing session</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </Link>
 
-            {/* Daily Quote Card */}
-            <Card className="bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground border-none shadow-xl rounded-3xl">
-              <CardContent className="p-5 sm:p-6">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-semibold mb-3">
-                  ✨ Daily Inspiration
-                </div>
-                <p className="text-sm sm:text-base font-medium opacity-95 italic leading-relaxed">
-                  "{quote.text}"
-                </p>
-                <p className="text-xs mt-3 opacity-80 font-semibold">— {quote.author}</p>
-              </CardContent>
-            </Card>
-
-            {/* Profile Snapshot Card */}
-            <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm rounded-3xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-bold">Wellness Profile</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl text-sm">
-                  <span className="text-muted-foreground">Sleep Goal</span>
-                  <span className="font-semibold">{profile?.sleepTime || "22:30"}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl text-sm">
-                  <span className="text-muted-foreground">Activity Level</span>
-                  <span className="font-semibold capitalize">{profile?.physicalActivity || "Moderate"}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl text-sm">
-                  <span className="text-muted-foreground">Music Therapy</span>
-                  <span className="font-semibold capitalize">{profile?.musicApp || "Active"}</span>
-                </div>
-                <Link href="/profile">
-                  <Button variant="outline" className="w-full text-xs h-9 mt-1 rounded-xl">
-                    View & Edit Preferences
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
-        {/* Mood Swing Shift Modal */}
+        {/* Mood Swing Modal */}
         <MoodSwingDialog 
           open={swingDialogOpen} 
           onOpenChange={setSwingDialogOpen}
           currentMoodScore={todaysMoodLog?.moodScore || 3}
         />
       </main>
+
+      {/* Mobile Bottom Navigation */}
       <MobileNav />
     </div>
   );

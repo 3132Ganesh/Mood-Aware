@@ -9,11 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useMood, useHabits, useCapsules, useMoodSwings } from "@/hooks/use-tracking";
 import { useLocation, Link } from "wouter";
 import { 
   Loader2, Sparkles, Zap, Heart, CheckCircle2, 
-  ArrowRight, BarChart3, Moon, Activity, Clock, Plus, TrendingUp, Compass
+  ArrowRight, BarChart3, Moon, Activity, Clock, Plus, TrendingUp, Compass,
+  Laptop, Smartphone
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -59,13 +61,12 @@ export default function Checkin() {
 
   const selectedMood = MOOD_OPTIONS.find(m => m.value === moodScore) || MOOD_OPTIONS[3];
 
-  // Calculate 24-hour reset countdown from check-in creation time or until midnight
+  // Calculate 24-hour reset countdown
   useEffect(() => {
     if (!alreadyCheckedInToday || !todaysMoodLog) return;
 
     const calculateTimeRemaining = () => {
       const now = new Date();
-      // Target: 24 hours after check-in, or next day midnight
       const checkinDate = todaysMoodLog.createdAt ? new Date(todaysMoodLog.createdAt) : new Date();
       const targetTime = new Date(checkinDate.getTime() + 24 * 60 * 60 * 1000);
       
@@ -99,368 +100,393 @@ export default function Checkin() {
         stressScore: stressScore[0],
         energyScore: energyScore[0],
         sleepScore: sleepScore[0],
-        notes: notes,
-        date: todayStr
+        notes: notes.trim() || undefined,
+        date: todayStr,
       });
-      
+
       await logHabit({
         date: todayStr,
         routineFollowed: habitRoutine,
         extraPhysicalActivity: habitPhysical,
-        screenTimeHours: screenTime[0]
+        screenTimeHours: screenTime[0],
       });
 
-      // Save time capsule if written
       if (saveCapsule && capsuleMessage.trim()) {
-        createCapsule({
+        await createCapsule({
           message: capsuleMessage.trim(),
           moodScore: moodScore,
         });
       }
 
-      toast({ title: "Check-in Complete! ✨", description: "Your baseline mood, habits, and reflections have been recorded." });
+      toast({ 
+        title: "Daily Check-in Complete ✨", 
+        description: "Your mood and habit baseline have been recorded!" 
+      });
       setLocation("/dashboard");
-    } catch (e: any) {
-      toast({ title: "Check-in Notice", description: e?.message || "Failed to save check-in.", variant: "destructive" });
+    } catch (error: any) {
+      toast({ 
+        title: "Submission Error", 
+        description: error.message || "Failed to save daily check-in.", 
+        variant: "destructive" 
+      });
     }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="flex-1 lg:ml-64 p-4 sm:p-6 pb-28 lg:pb-8 max-w-2xl mx-auto w-full">
-        <header className="mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-2">
-            <Heart className="w-3.5 h-3.5" /> Daily Reflection
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-display font-bold">Daily Check-in</h2>
-          <p className="text-sm text-muted-foreground">Take a moment to tune in to your mental and emotional state.</p>
-        </header>
 
-        {isMoodLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : alreadyCheckedInToday ? (
-          /* Already Checked In View with 24-Hour Reset Countdown & Mood Swing Logger */
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Primary Status Card */}
-            <Card className="border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-primary/10 shadow-xl rounded-3xl overflow-hidden backdrop-blur-sm">
-              <CardContent className="p-6 sm:p-8 text-center space-y-5">
-                <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/20">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-2">
-                    ✓ Daily Check-in Saved for {format(new Date(), "MMM d")}
-                  </div>
-                  <h3 className="text-2xl font-display font-bold text-foreground">
-                    You're All Checked In!
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                    Your daily baseline is securely recorded. Check-in unlocks automatically every 24 hours.
-                  </p>
-                </div>
+      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
 
-                {/* Live 24-Hour Reset Countdown Timer */}
-                {timeLeft && (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-card border border-border/80 shadow-sm text-xs font-medium text-muted-foreground">
-                    <Clock className="w-4 h-4 text-primary animate-pulse" />
-                    <span>Next fresh check-in resets in:</span>
-                    <span className="font-bold text-foreground font-mono">
-                      {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m {String(timeLeft.seconds).padStart(2, '0')}s
-                    </span>
-                  </div>
-                )}
+        {/* ========================================================================= */}
+        {/* 1. LAPTOP SCREEN UI (Visible on screens >= 1024px)                        */}
+        {/* ========================================================================= */}
+        <div className="hidden lg:block p-8 max-w-7xl w-full mx-auto space-y-8">
+          
+          <header className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
+                  <Laptop className="w-3 h-3" />
+                  Laptop Check-in Studio
+                </Badge>
+              </div>
+              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1">
+                Daily Reflection & Calibration
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Calibrate your mood, sleep, stress levels, and habits for {format(new Date(), "EEEE, MMMM do yyyy")}.
+              </p>
+            </div>
 
-                {/* Today's Recorded Highlights */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left pt-1">
-                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
-                    <span className="text-[11px] text-muted-foreground font-medium block">Baseline Mood</span>
-                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
-                      <span className="text-xl">
-                        {MOOD_OPTIONS.find(m => m.value === todaysMoodLog?.moodScore)?.emoji || "😊"}
-                      </span>
-                      {todaysMoodLog?.moodLabel || `${todaysMoodLog?.moodScore}/5`}
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
-                    <span className="text-[11px] text-muted-foreground font-medium block">Energy</span>
-                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
-                      <Zap className="w-4 h-4 text-amber-500" /> {todaysMoodLog?.energyScore ?? "—"}/5
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
-                    <span className="text-[11px] text-muted-foreground font-medium block">Sleep</span>
-                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
-                      <Moon className="w-4 h-4 text-blue-500" /> {todaysMoodLog?.sleepScore ?? "—"} hrs
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
-                    <span className="text-[11px] text-muted-foreground font-medium block">Routine</span>
-                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
-                      <Activity className="w-4 h-4 text-emerald-500" /> 
-                      {todaysHabitLog?.routineFollowed ? "Followed" : "Flexible"}
-                    </p>
-                  </div>
-                </div>
-
-                {todaysMoodLog?.notes && (
-                  <div className="p-4 rounded-2xl bg-card/60 border border-border/60 text-left">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                      Today's Reflection Note
-                    </span>
-                    <p className="text-sm text-foreground italic">"{todaysMoodLog.notes}"</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Quick Mood Swing Shift Card */}
-            <Card className="border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-card to-orange-500/10 rounded-3xl shadow-md backdrop-blur-sm overflow-hidden">
-              <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold">
-                    <Zap className="w-3.5 h-3.5" /> Experienced a Mood Swing?
-                  </div>
-                  <h4 className="text-base font-bold text-foreground">Track In-The-Moment Mood Shifts</h4>
-                  <p className="text-xs text-muted-foreground max-w-sm">
-                    Did something happen later today? Log quick emotional fluctuations without altering your daily baseline.
-                  </p>
-                </div>
-                <Button 
-                  onClick={() => setSwingDialogOpen(true)}
-                  className="rounded-2xl h-11 px-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-md shadow-amber-500/25 flex items-center gap-2 flex-shrink-0"
-                >
-                  <Plus className="w-4 h-4" /> Record Mood Swing
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Today's Recorded Mood Swings Timeline */}
-            {todaySwings && todaySwings.length > 0 && (
-              <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-base font-bold flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-primary" /> Today's Mood Swings & Shifts ({todaySwings.length})
-                      </CardTitle>
-                      <CardDescription className="text-xs">Recorded intraday emotional shifts</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2.5 pt-0">
-                  {todaySwings.map((swing) => {
-                    const moodObj = MOOD_OPTIONS.find(m => m.value === swing.newMoodScore) || MOOD_OPTIONS[2];
-                    return (
-                      <div key={swing.id} className="p-3.5 rounded-2xl bg-card border border-border/70 flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <div className="text-2xl filter drop-shadow-sm">{moodObj.emoji}</div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-foreground">{moodObj.label}</span>
-                              {swing.trigger && (
-                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                  {swing.trigger}
-                                </span>
-                              )}
-                              <span className="text-[11px] text-muted-foreground">Intensity: {swing.intensity}/5</span>
-                            </div>
-                            {swing.notes && (
-                              <p className="text-xs text-muted-foreground mt-1 italic leading-relaxed">
-                                "{swing.notes}"
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-[11px] font-mono text-muted-foreground whitespace-nowrap">
-                          {swing.timestamp ? format(new Date(swing.timestamp), "h:mm a") : "Today"}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Navigation Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <div className="flex items-center gap-3">
               <Link href="/dashboard">
-                <Button className="w-full sm:w-auto btn-primary rounded-2xl h-11 px-6 shadow-md shadow-primary/20">
-                  Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-              <Link href="/analytics">
-                <Button variant="outline" className="w-full sm:w-auto rounded-2xl h-11 px-6 border-border">
-                  <BarChart3 className="w-4 h-4 mr-2" /> View Analytics
+                <Button variant="outline" className="rounded-2xl text-xs font-semibold h-11 px-4">
+                  Back to Dashboard
                 </Button>
               </Link>
             </div>
+          </header>
+
+          {alreadyCheckedInToday ? (
+            /* Laptop: Already Checked In State */
+            <div className="grid grid-cols-12 gap-8 items-start">
+              <div className="col-span-7 space-y-6">
+                <Card className="border-none shadow-xl bg-card/85 backdrop-blur-md rounded-3xl p-6 border border-border/40 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-2xl">
+                      {todaysMoodLog?.moodScore ? MOOD_OPTIONS.find(m => m.value === todaysMoodLog.moodScore)?.emoji : "✨"}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Today's Daily Baseline Recorded</h3>
+                      <p className="text-xs text-muted-foreground">Completed today at {todaysMoodLog?.createdAt ? format(new Date(todaysMoodLog.createdAt), "h:mm a") : "earlier"}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-3 pt-2">
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
+                      <span className="text-xs text-muted-foreground">Mood Score</span>
+                      <p className="text-lg font-bold mt-1 text-primary">{todaysMoodLog?.moodScore}/5</p>
+                    </div>
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
+                      <span className="text-xs text-muted-foreground">Stress Level</span>
+                      <p className="text-lg font-bold mt-1 text-amber-500">{todaysMoodLog?.stressScore}/5</p>
+                    </div>
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
+                      <span className="text-xs text-muted-foreground">Sleep Score</span>
+                      <p className="text-lg font-bold mt-1 text-indigo-500">{todaysMoodLog?.sleepScore} hrs</p>
+                    </div>
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
+                      <span className="text-xs text-muted-foreground">Energy Index</span>
+                      <p className="text-lg font-bold mt-1 text-emerald-500">{todaysMoodLog?.energyScore}/5</p>
+                    </div>
+                  </div>
+
+                  {todaysMoodLog?.notes && (
+                    <div className="p-4 rounded-2xl bg-card border border-border/60">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Your Reflection Note</span>
+                      <p className="text-sm italic text-foreground leading-relaxed">"{todaysMoodLog.notes}"</p>
+                    </div>
+                  )}
+
+                  {timeLeft && (
+                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">Next daily reflection unlocks in:</span>
+                      <span className="font-bold font-mono text-primary">{timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</span>
+                    </div>
+                  )}
+                </Card>
+              </div>
+
+              {/* Right Column: Mood Shift Quick Trigger */}
+              <div className="col-span-5 space-y-6">
+                <Card className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-card rounded-3xl p-6 shadow-md space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-foreground">Track Intraday Mood Shift</h4>
+                      <p className="text-xs text-muted-foreground">Log spontaneous feelings without replacing your morning baseline</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => setSwingDialogOpen(true)}
+                    className="w-full h-11 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold shadow-md gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Record Mood Shift
+                  </Button>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            /* Laptop: Check-in Studio Split Form */
+            <div className="grid grid-cols-12 gap-8 items-start">
+              
+              {/* Left Column: Mood Selection & Vitality Sliders */}
+              <div className="col-span-6 space-y-6">
+                
+                {/* Mood Selection Card */}
+                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-4">
+                  <CardTitle className="text-lg font-bold">How are you feeling right now?</CardTitle>
+                  <div className="grid grid-cols-5 gap-3">
+                    {MOOD_OPTIONS.map((option) => {
+                      const isSelected = moodScore === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setMoodScore(option.value)}
+                          className={cn(
+                            "p-4 rounded-3xl border-2 transition-all flex flex-col items-center justify-center h-28 active:scale-95",
+                            isSelected 
+                              ? "border-primary bg-primary/10 shadow-lg scale-105" 
+                              : "border-border/60 bg-muted/20 hover:bg-muted/50"
+                          )}
+                        >
+                          <span className="text-3xl">{option.emoji}</span>
+                          <span className="text-xs font-bold mt-2 text-foreground">{option.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Card>
+
+                {/* Energy & Stress Sliders */}
+                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-5">
+                  <CardTitle className="text-lg font-bold">Energy & Stress Balance</CardTitle>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <Label className="font-semibold flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 text-amber-500" /> Energy Level
+                      </Label>
+                      <span className="font-bold text-foreground">{energyScore[0]}/5</span>
+                    </div>
+                    <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-2" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <Label className="font-semibold flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-rose-500" /> Stress Level
+                      </Label>
+                      <span className="font-bold text-foreground">{stressScore[0]}/5</span>
+                    </div>
+                    <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-2" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <Label className="font-semibold flex items-center gap-1.5">
+                        <Moon className="w-3.5 h-3.5 text-indigo-500" /> Sleep Duration
+                      </Label>
+                      <span className="font-bold text-foreground">{sleepScore[0]} Hours</span>
+                    </div>
+                    <Slider value={sleepScore} onValueChange={setSleepScore} min={3} max={12} step={1} className="py-2" />
+                  </div>
+                </Card>
+
+              </div>
+
+              {/* Right Column: Habits, Voice Notes & Submission */}
+              <div className="col-span-6 space-y-6">
+                
+                {/* Daily Reflection & Voice Note */}
+                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-bold">Reflection & Voice Journal</CardTitle>
+                    <VoiceRecorder onTranscript={(text: string) => setNotes(prev => prev ? `${prev} ${text}` : text)} />
+                  </div>
+
+                  <Textarea 
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Write a few thoughts about your mindset, what's on your mind, or what you're grateful for today..."
+                    className="min-h-[120px] rounded-2xl resize-none text-sm"
+                  />
+                </Card>
+
+                {/* Submit Action */}
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={isLogging}
+                  className="w-full btn-primary rounded-2xl h-12 text-sm font-bold shadow-lg shadow-primary/25 gap-2"
+                >
+                  {isLogging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  Complete Daily Reflection
+                </Button>
+
+              </div>
+
+            </div>
+          )}
+
+        </div>
+
+
+        {/* ========================================================================= */}
+        {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
+        {/* ========================================================================= */}
+        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+          
+          <div className="flex items-center justify-between pb-1">
+            <div>
+              <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
+                <Smartphone className="w-2.5 h-2.5" />
+                Mobile Check-in
+              </Badge>
+              <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Daily Check-in
+              </h1>
+            </div>
           </div>
-        ) : (
-          /* Check-in Form */
-          <div className="space-y-5">
-            {/* Mood Selector Card */}
-            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm overflow-hidden rounded-3xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">How are you feeling right now?</CardTitle>
-                <CardDescription>Tap an emoji that best matches your emotional state</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-5 gap-2">
-                  {MOOD_OPTIONS.map((option) => {
-                    const isSelected = moodScore === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setMoodScore(option.value)}
-                        className={cn(
-                          "flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-200 active:scale-90",
-                          isSelected 
-                            ? "bg-gradient-to-b border-primary shadow-lg shadow-primary/20 scale-105 " + option.color
-                            : "border-border/60 bg-muted/20 hover:bg-muted/40 hover:border-border"
-                        )}
-                      >
-                        <span className="text-2xl sm:text-3xl filter drop-shadow-sm select-none">{option.emoji}</span>
-                        <span className="text-xs font-semibold mt-1.5">{option.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Sliders Card: Stress, Energy, Sleep */}
-            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Energy & Vitality</CardTitle>
-                <CardDescription>Calibrate your physical and mental levels</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Zap className="w-3.5 h-3.5 text-amber-500" /> Energy Level
-                    </Label>
-                    <span className="font-bold text-xs">{energyScore[0]}/5 ({energyScore[0] <= 2 ? "Drained" : energyScore[0] <= 4 ? "Good" : "Vibrant"})</span>
-                  </div>
-                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-2" />
+          {alreadyCheckedInToday ? (
+            /* Mobile Checked in */
+            <Card className="border-none shadow-lg bg-card/90 rounded-3xl p-5 space-y-4 border border-border/40">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center text-2xl font-bold">
+                  ✓
                 </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-500" /> Stress Level
-                    </Label>
-                    <span className="font-bold text-xs">{stressScore[0]}/5 ({stressScore[0] <= 2 ? "Calm" : stressScore[0] <= 3 ? "Moderate" : "Elevated"})</span>
-                  </div>
-                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-2" />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Moon className="w-3.5 h-3.5 text-blue-500" /> Sleep Duration
-                    </Label>
-                    <span className="font-bold text-xs">{sleepScore[0]} hours</span>
-                  </div>
-                  <Slider value={sleepScore} onValueChange={setSleepScore} min={2} max={12} step={0.5} className="py-2" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Habits Check */}
-            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Habits & Routine</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div 
-                  onClick={() => setHabitRoutine(!habitRoutine)}
-                  className={cn(
-                    "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
-                    habitRoutine ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
-                  )}
-                >
-                  <Checkbox 
-                    id="routine" 
-                    checked={habitRoutine} 
-                    onCheckedChange={(c) => setHabitRoutine(!!c)} 
-                  />
-                  <div className="grid gap-0.5 leading-tight flex-1">
-                    <span className="font-medium text-sm">Followed daily routine</span>
-                    <span className="text-xs text-muted-foreground">Stuck to regular schedule & habits</span>
-                  </div>
-                </div>
-
-                <div 
-                  onClick={() => setHabitPhysical(!habitPhysical)}
-                  className={cn(
-                    "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
-                    habitPhysical ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
-                  )}
-                >
-                  <Checkbox 
-                    id="physical" 
-                    checked={habitPhysical} 
-                    onCheckedChange={(c) => setHabitPhysical(!!c)} 
-                  />
-                  <div className="grid gap-0.5 leading-tight flex-1">
-                    <span className="font-medium text-sm">Active movement</span>
-                    <span className="text-xs text-muted-foreground">Walking, workout, or stretching</span>
-                  </div>
-                </div>
-
-                <div className="pt-3 space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <Label className="text-xs text-muted-foreground">Screen Time</Label>
-                    <span className="font-bold text-xs">{screenTime[0]} hrs</span>
-                  </div>
-                  <Slider value={screenTime} onValueChange={setScreenTime} min={0} max={16} step={1} className="py-2" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Journal Notes with Voice Dictation */}
-            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
-              <CardHeader className="pb-3 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">Quick Note (Optional)</CardTitle>
-                  <CardDescription>Type or speak your thoughts</CardDescription>
+                  <h3 className="text-base font-bold text-foreground">Checked In for Today</h3>
+                  <p className="text-xs text-muted-foreground">{todaysMoodLog?.moodScore}/5 Mood ({todaysMoodLog?.moodLabel || "Logged"})</p>
                 </div>
-                <VoiceRecorder 
-                  onTranscript={(spokenText) => setNotes((prev) => prev ? `${prev} ${spokenText}` : spokenText)} 
-                />
-              </CardHeader>
-              <CardContent>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                <div className="p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-[10px] text-muted-foreground">Energy</span>
+                  <p className="text-sm font-bold">{todaysMoodLog?.energyScore}/5</p>
+                </div>
+                <div className="p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-[10px] text-muted-foreground">Stress</span>
+                  <p className="text-sm font-bold">{todaysMoodLog?.stressScore}/5</p>
+                </div>
+                <div className="p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-[10px] text-muted-foreground">Sleep</span>
+                  <p className="text-sm font-bold">{todaysMoodLog?.sleepScore}h</p>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => setSwingDialogOpen(true)}
+                className="w-full rounded-2xl h-10 bg-amber-500 text-white font-semibold text-xs shadow-sm gap-1.5"
+              >
+                <Zap className="w-4 h-4" /> Log Mood Shift
+              </Button>
+            </Card>
+          ) : (
+            /* Mobile Check-in Form */
+            <div className="space-y-4">
+              
+              {/* Mood Grid */}
+              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
+                <p className="text-xs font-bold text-foreground">Select Current Mood</p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {MOOD_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setMoodScore(option.value)}
+                      className={cn(
+                        "py-3 px-1 rounded-2xl border-2 transition-all flex flex-col items-center justify-center active:scale-95",
+                        moodScore === option.value
+                          ? "border-primary bg-primary/10 scale-105"
+                          : "border-border/60 bg-muted/20"
+                      )}
+                    >
+                      <span className="text-2xl">{option.emoji}</span>
+                      <span className="text-[10px] font-semibold mt-1 truncate">{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Sliders */}
+              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-4 border border-border/40">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">⚡ Energy</span>
+                    <span className="font-bold">{energyScore[0]}/5</span>
+                  </div>
+                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} />
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">🌊 Stress</span>
+                    <span className="font-bold">{stressScore[0]}/5</span>
+                  </div>
+                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} />
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">🌙 Sleep</span>
+                    <span className="font-bold">{sleepScore[0]} Hours</span>
+                  </div>
+                  <Slider value={sleepScore} onValueChange={setSleepScore} min={3} max={12} step={1} />
+                </div>
+              </Card>
+
+              {/* Voice & Notes */}
+              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold">Reflection Note</span>
+                  <VoiceRecorder onTranscript={(text: string) => setNotes(prev => prev ? `${prev} ${text}` : text)} />
+                </div>
                 <Textarea 
-                  placeholder="What made you smile or stressed today? (Or tap Voice Record to speak)" 
-                  className="min-h-[90px] resize-none text-sm rounded-2xl leading-relaxed"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Notes or voice thoughts..."
+                  className="min-h-[80px] rounded-xl text-xs resize-none"
                 />
-              </CardContent>
-            </Card>
+              </Card>
 
-            <Button 
-              onClick={handleSubmit} 
-              className="w-full btn-primary h-12 text-base font-semibold rounded-2xl shadow-lg shadow-primary/25"
-              disabled={isLogging || isHabitLogging || alreadyCheckedInToday}
-            >
-              {isLogging || isHabitLogging ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Save Check-in 🌿"}
-            </Button>
-          </div>
-        )}
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isLogging}
+                className="w-full btn-primary rounded-2xl h-11 text-xs font-bold shadow-md gap-2"
+              >
+                {isLogging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Submit Check-in
+              </Button>
 
-        {/* Mood Swing Dialog Modal */}
+            </div>
+          )}
+
+        </div>
+
+        {/* Mood Swing Modal */}
         <MoodSwingDialog 
           open={swingDialogOpen} 
           onOpenChange={setSwingDialogOpen}
-          currentMoodScore={todaysMoodLog?.moodScore || moodScore}
+          currentMoodScore={todaysMoodLog?.moodScore || 3}
         />
       </main>
+
       <MobileNav />
     </div>
   );
