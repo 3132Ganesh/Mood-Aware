@@ -6,8 +6,8 @@ import * as chatSchema from "@shared/models/chat";
 
 const { Pool } = pg;
 
-// Supabase PostgreSQL Production Connection String (with SSL)
-const SUPABASE_DEFAULT_URL = "postgresql://postgres:8hx8Xfwt5vBV7NMG@db.kwmebglwhypvmzzxskpm.supabase.co:5432/postgres";
+// Supabase PostgreSQL Production IPv4 Pooler Connection String (Session mode - port 5432)
+const SUPABASE_DEFAULT_URL = "postgresql://postgres.kwmebglwhypvmzzxskpm:hfaX0IFJpn704NgT@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
 
 const databaseUrl = process.env.DATABASE_URL || SUPABASE_DEFAULT_URL;
 
