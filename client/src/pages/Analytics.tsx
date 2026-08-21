@@ -69,72 +69,71 @@ export default function Analytics() {
       <Sidebar />
 
       <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
-
         {/* ========================================================================= */}
-        {/* 1. LAPTOP SCREEN UI (Visible on screens >= 1024px)                        */}
+        {/* 1. LAPTOP SCREEN UI (CSS Grid 2-col charts + 3-col stats + Flexbox cards) */}
         {/* ========================================================================= */}
-        <div className="hidden lg:block p-8 max-w-7xl w-full mx-auto space-y-8">
+        <div className="hidden lg:block w-full max-w-[min(100%,88rem)] mx-auto px-[3vw] py-[3vh] space-y-[3vh]">
           
-          <header className="flex items-center justify-between">
-            <div>
+          <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-[2vw] w-full min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="rounded-full bg-blue-500/10 text-blue-600 border-blue-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
                   <Laptop className="w-3 h-3" />
                   Laptop Analytics Center
                 </Badge>
               </div>
-              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1">
+              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1 truncate">
                 Wellness Analytics & Trends
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground truncate">
                 Detailed longitudinal patterns across your mood logs, energy levels, and lifestyle habits.
               </p>
             </div>
           </header>
 
-          {/* Laptop 3 Stat Highlight Cards */}
-          <div className="grid grid-cols-3 gap-6">
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+          {/* Laptop 3 Stat Highlight Cards - CSS Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-[1.5vw] w-full">
+            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                 <Smile className="w-7 h-7" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Average Mood Score</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate">Average Mood Score</p>
                 <p className="text-3xl font-bold font-display text-foreground mt-0.5">{avgMood} <span className="text-sm text-muted-foreground font-normal">/ 5.0</span></p>
               </div>
             </Card>
 
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
                 <Activity className="w-7 h-7" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Routine Consistency</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate">Routine Consistency</p>
                 <p className="text-3xl font-bold font-display text-foreground mt-0.5">{routineRate}%</p>
               </div>
             </Card>
 
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center flex-shrink-0">
                 <Monitor className="w-7 h-7" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Avg Daily Screen Time</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg Daily Screen Time</p>
                 <p className="text-3xl font-bold font-display text-foreground mt-0.5">{avgScreenTime} <span className="text-sm text-muted-foreground font-normal">hrs</span></p>
               </div>
             </Card>
           </div>
 
-          {/* Laptop 2-Column Charts */}
-          <div className="grid grid-cols-2 gap-8">
+          {/* Laptop 2-Column Charts - CSS Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[2vw] w-full items-start">
             
             {/* Chart 1: Mood & Energy Trend */}
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6">
+            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 w-full min-w-0">
               <CardHeader className="p-0 pb-6">
                 <CardTitle className="text-lg font-bold">Mood & Energy Trajectory</CardTitle>
                 <CardDescription className="text-xs">14-day history of self-reported baseline scores</CardDescription>
               </CardHeader>
-              <CardContent className="p-0 h-[280px]">
+              <CardContent className="p-0 h-[280px] w-full">
                 {moodData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={moodData}>
@@ -165,12 +164,12 @@ export default function Analytics() {
             </Card>
 
             {/* Chart 2: Daily Screen Time */}
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6">
+            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 w-full min-w-0">
               <CardHeader className="p-0 pb-6">
                 <CardTitle className="text-lg font-bold">Screen Time Habit Log</CardTitle>
                 <CardDescription className="text-xs">Daily hours spent on screen</CardDescription>
               </CardHeader>
-              <CardContent className="p-0 h-[280px]">
+              <CardContent className="p-0 h-[280px] w-full">
                 {habitData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={habitData}>
@@ -188,17 +187,16 @@ export default function Analytics() {
                 )}
               </CardContent>
             </Card>
-
           </div>
 
-          {/* Predictive Insights Component */}
-          <PredictiveInsights 
-            moods={moodHistory || []} 
-            habits={habitHistory || []} 
-          />
-
+          {/* Laptop Predictive AI Insights */}
+          <div className="w-full min-w-0">
+            <PredictiveInsights 
+              moods={moodHistory || []} 
+              habits={habitHistory || []} 
+            />
+          </div>
         </div>
-
 
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}

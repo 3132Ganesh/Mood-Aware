@@ -98,33 +98,33 @@ export function PredictiveInsights({ moods, habits }: PredictiveInsightsProps) {
   const insights = generateInsights();
 
   return (
-    <Card className="border-none shadow-md bg-card/80 backdrop-blur-sm rounded-3xl">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+    <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 w-full min-w-0">
+      <CardHeader className="pb-3 flex flex-col space-y-1.5 w-full min-w-0">
+        <div className="flex items-center justify-between gap-2 w-full min-w-0 flex-wrap">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold flex-shrink-0">
             <Sparkles className="w-3.5 h-3.5" /> Predictive Wellness Insights
           </div>
-          <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+          <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1 flex-shrink-0">
             <TrendingUp className="w-3 h-3 text-emerald-500" /> Live Correlation
           </span>
         </div>
-        <CardTitle className="text-lg font-bold mt-1">Smart Lifestyle Trends</CardTitle>
-        <CardDescription className="text-xs">Data-driven observations connecting your habits to how you feel.</CardDescription>
+        <CardTitle className="text-lg font-bold truncate">Smart Lifestyle Trends</CardTitle>
+        <CardDescription className="text-xs line-clamp-2">Data-driven observations connecting your habits to how you feel.</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 w-full min-w-0">
         {insights.map((item, idx) => (
           <div 
             key={idx}
-            className={`p-3.5 sm:p-4 rounded-2xl border bg-gradient-to-r ${item.color} flex items-start gap-3.5 transition-all`}
+            className={`p-3.5 sm:p-4 rounded-2xl border bg-gradient-to-r ${item.color} flex items-start gap-3.5 transition-all w-full min-w-0`}
           >
             <div className="p-2 rounded-xl bg-card shadow-sm flex-shrink-0 mt-0.5">
               <item.icon className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
                 <h4 className="text-xs sm:text-sm font-bold text-foreground truncate">{item.title}</h4>
-                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-card/80 border border-border/40 text-muted-foreground">
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-card/80 border border-border/40 text-muted-foreground flex-shrink-0">
                   {item.tag}
                 </span>
               </div>

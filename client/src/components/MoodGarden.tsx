@@ -44,23 +44,23 @@ export function MoodGarden({ totalCheckins, currentStreak }: MoodGardenProps) {
   };
 
   return (
-    <Card className="border-none shadow-lg bg-gradient-to-br from-emerald-500/10 via-card/80 to-teal-500/10 backdrop-blur-md rounded-3xl overflow-hidden relative">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-semibold">
+    <Card className="border-none shadow-lg bg-gradient-to-br from-emerald-500/10 via-card/80 to-teal-500/10 backdrop-blur-md rounded-3xl overflow-hidden relative w-full min-w-0">
+      <CardHeader className="pb-2 flex flex-col space-y-1.5 w-full min-w-0">
+        <div className="flex items-center justify-between gap-2 w-full min-w-0 flex-wrap">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-semibold flex-shrink-0">
             <Sparkles className="w-3.5 h-3.5" /> Living Mood Garden
           </div>
-          <span className="text-xs font-bold text-muted-foreground bg-card/80 px-2.5 py-1 rounded-full border border-border/50">
+          <span className="text-xs font-bold text-muted-foreground bg-card/80 px-2.5 py-1 rounded-full border border-border/50 flex-shrink-0">
             Level {currentStage.level} / 5
           </span>
         </div>
-        <CardTitle className="text-lg font-bold mt-1">{currentStage.name}</CardTitle>
-        <CardDescription className="text-xs">{currentStage.desc}</CardDescription>
+        <CardTitle className="text-lg font-bold truncate">{currentStage.name}</CardTitle>
+        <CardDescription className="text-xs line-clamp-2">{currentStage.desc}</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Plant Display Frame */}
-        <div className="relative flex flex-col items-center justify-center p-6 rounded-2xl bg-card/60 border border-border/50 overflow-hidden min-h-[140px]">
+      <CardContent className="space-y-4 w-full min-w-0">
+        {/* Plant Display Frame - Flexbox */}
+        <div className="relative flex flex-col items-center justify-center p-6 rounded-2xl bg-card/60 border border-border/50 overflow-hidden min-h-[140px] w-full min-w-0">
           {/* Animated visual effects */}
           {waterEffect && (
             <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center animate-pulse z-10">
@@ -83,7 +83,7 @@ export function MoodGarden({ totalCheckins, currentStreak }: MoodGardenProps) {
         </div>
 
         {/* Growth Progress Bar */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 w-full">
           <div className="flex justify-between text-xs font-medium text-muted-foreground">
             <span>Growth Progress</span>
             <span>{nextStage ? `${logsToNext} more check-ins to ${nextStage.emoji}` : "Max Level Reached! 🌟"}</span>
@@ -96,23 +96,23 @@ export function MoodGarden({ totalCheckins, currentStreak }: MoodGardenProps) {
           </div>
         </div>
 
-        {/* Quick Garden Interactions */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        {/* Quick Garden Interactions - CSS Grid */}
+        <div className="grid grid-cols-2 gap-2 pt-1 w-full">
           <Button 
             type="button" 
             variant="outline" 
             onClick={handleWater} 
-            className="rounded-xl text-xs h-9 flex items-center gap-1.5 border-blue-200 dark:border-blue-900 text-blue-600 hover:bg-blue-500/10 active:scale-95"
+            className="rounded-xl text-xs h-9 flex items-center justify-center gap-1.5 border-blue-200 dark:border-blue-900 text-blue-600 hover:bg-blue-500/10 active:scale-95 w-full min-w-0"
           >
-            <Droplets className="w-3.5 h-3.5" /> Water Garden
+            <Droplets className="w-3.5 h-3.5 flex-shrink-0" /> <span className="truncate">Water Garden</span>
           </Button>
           <Button 
             type="button" 
             variant="outline" 
             onClick={handleSun} 
-            className="rounded-xl text-xs h-9 flex items-center gap-1.5 border-amber-200 dark:border-amber-900 text-amber-600 hover:bg-amber-500/10 active:scale-95"
+            className="rounded-xl text-xs h-9 flex items-center justify-center gap-1.5 border-amber-200 dark:border-amber-900 text-amber-600 hover:bg-amber-500/10 active:scale-95 w-full min-w-0"
           >
-            <Sun className="w-3.5 h-3.5" /> Give Sun
+            <Sun className="w-3.5 h-3.5 flex-shrink-0" /> <span className="truncate">Give Sun</span>
           </Button>
         </div>
       </CardContent>

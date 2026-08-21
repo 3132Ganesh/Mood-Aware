@@ -139,27 +139,27 @@ export default function Checkin() {
       <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
 
         {/* ========================================================================= */}
-        {/* 1. LAPTOP SCREEN UI (Visible on screens >= 1024px)                        */}
+        {/* 1. LAPTOP SCREEN UI (CSS Grid 12-col panel rearrangement + Flexbox cards) */}
         {/* ========================================================================= */}
-        <div className="hidden lg:block p-8 max-w-7xl w-full mx-auto space-y-8">
+        <div className="hidden lg:block w-full max-w-[min(100%,88rem)] mx-auto px-[3vw] py-[3vh] space-y-[3vh]">
           
-          <header className="flex items-center justify-between">
-            <div>
+          <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-[2vw] w-full min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
                   <Laptop className="w-3 h-3" />
                   Laptop Check-in Studio
                 </Badge>
               </div>
-              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1">
+              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1 truncate">
                 Daily Reflection & Calibration
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground truncate">
                 Calibrate your mood, sleep, stress levels, and habits for {format(new Date(), "EEEE, MMMM do yyyy")}.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Link href="/dashboard">
                 <Button variant="outline" className="rounded-2xl text-xs font-semibold h-11 px-4">
                   Back to Dashboard
@@ -169,48 +169,48 @@ export default function Checkin() {
           </header>
 
           {alreadyCheckedInToday ? (
-            /* Laptop: Already Checked In State */
-            <div className="grid grid-cols-12 gap-8 items-start">
-              <div className="col-span-7 space-y-6">
-                <Card className="border-none shadow-xl bg-card/85 backdrop-blur-md rounded-3xl p-6 border border-border/40 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-2xl">
+            /* Laptop: Already Checked In State - CSS Grid */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-[2vw] w-full items-start">
+              <div className="lg:col-span-7 space-y-[2vh] w-full min-w-0">
+                <Card className="border-none shadow-xl bg-card/85 backdrop-blur-md rounded-3xl p-6 border border-border/40 space-y-4 w-full min-w-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-2xl flex-shrink-0">
                       {todaysMoodLog?.moodScore ? MOOD_OPTIONS.find(m => m.value === todaysMoodLog.moodScore)?.emoji : "✨"}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-foreground">Today's Daily Baseline Recorded</h3>
-                      <p className="text-xs text-muted-foreground">Completed today at {todaysMoodLog?.createdAt ? format(new Date(todaysMoodLog.createdAt), "h:mm a") : "earlier"}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xl font-bold text-foreground truncate">Today's Daily Baseline Recorded</h3>
+                      <p className="text-xs text-muted-foreground truncate">Completed today at {todaysMoodLog?.createdAt ? format(new Date(todaysMoodLog.createdAt), "h:mm a") : "earlier"}</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3 pt-2">
-                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
-                      <span className="text-xs text-muted-foreground">Mood Score</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 w-full">
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center min-w-0">
+                      <span className="text-xs text-muted-foreground truncate">Mood Score</span>
                       <p className="text-lg font-bold mt-1 text-primary">{todaysMoodLog?.moodScore}/5</p>
                     </div>
-                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
-                      <span className="text-xs text-muted-foreground">Stress Level</span>
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center min-w-0">
+                      <span className="text-xs text-muted-foreground truncate">Stress Level</span>
                       <p className="text-lg font-bold mt-1 text-amber-500">{todaysMoodLog?.stressScore}/5</p>
                     </div>
-                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
-                      <span className="text-xs text-muted-foreground">Sleep Score</span>
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center min-w-0">
+                      <span className="text-xs text-muted-foreground truncate">Sleep Score</span>
                       <p className="text-lg font-bold mt-1 text-indigo-500">{todaysMoodLog?.sleepScore} hrs</p>
                     </div>
-                    <div className="p-3 bg-muted/30 rounded-2xl text-center">
-                      <span className="text-xs text-muted-foreground">Energy Index</span>
+                    <div className="p-3 bg-muted/30 rounded-2xl text-center min-w-0">
+                      <span className="text-xs text-muted-foreground truncate">Energy Index</span>
                       <p className="text-lg font-bold mt-1 text-emerald-500">{todaysMoodLog?.energyScore}/5</p>
                     </div>
                   </div>
 
                   {todaysMoodLog?.notes && (
-                    <div className="p-4 rounded-2xl bg-card border border-border/60">
+                    <div className="p-4 rounded-2xl bg-card border border-border/60 w-full min-w-0">
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Your Reflection Note</span>
                       <p className="text-sm italic text-foreground leading-relaxed">"{todaysMoodLog.notes}"</p>
                     </div>
                   )}
 
                   {timeLeft && (
-                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-between text-xs">
+                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-between text-xs w-full min-w-0">
                       <span className="text-muted-foreground font-medium">Next daily reflection unlocks in:</span>
                       <span className="font-bold font-mono text-primary">{timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</span>
                     </div>
@@ -219,13 +219,13 @@ export default function Checkin() {
               </div>
 
               {/* Right Column: Mood Shift Quick Trigger */}
-              <div className="col-span-5 space-y-6">
-                <Card className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-card rounded-3xl p-6 shadow-md space-y-4">
+              <div className="lg:col-span-5 space-y-[2vh] w-full min-w-0">
+                <Card className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-card rounded-3xl p-6 shadow-md space-y-4 w-full min-w-0">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center flex-shrink-0">
                       <Zap className="w-5 h-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <h4 className="text-base font-bold text-foreground">Track Intraday Mood Shift</h4>
                       <p className="text-xs text-muted-foreground">Log spontaneous feelings without replacing your morning baseline</p>
                     </div>
@@ -240,16 +240,16 @@ export default function Checkin() {
               </div>
             </div>
           ) : (
-            /* Laptop: Check-in Studio Split Form */
-            <div className="grid grid-cols-12 gap-8 items-start">
+            /* Laptop: Check-in Studio Split Form - CSS Grid */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-[2vw] w-full items-start">
               
               {/* Left Column: Mood Selection & Vitality Sliders */}
-              <div className="col-span-6 space-y-6">
+              <div className="lg:col-span-6 space-y-[2vh] w-full min-w-0">
                 
                 {/* Mood Selection Card */}
-                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-4">
+                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-4 w-full min-w-0">
                   <CardTitle className="text-lg font-bold">How are you feeling right now?</CardTitle>
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-5 gap-[1vw] w-full">
                     {MOOD_OPTIONS.map((option) => {
                       const isSelected = moodScore === option.value;
                       return (
@@ -258,25 +258,25 @@ export default function Checkin() {
                           type="button"
                           onClick={() => setMoodScore(option.value)}
                           className={cn(
-                            "p-4 rounded-3xl border-2 transition-all flex flex-col items-center justify-center h-28 active:scale-95",
+                            "p-3 rounded-2xl border-2 transition-all flex flex-col items-center justify-center min-h-[6.5rem] active:scale-95 min-w-0 w-full",
                             isSelected 
                               ? "border-primary bg-primary/10 shadow-lg scale-105" 
                               : "border-border/60 bg-muted/20 hover:bg-muted/50"
                           )}
                         >
                           <span className="text-3xl">{option.emoji}</span>
-                          <span className="text-xs font-bold mt-2 text-foreground">{option.label}</span>
+                          <span className="text-xs font-bold mt-2 text-foreground truncate">{option.label}</span>
                         </button>
                       );
                     })}
                   </div>
                 </Card>
 
-                {/* Energy & Stress Sliders */}
-                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-5">
+                {/* Energy & Stress Sliders - Flexbox item rows */}
+                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-5 w-full min-w-0">
                   <CardTitle className="text-lg font-bold">Energy & Stress Balance</CardTitle>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2 w-full">
                     <div className="flex justify-between items-center text-xs">
                       <Label className="font-semibold flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5 text-amber-500" /> Energy Level
@@ -286,7 +286,7 @@ export default function Checkin() {
                     <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-2" />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 w-full">
                     <div className="flex justify-between items-center text-xs">
                       <Label className="font-semibold flex items-center gap-1.5">
                         <Activity className="w-3.5 h-3.5 text-rose-500" /> Stress Level
@@ -296,7 +296,7 @@ export default function Checkin() {
                     <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-2" />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 w-full">
                     <div className="flex justify-between items-center text-xs">
                       <Label className="font-semibold flex items-center gap-1.5">
                         <Moon className="w-3.5 h-3.5 text-indigo-500" /> Sleep Duration
@@ -310,10 +310,10 @@ export default function Checkin() {
               </div>
 
               {/* Right Column: Habits, Voice Notes & Submission */}
-              <div className="col-span-6 space-y-6">
+              <div className="lg:col-span-6 space-y-[2vh] w-full min-w-0">
                 
                 {/* Daily Reflection & Voice Note */}
-                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-4">
+                <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 space-y-4 w-full min-w-0">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg font-bold">Reflection & Voice Journal</CardTitle>
                     <VoiceRecorder onTranscript={(text: string) => setNotes(prev => prev ? `${prev} ${text}` : text)} />
@@ -323,7 +323,7 @@ export default function Checkin() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Write a few thoughts about your mindset, what's on your mind, or what you're grateful for today..."
-                    className="min-h-[120px] rounded-2xl resize-none text-sm"
+                    className="min-h-[140px] rounded-2xl resize-none text-sm"
                   />
                 </Card>
 

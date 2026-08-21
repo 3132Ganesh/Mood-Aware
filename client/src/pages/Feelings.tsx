@@ -69,63 +69,63 @@ export default function Feelings() {
       <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
 
         {/* ========================================================================= */}
-        {/* 1. LAPTOP SCREEN UI (Visible on screens >= 1024px)                        */}
+        {/* 1. LAPTOP SCREEN UI (CSS Grid 12-col panel rearrangement + Flexbox cards) */}
         {/* ========================================================================= */}
-        <div className="hidden lg:block p-8 max-w-7xl w-full mx-auto space-y-8">
+        <div className="hidden lg:block w-full max-w-[min(100%,88rem)] mx-auto px-[3vw] py-[3vh] space-y-[3vh]">
           
-          <header className="flex items-center justify-between">
-            <div>
+          <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-[2vw] w-full min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="rounded-full bg-purple-500/10 text-purple-600 border-purple-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
                   <Laptop className="w-3 h-3" />
-                  Laptop Feelings Studio
+                  Laptop Reflection Studio
                 </Badge>
               </div>
-              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1">
-                Feelings Space & Journal
+              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1 truncate">
+                Feelings & Reflection Space
               </h1>
-              <p className="text-sm text-muted-foreground">
-                A private, sanctuary for your reflections, voice notes, and emotional time capsules.
+              <p className="text-sm text-muted-foreground truncate">
+                Capture spontaneous thoughts, emotional reflections, and seal time capsules for your future self.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Button 
                 onClick={() => setIsCapsuleOpen(true)}
                 variant="outline"
-                className="rounded-2xl text-xs font-semibold h-11 border-purple-300 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 gap-2 px-4"
+                className="rounded-2xl text-xs font-semibold h-11 border-purple-300 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 gap-2 px-4 shadow-xs"
               >
                 <Mail className="w-4 h-4" /> Seal Time Capsule
               </Button>
             </div>
           </header>
 
-          {/* Laptop 2-Column Split: Left Composer / Time Capsule, Right Timeline Feed */}
-          <div className="grid grid-cols-12 gap-8 items-start">
+          {/* Laptop 2-Column Split: Left Composer / Time Capsule, Right Timeline Feed (CSS Grid) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-[2vw] w-full items-start">
             
             {/* Left 5 Columns: Inline Studio Composer */}
-            <div className="col-span-5 sticky top-6 space-y-6">
+            <div className="lg:col-span-5 lg:sticky lg:top-6 space-y-[2vh] w-full min-w-0">
               
-              <Card className="border-none shadow-xl bg-card/85 backdrop-blur-md rounded-3xl p-6 border border-border/40 space-y-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-bold flex items-center gap-2">
-                    <BookHeart className="w-5 h-5 text-primary" /> Express Your Feelings
+              <Card className="border-none shadow-xl bg-card/85 backdrop-blur-md rounded-3xl p-6 border border-border/40 space-y-4 w-full min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-lg font-bold flex items-center gap-2 truncate">
+                    <BookHeart className="w-5 h-5 text-primary flex-shrink-0" /> Express Your Feelings
                   </CardTitle>
                   <VoiceRecorder onTranscript={(text: string) => setContent(prev => prev ? `${prev} ${text}` : text)} />
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-3 w-full">
                   <Input 
                     placeholder="Entry Title (e.g. Evening clarity after walk)" 
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="rounded-xl text-sm h-10"
+                    className="rounded-xl text-sm h-10 w-full"
                   />
                   <Textarea 
                     placeholder="What emotions or moments are present right now? Type freely or use the mic above..."
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    className="min-h-[160px] rounded-2xl resize-none text-sm leading-relaxed"
+                    className="min-h-[160px] rounded-2xl resize-none text-sm leading-relaxed w-full"
                   />
                 </div>
 
@@ -139,16 +139,16 @@ export default function Feelings() {
                 </Button>
               </Card>
 
-              {/* Time Capsule Summary Card */}
-              <Card className="border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-card to-card rounded-3xl p-5 shadow-sm space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-600 flex items-center justify-center">
+              {/* Time Capsule Summary Card - Flexbox */}
+              <Card className="border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-card to-card rounded-3xl p-5 shadow-sm space-y-3 w-full min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-600 flex items-center justify-center flex-shrink-0">
                       <Mail className="w-4 h-4" />
                     </div>
-                    <span className="text-xs font-bold text-foreground">Future Self Time Capsules</span>
+                    <span className="text-xs font-bold text-foreground truncate">Future Self Time Capsules</span>
                   </div>
-                  <Badge variant="outline" className="text-[10px] bg-purple-500/10 text-purple-600 border-purple-500/30">
+                  <Badge variant="outline" className="text-[10px] bg-purple-500/10 text-purple-600 border-purple-500/30 flex-shrink-0">
                     {capsules?.length || 0} Sealed
                   </Badge>
                 </div>
@@ -168,7 +168,7 @@ export default function Feelings() {
             </div>
 
             {/* Right 7 Columns: Past Reflections Timeline */}
-            <div className="col-span-7 space-y-4">
+            <div className="lg:col-span-7 space-y-[2vh] w-full min-w-0">
               
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -181,19 +181,19 @@ export default function Feelings() {
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
               ) : notes && notes.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-4 w-full">
                   {notes.map((note) => {
                     const sentiment = getSentimentLabel(note.sentimentScore);
                     return (
-                      <Card key={note.id} className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-5 space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h4 className="font-bold text-base text-foreground">{note.title || "Reflective Journal"}</h4>
+                      <Card key={note.id} className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-5 space-y-3 w-full min-w-0">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-base text-foreground truncate">{note.title || "Reflective Journal"}</h4>
                             <p className="text-[11px] text-muted-foreground">
                               {note.timestamp ? format(new Date(note.timestamp), "EEEE, MMMM do yyyy 'at' h:mm a") : "Recorded"}
                             </p>
                           </div>
-                          <Badge variant="outline" className={cn("text-[10px] font-semibold", sentiment.color)}>
+                          <Badge variant="outline" className={cn("text-[10px] font-semibold flex-shrink-0", sentiment.color)}>
                             {sentiment.text}
                           </Badge>
                         </div>
@@ -203,16 +203,13 @@ export default function Feelings() {
                   })}
                 </div>
               ) : (
-                <Card className="border-none shadow-sm bg-card/60 rounded-3xl p-12 text-center">
+                <Card className="border-none shadow-sm bg-card/60 rounded-3xl p-12 text-center w-full">
                   <p className="text-sm font-semibold text-foreground">Your Feelings Space is Empty</p>
                   <p className="text-xs text-muted-foreground mt-1">Write your first reflection using the studio composer on the left!</p>
                 </Card>
               )}
-
             </div>
-
           </div>
-
         </div>
 
 
