@@ -7,6 +7,8 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
+import { supabase } from "./supabase";
+
 declare global {
   namespace Express {
     interface User extends SelectUser {}
@@ -106,6 +108,19 @@ export function setupAuth(app: Express) {
         password: hashedPassword,
         name: name?.trim() || normalizedEmail.split('@')[0],
       });
+
+      // Synchronize into Supabase Auth (auth.users) so user appears in both Authentication tab and Table Editor
+      try {
+        await supabase.auth.signUp({
+          email: normalizedEmail,
+          password: password,
+          options: {
+            data: { name: user.name }
+          }
+        });
+      } catch (authErr) {
+        console.warn("Supabase Auth sync notice:", authErr);
+      }
 
       req.login(user, (err) => {
         if (err) return next(err);
