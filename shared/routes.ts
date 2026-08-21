@@ -4,6 +4,7 @@ import {
   insertUserProfileSchema, userProfiles, 
   insertTaskSchema, tasks, 
   insertMoodLogSchema, moodLogs, 
+  insertMoodSwingSchema, moodSwings,
   insertPlanSchema, plans, 
   insertPlanItemSchema, planItems, 
   insertDailyHabitSchema, dailyHabits, 
@@ -12,6 +13,7 @@ import {
   type InsertUser,
   type InsertUserProfile,
   type InsertMoodLog,
+  type InsertMoodSwing,
   type InsertDailyHabit,
   type InsertFeelingsNote,
   type InsertTimeCapsule,
@@ -24,6 +26,7 @@ export type {
   InsertUser,
   InsertUserProfile,
   InsertMoodLog,
+  InsertMoodSwing,
   InsertDailyHabit,
   InsertFeelingsNote,
   InsertTimeCapsule,
@@ -149,6 +152,21 @@ export const api = {
       path: '/api/mood/history',
       responses: {
         200: z.array(z.custom<typeof moodLogs.$inferSelect>()),
+      },
+    },
+    logSwing: {
+      method: 'POST' as const,
+      path: '/api/mood/swings',
+      input: insertMoodSwingSchema,
+      responses: {
+        201: z.custom<typeof moodSwings.$inferSelect>(),
+      },
+    },
+    swingsHistory: {
+      method: 'GET' as const,
+      path: '/api/mood/swings',
+      responses: {
+        200: z.array(z.custom<typeof moodSwings.$inferSelect>()),
       },
     },
   },

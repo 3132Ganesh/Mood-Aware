@@ -1,9 +1,9 @@
 import { 
   User, InsertUser, 
   UserProfile, InsertUserProfile, 
-  Task, MoodLog, Plan, PlanItem, DailyHabit, FeelingsNote, TimeCapsule,
-  InsertMoodLog, InsertDailyHabit, InsertFeelingsNote, InsertPlan, InsertPlanItem, InsertTimeCapsule,
-  users, userProfiles, tasks, moodLogs, plans, planItems, dailyHabits, feelingsNotes, timeCapsules,
+  Task, MoodLog, MoodSwing, Plan, PlanItem, DailyHabit, FeelingsNote, TimeCapsule,
+  InsertMoodLog, InsertMoodSwing, InsertDailyHabit, InsertFeelingsNote, InsertPlan, InsertPlanItem, InsertTimeCapsule,
+  users, userProfiles, tasks, moodLogs, moodSwings, plans, planItems, dailyHabits, feelingsNotes, timeCapsules,
   PlanWithItems
 } from "@shared/schema";
 import { db, pool } from "./db";
@@ -47,6 +47,9 @@ export interface IStorage {
   getMoodLogs(userId: number, limit?: number): Promise<MoodLog[]>;
   getLastMoodLog(userId: number): Promise<MoodLog | undefined>;
   getMoodLogByDate(userId: number, date: string): Promise<MoodLog | undefined>;
+  createMoodSwing(swing: InsertMoodSwing & { userId: number }): Promise<MoodSwing>;
+  getMoodSwings(userId: number, limit?: number): Promise<MoodSwing[]>;
+  getTodayMoodSwings(userId: number, date: string): Promise<MoodSwing[]>;
   
   // Plans
   createPlan(plan: InsertPlan & { userId: number }): Promise<Plan>;
@@ -84,11 +87,13 @@ export class MemStorage implements IStorage {
   private dailyHabits: Map<number, DailyHabit> = new Map();
   private feelingsNotes: Map<number, FeelingsNote> = new Map();
   private timeCapsules: Map<number, TimeCapsule> = new Map();
+  private moodSwings: Map<number, MoodSwing> = new Map();
 
   private currentUserId = 1;
   private currentProfileId = 1;
   private currentTaskId = 1;
   private currentMoodLogId = 1;
+  private currentMoodSwingId = 1;
   private currentPlanId = 1;
   private currentPlanItemId = 1;
   private currentHabitId = 1;
@@ -175,6 +180,7 @@ export class MemStorage implements IStorage {
       id,
       userId: log.userId,
       date: log.date,
+      createdAt: new Date(),
       moodScore: log.moodScore,
       moodLabel: log.moodLabel || null,
       stressScore: log.stressScore || null,
@@ -203,6 +209,38 @@ export class MemStorage implements IStorage {
     return Array.from(this.moodLogs.values()).find(
       m => m.userId === userId && String(m.date).split('T')[0] === cleanDate
     );
+  }
+
+  async createMoodSwing(swing: InsertMoodSwing & { userId: number }): Promise<MoodSwing> {
+    const id = this.currentMoodSwingId++;
+    const created: MoodSwing = {
+      id,
+      userId: swing.userId,
+      timestamp: new Date(),
+      date: swing.date,
+      previousMoodScore: swing.previousMoodScore ?? null,
+      newMoodScore: swing.newMoodScore,
+      newMoodLabel: swing.newMoodLabel,
+      trigger: swing.trigger ?? null,
+      intensity: swing.intensity ?? 3,
+      notes: swing.notes ?? null,
+    };
+    this.moodSwings.set(id, created);
+    return created;
+  }
+
+  async getMoodSwings(userId: number, limit = 20): Promise<MoodSwing[]> {
+    return Array.from(this.moodSwings.values())
+      .filter(s => s.userId === userId)
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
+      .slice(0, limit);
+  }
+
+  async getTodayMoodSwings(userId: number, date: string): Promise<MoodSwing[]> {
+    const cleanDate = date.split('T')[0];
+    return Array.from(this.moodSwings.values())
+      .filter(s => s.userId === userId && String(s.date).split('T')[0] === cleanDate)
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   }
 
   async createPlan(plan: InsertPlan & { userId: number }): Promise<Plan> {
@@ -286,6 +324,7 @@ export class MemStorage implements IStorage {
       id,
       userId: log.userId,
       date: log.date,
+      createdAt: new Date(),
       routineFollowed: log.routineFollowed ?? null,
       extraPhysicalActivity: log.extraPhysicalActivity ?? null,
       screenTimeHours: log.screenTimeHours ?? null,
@@ -461,6 +500,27 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(moodLogs.userId, userId), eq(moodLogs.date, cleanDate)))
       .limit(1);
     return log;
+  }
+
+  async createMoodSwing(swing: InsertMoodSwing & { userId: number }): Promise<MoodSwing> {
+    const [created] = await db.insert(moodSwings).values(swing as any).returning();
+    return created;
+  }
+
+  async getMoodSwings(userId: number, limit = 20): Promise<MoodSwing[]> {
+    return db.select()
+      .from(moodSwings)
+      .where(eq(moodSwings.userId, userId))
+      .orderBy(desc(moodSwings.timestamp))
+      .limit(limit);
+  }
+
+  async getTodayMoodSwings(userId: number, date: string): Promise<MoodSwing[]> {
+    const cleanDate = date.split('T')[0];
+    return db.select()
+      .from(moodSwings)
+      .where(and(eq(moodSwings.userId, userId), eq(moodSwings.date, cleanDate)))
+      .orderBy(desc(moodSwings.timestamp));
   }
 
   async createPlan(plan: InsertPlan & { userId: number }): Promise<Plan> {

@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
 import { generatePlanWithAI, analyzeSentiment } from "./openai_helper";
-import { insertMoodLogSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema, insertTimeCapsuleSchema } from "@shared/schema";
+import { insertMoodLogSchema, insertMoodSwingSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema, insertTimeCapsuleSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -147,7 +147,10 @@ export async function registerRoutes(
       const input = insertMoodLogSchema.parse(req.body);
       const existing = await storage.getMoodLogByDate(req.user!.id, input.date);
       if (existing) {
-        return res.status(400).json({ message: "You have already completed your mood check-in for today." });
+        return res.status(400).json({ 
+          message: "Daily check-in is already completed for today. It will reset after 24 hours for your next day reflection. Use 'Record Mood Swing' to log any intraday mood changes!",
+          alreadyCheckedIn: true 
+        });
       }
       const log = await storage.createMoodLog({ ...input, userId: req.user!.id });
       res.status(201).json(log);
@@ -162,6 +165,34 @@ export async function registerRoutes(
   app.get(api.mood.history.path, requireAuth, async (req, res) => {
     const logs = await storage.getMoodLogs(req.user!.id);
     res.json(logs);
+  });
+
+  // === Mood Swings Routes (Intraday Fluctuations) ===
+  app.post(api.mood.logSwing.path, requireAuth, async (req, res) => {
+    try {
+      const input = insertMoodSwingSchema.parse(req.body);
+      const swing = await storage.createMoodSwing({ ...input, userId: req.user!.id });
+      res.status(201).json(swing);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get(api.mood.swingsHistory.path, requireAuth, async (req, res) => {
+    try {
+      const date = req.query.date as string | undefined;
+      if (date) {
+        const swings = await storage.getTodayMoodSwings(req.user!.id, date);
+        return res.json(swings);
+      }
+      const swings = await storage.getMoodSwings(req.user!.id);
+      res.json(swings);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   // === Habit Routes ===

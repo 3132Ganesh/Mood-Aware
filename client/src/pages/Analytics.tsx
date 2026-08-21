@@ -1,16 +1,17 @@
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { useMood, useHabits } from "@/hooks/use-tracking";
+import { useMood, useHabits, useMoodSwings } from "@/hooks/use-tracking";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend } from "recharts";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Activity, Monitor, Smile, Sparkles } from "lucide-react";
+import { TrendingUp, Activity, Monitor, Smile, Sparkles, Zap } from "lucide-react";
 import { PredictiveInsights } from "@/components/PredictiveInsights";
 
 export default function Analytics() {
   const { history: moodHistory, isLoading: moodLoading } = useMood();
   const { history: habitHistory, isLoading: habitLoading } = useHabits();
+  const { swings: allSwings } = useMoodSwings();
 
   // Combine and process data for charts safely
   const moodData = (moodHistory || [])
@@ -189,7 +190,13 @@ export default function Analytics() {
                 <div className="flex justify-between items-center p-3.5 bg-card/90 border border-border/60 rounded-xl">
                   <span className="text-sm text-muted-foreground">Logged Check-ins</span>
                   <span className="font-bold text-foreground">
-                    {moodHistory ? moodHistory.length : 0} Total
+                    {moodHistory ? moodHistory.length : 0} Daily Logs
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3.5 bg-card/90 border border-border/60 rounded-xl">
+                  <span className="text-sm text-muted-foreground">Mood Shifts Tracked</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">
+                    {allSwings ? allSwings.length : 0} Intraday Swings
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3.5 bg-card/90 border border-border/60 rounded-xl">

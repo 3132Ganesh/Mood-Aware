@@ -43,11 +43,25 @@ export const moodLogs = pgTable("mood_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
   moodScore: integer("mood_score").notNull(),
   moodLabel: text("mood_label"),
   stressScore: integer("stress_score"),
   sleepScore: integer("sleep_score"),
   energyScore: integer("energy_score"),
+  notes: text("notes"),
+});
+
+export const moodSwings = pgTable("mood_swings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  timestamp: timestamp("timestamp").defaultNow(),
+  date: date("date").notNull(),
+  previousMoodScore: integer("previous_mood_score"),
+  newMoodScore: integer("new_mood_score").notNull(),
+  newMoodLabel: text("new_mood_label").notNull(),
+  trigger: text("trigger"),
+  intensity: integer("intensity").default(3),
   notes: text("notes"),
 });
 
@@ -71,6 +85,7 @@ export const dailyHabits = pgTable("daily_habits", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
   routineFollowed: boolean("routine_followed"),
   extraPhysicalActivity: boolean("extra_physical_activity"),
   screenTimeHours: integer("screen_time_hours"),
@@ -105,10 +120,11 @@ export const session = pgTable("session", {
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, userId: true });
 export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true });
-export const insertMoodLogSchema = createInsertSchema(moodLogs).omit({ id: true, userId: true });
+export const insertMoodLogSchema = createInsertSchema(moodLogs).omit({ id: true, userId: true, createdAt: true });
+export const insertMoodSwingSchema = createInsertSchema(moodSwings).omit({ id: true, userId: true, timestamp: true });
 export const insertPlanSchema = createInsertSchema(plans).omit({ id: true, userId: true });
 export const insertPlanItemSchema = createInsertSchema(planItems).omit({ id: true });
-export const insertDailyHabitSchema = createInsertSchema(dailyHabits).omit({ id: true, userId: true });
+export const insertDailyHabitSchema = createInsertSchema(dailyHabits).omit({ id: true, userId: true, createdAt: true });
 export const insertFeelingsNoteSchema = createInsertSchema(feelingsNotes).omit({ id: true, userId: true, timestamp: true });
 export const insertTimeCapsuleSchema = createInsertSchema(timeCapsules).omit({ id: true, userId: true, createdAt: true, isDelivered: true, deliveredAt: true });
 
@@ -118,6 +134,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type MoodLog = typeof moodLogs.$inferSelect;
+export type MoodSwing = typeof moodSwings.$inferSelect;
 export type Plan = typeof plans.$inferSelect;
 export type PlanItem = typeof planItems.$inferSelect;
 export type DailyHabit = typeof dailyHabits.$inferSelect;
@@ -129,6 +146,7 @@ export type PlanWithItems = Plan & { items: (PlanItem & { task: Task })[] };
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type InsertMoodLog = z.infer<typeof insertMoodLogSchema>;
+export type InsertMoodSwing = z.infer<typeof insertMoodSwingSchema>;
 export type InsertPlan = z.infer<typeof insertPlanSchema>;
 export type InsertPlanItem = z.infer<typeof insertPlanItemSchema>;
 export type InsertDailyHabit = z.infer<typeof insertDailyHabitSchema>;

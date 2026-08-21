@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useAuth, useProfile } from "@/hooks/use-auth";
 import { useCurrentPlan } from "@/hooks/use-tasks";
-import { useMood, useHabits, useCapsules } from "@/hooks/use-tracking";
+import { useMood, useHabits, useCapsules, useMoodSwings } from "@/hooks/use-tracking";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { MoodGarden } from "@/components/MoodGarden";
 import { PredictiveInsights } from "@/components/PredictiveInsights";
+import { MoodSwingDialog } from "@/components/MoodSwingDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "wouter";
 import { 
   ArrowRight, CheckCircle2, Circle, Sun, Music, Gamepad2, Brain, 
-  Dumbbell, Sparkles, Heart, Plus, BookHeart, TrendingUp, Wind, Mail, X, Check
+  Dumbbell, Sparkles, Heart, Plus, BookHeart, TrendingUp, Wind, Mail, X, Check, Zap
 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,8 +35,10 @@ export default function Dashboard() {
   const { undeliveredCapsule, markDelivered } = useCapsules();
 
   const [dismissedCapsule, setDismissedCapsule] = useState(false);
+  const [swingDialogOpen, setSwingDialogOpen] = useState(false);
 
   const today = format(new Date(), "yyyy-MM-dd");
+  const { swings: todaySwings } = useMoodSwings(today);
   const todaysMoodLog = history?.find(m => String(m.date).split('T')[0] === today);
   const hasCheckedInToday = Boolean(todaysMoodLog);
   
@@ -87,6 +90,15 @@ export default function Dashboard() {
                 <Wind className="w-4 h-4" /> Quick Calm
               </Button>
             </Link>
+            {hasCheckedInToday && (
+              <Button 
+                variant="outline" 
+                onClick={() => setSwingDialogOpen(true)}
+                className="rounded-2xl text-xs sm:text-sm font-semibold h-11 flex items-center gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20"
+              >
+                <Zap className="w-4 h-4 text-amber-500" /> Mood Shift
+              </Button>
+            )}
             <Link href="/checkin">
               {hasCheckedInToday ? (
                 <Button variant="outline" className="rounded-2xl text-xs sm:text-sm font-semibold h-11 flex items-center gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20">
@@ -354,6 +366,13 @@ export default function Dashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Mood Swing Shift Modal */}
+        <MoodSwingDialog 
+          open={swingDialogOpen} 
+          onOpenChange={setSwingDialogOpen}
+          currentMoodScore={todaysMoodLog?.moodScore || 3}
+        />
       </main>
       <MobileNav />
     </div>

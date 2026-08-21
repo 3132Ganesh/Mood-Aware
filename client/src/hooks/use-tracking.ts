@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type InsertMoodLog, type InsertDailyHabit, type InsertFeelingsNote } from "@shared/routes";
+import { api, type InsertMoodLog, type InsertMoodSwing, type InsertDailyHabit, type InsertFeelingsNote } from "@shared/routes";
 
 export function useMood() {
   const queryClient = useQueryClient();
@@ -41,6 +41,53 @@ export function useMood() {
     isLoading: history.isLoading, 
     logMood: logMood.mutateAsync,
     isLogging: logMood.isPending 
+  };
+}
+
+export function useMoodSwings(date?: string) {
+  const queryClient = useQueryClient();
+
+  const swings = useQuery({
+    queryKey: date ? [api.mood.swingsHistory.path, date] : [api.mood.swingsHistory.path],
+    queryFn: async () => {
+      const url = date 
+        ? `${api.mood.swingsHistory.path}?date=${encodeURIComponent(date)}` 
+        : api.mood.swingsHistory.path;
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch mood swings");
+      return api.mood.swingsHistory.responses[200].parse(await res.json());
+    },
+  });
+
+  const logSwing = useMutation({
+    mutationFn: async (data: InsertMoodSwing) => {
+      const res = await fetch(api.mood.logSwing.path, {
+        method: api.mood.logSwing.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        let errorMsg = "Failed to record mood swing";
+        try {
+          const err = await res.json();
+          errorMsg = err.message || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+      return api.mood.logSwing.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.mood.swingsHistory.path] });
+      queryClient.invalidateQueries({ queryKey: [api.mood.history.path] });
+    },
+  });
+
+  return {
+    swings: swings.data,
+    isLoading: swings.isLoading,
+    logSwing: logSwing.mutateAsync,
+    isLogging: logSwing.isPending,
   };
 }
 

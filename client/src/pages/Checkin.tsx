@@ -1,18 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
+import { MoodSwingDialog } from "@/components/MoodSwingDialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useMood, useHabits, useCapsules } from "@/hooks/use-tracking";
+import { useMood, useHabits, useCapsules, useMoodSwings } from "@/hooks/use-tracking";
 import { useLocation, Link } from "wouter";
 import { 
-  Loader2, Smile, Frown, Meh, Sparkles, Zap, Heart, CheckCircle2, 
-  Wind, Mail, ArrowRight, BarChart3, Moon, Activity 
+  Loader2, Sparkles, Zap, Heart, CheckCircle2, 
+  ArrowRight, BarChart3, Moon, Activity, Clock, Plus, TrendingUp, Compass
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -37,6 +38,11 @@ export default function Checkin() {
   const todaysHabitLog = habitHistory?.find(h => String(h.date).split('T')[0] === todayStr);
   const alreadyCheckedInToday = Boolean(todaysMoodLog);
 
+  const { swings: todaySwings, isLoading: isSwingsLoading } = useMoodSwings(todayStr);
+
+  const [swingDialogOpen, setSwingDialogOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
+
   const [moodScore, setMoodScore] = useState<number>(4);
   const [stressScore, setStressScore] = useState<number[]>([2]);
   const [energyScore, setEnergyScore] = useState<number[]>([4]);
@@ -52,6 +58,33 @@ export default function Checkin() {
   const [saveCapsule, setSaveCapsule] = useState(false);
 
   const selectedMood = MOOD_OPTIONS.find(m => m.value === moodScore) || MOOD_OPTIONS[3];
+
+  // Calculate 24-hour reset countdown from check-in creation time or until midnight
+  useEffect(() => {
+    if (!alreadyCheckedInToday || !todaysMoodLog) return;
+
+    const calculateTimeRemaining = () => {
+      const now = new Date();
+      // Target: 24 hours after check-in, or next day midnight
+      const checkinDate = todaysMoodLog.createdAt ? new Date(todaysMoodLog.createdAt) : new Date();
+      const targetTime = new Date(checkinDate.getTime() + 24 * 60 * 60 * 1000);
+      
+      const diffMs = targetTime.getTime() - now.getTime();
+      if (diffMs <= 0) {
+        setTimeLeft(null);
+        return;
+      }
+
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+      setTimeLeft({ hours, minutes, seconds });
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+    return () => clearInterval(interval);
+  }, [alreadyCheckedInToday, todaysMoodLog]);
 
   const handleSubmit = async () => {
     if (alreadyCheckedInToday || isLogging || isHabitLogging) {
@@ -85,7 +118,7 @@ export default function Checkin() {
         });
       }
 
-      toast({ title: "Check-in Complete! ✨", description: "Your mood, habits, and reflections have been recorded." });
+      toast({ title: "Check-in Complete! ✨", description: "Your baseline mood, habits, and reflections have been recorded." });
       setLocation("/dashboard");
     } catch (e: any) {
       toast({ title: "Check-in Notice", description: e?.message || "Failed to save check-in.", variant: "destructive" });
@@ -101,7 +134,7 @@ export default function Checkin() {
             <Heart className="w-3.5 h-3.5" /> Daily Reflection
           </div>
           <h2 className="text-2xl sm:text-3xl font-display font-bold">Daily Check-in</h2>
-          <p className="text-sm text-muted-foreground">Take a moment to tune in to how you feel.</p>
+          <p className="text-sm text-muted-foreground">Take a moment to tune in to your mental and emotional state.</p>
         </header>
 
         {isMoodLoading ? (
@@ -109,29 +142,41 @@ export default function Checkin() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : alreadyCheckedInToday ? (
-          /* Already Checked In View */
+          /* Already Checked In View with 24-Hour Reset Countdown & Mood Swing Logger */
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Primary Status Card */}
             <Card className="border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-primary/10 shadow-xl rounded-3xl overflow-hidden backdrop-blur-sm">
-              <CardContent className="p-6 sm:p-8 text-center space-y-6">
+              <CardContent className="p-6 sm:p-8 text-center space-y-5">
                 <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/20">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-2">
-                    ✓ Completed for Today
+                    ✓ Daily Check-in Saved for {format(new Date(), "MMM d")}
                   </div>
                   <h3 className="text-2xl font-display font-bold text-foreground">
                     You're All Checked In!
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                    You have already completed your daily reflection for <span className="font-semibold text-foreground">{format(new Date(), "EEEE, MMMM do")}</span>.
+                    Your daily baseline is securely recorded. Check-in unlocks automatically every 24 hours.
                   </p>
                 </div>
 
+                {/* Live 24-Hour Reset Countdown Timer */}
+                {timeLeft && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-card border border-border/80 shadow-sm text-xs font-medium text-muted-foreground">
+                    <Clock className="w-4 h-4 text-primary animate-pulse" />
+                    <span>Next fresh check-in resets in:</span>
+                    <span className="font-bold text-foreground font-mono">
+                      {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m {String(timeLeft.seconds).padStart(2, '0')}s
+                    </span>
+                  </div>
+                )}
+
                 {/* Today's Recorded Highlights */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left pt-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left pt-1">
                   <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
-                    <span className="text-[11px] text-muted-foreground font-medium block">Mood</span>
+                    <span className="text-[11px] text-muted-foreground font-medium block">Baseline Mood</span>
                     <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
                       <span className="text-xl">
                         {MOOD_OPTIONS.find(m => m.value === todaysMoodLog?.moodScore)?.emoji || "😊"}
@@ -168,25 +213,90 @@ export default function Checkin() {
                     <p className="text-sm text-foreground italic">"{todaysMoodLog.notes}"</p>
                   </div>
                 )}
-
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  Daily reflections are restricted to once per day to keep your wellness rhythm accurate and consistent. Come back tomorrow for your next check-in!
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                  <Link href="/dashboard">
-                    <Button className="w-full sm:w-auto btn-primary rounded-2xl h-11 px-6 shadow-md shadow-primary/20">
-                      Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                  <Link href="/analytics">
-                    <Button variant="outline" className="w-full sm:w-auto rounded-2xl h-11 px-6 border-border">
-                      <BarChart3 className="w-4 h-4 mr-2" /> View Analytics
-                    </Button>
-                  </Link>
-                </div>
               </CardContent>
             </Card>
+
+            {/* Quick Mood Swing Shift Card */}
+            <Card className="border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-card to-orange-500/10 rounded-3xl shadow-md backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold">
+                    <Zap className="w-3.5 h-3.5" /> Experienced a Mood Swing?
+                  </div>
+                  <h4 className="text-base font-bold text-foreground">Track In-The-Moment Mood Shifts</h4>
+                  <p className="text-xs text-muted-foreground max-w-sm">
+                    Did something happen later today? Log quick emotional fluctuations without altering your daily baseline.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setSwingDialogOpen(true)}
+                  className="rounded-2xl h-11 px-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-md shadow-amber-500/25 flex items-center gap-2 flex-shrink-0"
+                >
+                  <Plus className="w-4 h-4" /> Record Mood Swing
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Today's Recorded Mood Swings Timeline */}
+            {todaySwings && todaySwings.length > 0 && (
+              <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base font-bold flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-primary" /> Today's Mood Swings & Shifts ({todaySwings.length})
+                      </CardTitle>
+                      <CardDescription className="text-xs">Recorded intraday emotional shifts</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2.5 pt-0">
+                  {todaySwings.map((swing) => {
+                    const moodObj = MOOD_OPTIONS.find(m => m.value === swing.newMoodScore) || MOOD_OPTIONS[2];
+                    return (
+                      <div key={swing.id} className="p-3.5 rounded-2xl bg-card border border-border/70 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <div className="text-2xl filter drop-shadow-sm">{moodObj.emoji}</div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-foreground">{moodObj.label}</span>
+                              {swing.trigger && (
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                  {swing.trigger}
+                                </span>
+                              )}
+                              <span className="text-[11px] text-muted-foreground">Intensity: {swing.intensity}/5</span>
+                            </div>
+                            {swing.notes && (
+                              <p className="text-xs text-muted-foreground mt-1 italic leading-relaxed">
+                                "{swing.notes}"
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-mono text-muted-foreground whitespace-nowrap">
+                          {swing.timestamp ? format(new Date(swing.timestamp), "h:mm a") : "Today"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Navigation Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+              <Link href="/dashboard">
+                <Button className="w-full sm:w-auto btn-primary rounded-2xl h-11 px-6 shadow-md shadow-primary/20">
+                  Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/analytics">
+                <Button variant="outline" className="w-full sm:w-auto rounded-2xl h-11 px-6 border-border">
+                  <BarChart3 className="w-4 h-4 mr-2" /> View Analytics
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : (
           /* Check-in Form */
@@ -343,6 +453,13 @@ export default function Checkin() {
             </Button>
           </div>
         )}
+
+        {/* Mood Swing Dialog Modal */}
+        <MoodSwingDialog 
+          open={swingDialogOpen} 
+          onOpenChange={setSwingDialogOpen}
+          currentMoodScore={todaysMoodLog?.moodScore || moodScore}
+        />
       </main>
       <MobileNav />
     </div>
