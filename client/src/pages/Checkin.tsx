@@ -348,130 +348,145 @@ export default function Checkin() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
           
           <div className="flex items-center justify-between pb-1">
             <div>
               <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
                 <Smartphone className="w-2.5 h-2.5" />
-                Mobile Check-in
+                Daily Calibration
               </Badge>
               <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Daily Check-in
               </h1>
             </div>
+            <span className="text-xs font-semibold text-muted-foreground">{format(new Date(), "MMM d")}</span>
           </div>
 
           {alreadyCheckedInToday ? (
             /* Mobile Checked in */
-            <Card className="border-none shadow-lg bg-card/90 rounded-3xl p-5 space-y-4 border border-border/40">
+            <Card className="border-none shadow-md bg-card/95 rounded-3xl p-5 space-y-4 border border-border/50 w-full">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center text-2xl font-bold">
-                  ✓
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                  {todaysMoodLog?.moodScore ? MOOD_OPTIONS.find(m => m.value === todaysMoodLog.moodScore)?.emoji : "✓"}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-foreground">Checked In for Today</h3>
+                  <h3 className="text-base font-bold text-foreground">Completed for Today</h3>
                   <p className="text-xs text-muted-foreground">{todaysMoodLog?.moodScore}/5 Mood ({todaysMoodLog?.moodLabel || "Logged"})</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center pt-1">
-                <div className="p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-[10px] text-muted-foreground">Energy</span>
-                  <p className="text-sm font-bold">{todaysMoodLog?.energyScore}/5</p>
+              <div className="grid grid-cols-3 gap-2 text-center pt-1 w-full">
+                <div className="p-3 bg-muted/30 rounded-2xl">
+                  <span className="text-[10px] font-semibold text-muted-foreground">⚡ Energy</span>
+                  <p className="text-sm font-bold text-foreground mt-0.5">{todaysMoodLog?.energyScore}/5</p>
                 </div>
-                <div className="p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-[10px] text-muted-foreground">Stress</span>
-                  <p className="text-sm font-bold">{todaysMoodLog?.stressScore}/5</p>
+                <div className="p-3 bg-muted/30 rounded-2xl">
+                  <span className="text-[10px] font-semibold text-muted-foreground">🌊 Stress</span>
+                  <p className="text-sm font-bold text-amber-500 mt-0.5">{todaysMoodLog?.stressScore}/5</p>
                 </div>
-                <div className="p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-[10px] text-muted-foreground">Sleep</span>
-                  <p className="text-sm font-bold">{todaysMoodLog?.sleepScore}h</p>
+                <div className="p-3 bg-muted/30 rounded-2xl">
+                  <span className="text-[10px] font-semibold text-muted-foreground">🌙 Sleep</span>
+                  <p className="text-sm font-bold text-indigo-500 mt-0.5">{todaysMoodLog?.sleepScore}h</p>
                 </div>
               </div>
 
+              {todaysMoodLog?.notes && (
+                <div className="p-3 bg-card border border-border/60 rounded-2xl text-xs italic text-foreground leading-relaxed">
+                  "{todaysMoodLog.notes}"
+                </div>
+              )}
+
+              {timeLeft && (
+                <div className="p-2.5 bg-primary/10 rounded-xl text-center text-[11px] text-primary font-medium">
+                  Next daily check-in resets in {timeLeft.hours}h {timeLeft.minutes}m
+                </div>
+              )}
+
               <Button 
                 onClick={() => setSwingDialogOpen(true)}
-                className="w-full rounded-2xl h-10 bg-amber-500 text-white font-semibold text-xs shadow-sm gap-1.5"
+                className="w-full rounded-2xl h-11 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md gap-1.5 active:scale-98"
               >
-                <Zap className="w-4 h-4" /> Log Mood Shift
+                <Zap className="w-4 h-4" /> Log Intraday Mood Shift
               </Button>
             </Card>
           ) : (
             /* Mobile Check-in Form */
-            <div className="space-y-4">
+            <div className="space-y-4 w-full">
               
               {/* Mood Grid */}
-              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
-                <p className="text-xs font-bold text-foreground">Select Current Mood</p>
-                <div className="grid grid-cols-5 gap-1.5">
+              <Card className="border-none shadow-md bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full">
+                <p className="text-xs font-bold text-foreground">1. How are you feeling?</p>
+                <div className="grid grid-cols-5 gap-1.5 w-full">
                   {MOOD_OPTIONS.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       onClick={() => setMoodScore(option.value)}
                       className={cn(
-                        "py-3 px-1 rounded-2xl border-2 transition-all flex flex-col items-center justify-center active:scale-95",
+                        "py-3 px-1 rounded-2xl border-2 transition-all flex flex-col items-center justify-center active:scale-90",
                         moodScore === option.value
-                          ? "border-primary bg-primary/10 scale-105"
-                          : "border-border/60 bg-muted/20"
+                          ? "border-primary bg-primary/10 scale-105 shadow-xs"
+                          : "border-border/60 bg-muted/20 hover:bg-muted/40"
                       )}
                     >
                       <span className="text-2xl">{option.emoji}</span>
-                      <span className="text-[10px] font-semibold mt-1 truncate">{option.label}</span>
+                      <span className="text-[10px] font-bold mt-1 truncate">{option.label}</span>
                     </button>
                   ))}
                 </div>
               </Card>
 
               {/* Sliders */}
-              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-4 border border-border/40">
+              <Card className="border-none shadow-md bg-card/95 rounded-3xl p-4 space-y-4 border border-border/50 w-full">
+                <p className="text-xs font-bold text-foreground">2. Energy & Vitality Sliders</p>
+                
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">⚡ Energy</span>
-                    <span className="font-bold">{energyScore[0]}/5</span>
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-muted-foreground flex items-center gap-1">⚡ Energy Level</span>
+                    <span className="font-bold text-foreground">{energyScore[0]}/5</span>
                   </div>
-                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} />
+                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-2" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">🌊 Stress</span>
-                    <span className="font-bold">{stressScore[0]}/5</span>
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-muted-foreground flex items-center gap-1">🌊 Stress Level</span>
+                    <span className="font-bold text-foreground">{stressScore[0]}/5</span>
                   </div>
-                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} />
+                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-2" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground font-medium">🌙 Sleep</span>
-                    <span className="font-bold">{sleepScore[0]} Hours</span>
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-muted-foreground flex items-center gap-1">🌙 Sleep Duration</span>
+                    <span className="font-bold text-foreground">{sleepScore[0]} Hours</span>
                   </div>
-                  <Slider value={sleepScore} onValueChange={setSleepScore} min={3} max={12} step={1} />
+                  <Slider value={sleepScore} onValueChange={setSleepScore} min={3} max={12} step={1} className="py-2" />
                 </div>
               </Card>
 
               {/* Voice & Notes */}
-              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
+              <Card className="border-none shadow-md bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold">Reflection Note</span>
+                  <span className="text-xs font-bold text-foreground">3. Reflection & Voice Note</span>
                   <VoiceRecorder onTranscript={(text: string) => setNotes(prev => prev ? `${prev} ${text}` : text)} />
                 </div>
                 <Textarea 
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Notes or voice thoughts..."
-                  className="min-h-[80px] rounded-xl text-xs resize-none"
+                  placeholder="Tap the mic to speak or type thoughts..."
+                  className="min-h-[80px] rounded-2xl text-xs resize-none leading-relaxed"
                 />
               </Card>
 
               <Button 
                 onClick={handleSubmit} 
                 disabled={isLogging}
-                className="w-full btn-primary rounded-2xl h-11 text-xs font-bold shadow-md gap-2"
+                className="w-full btn-primary rounded-2xl h-12 text-xs font-bold shadow-md shadow-primary/25 gap-2 active:scale-98"
               >
                 {isLogging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Submit Check-in
+                Complete Daily Reflection
               </Button>
 
             </div>

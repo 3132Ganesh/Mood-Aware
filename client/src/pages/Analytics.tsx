@@ -203,12 +203,12 @@ export default function Analytics() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
           
           <div className="pb-1">
             <Badge variant="outline" className="rounded-full bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
               <Smartphone className="w-2.5 h-2.5" />
-              Mobile Insights
+              Mobile Analytics
             </Badge>
             <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Analytics & Trends
@@ -216,23 +216,23 @@ export default function Analytics() {
           </div>
 
           {/* Mobile 3 Mini Stat Cards */}
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="p-3 rounded-2xl bg-card border border-border/70 shadow-sm">
-              <p className="text-base font-bold font-display text-foreground">{avgMood}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Avg Mood</p>
+          <div className="grid grid-cols-3 gap-2 text-center w-full">
+            <div className="p-3.5 rounded-3xl bg-card border border-border/70 shadow-xs">
+              <p className="text-lg font-bold font-display text-foreground">{avgMood}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Avg Mood</p>
             </div>
-            <div className="p-3 rounded-2xl bg-card border border-border/70 shadow-sm">
-              <p className="text-base font-bold font-display text-emerald-600">{routineRate}%</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Routine</p>
+            <div className="p-3.5 rounded-3xl bg-card border border-border/70 shadow-xs">
+              <p className="text-lg font-bold font-display text-emerald-600">{routineRate}%</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Routine</p>
             </div>
-            <div className="p-3 rounded-2xl bg-card border border-border/70 shadow-sm">
-              <p className="text-base font-bold font-display text-blue-600">{avgScreenTime}h</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Screen Time</p>
+            <div className="p-3.5 rounded-3xl bg-card border border-border/70 shadow-xs">
+              <p className="text-lg font-bold font-display text-blue-600">{avgScreenTime}h</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Screen Time</p>
             </div>
           </div>
 
           {/* Mobile Mood Chart */}
-          <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
+          <Card className="border-none shadow-sm bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full">
             <div>
               <h3 className="text-sm font-bold text-foreground">Mood Trajectory</h3>
               <p className="text-[10px] text-muted-foreground">Past 14 check-in logs</p>
@@ -250,7 +250,7 @@ export default function Analytics() {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                     <XAxis dataKey="date" stroke="#888" fontSize={9} />
                     <YAxis domain={[1, 5]} stroke="#888" fontSize={9} />
-                    <Tooltip />
+                    <Tooltip contentStyle={{ borderRadius: "0.75rem", backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: "11px" }} />
                     <Area type="monotone" dataKey="mood" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#mobMoodGrad)" />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -263,10 +263,12 @@ export default function Analytics() {
           </Card>
 
           {/* Predictive Insights */}
-          <PredictiveInsights 
-            moods={moodHistory || []} 
-            habits={habitHistory || []} 
-          />
+          <div className="w-full">
+            <PredictiveInsights 
+              moods={moodHistory || []} 
+              habits={habitHistory || []} 
+            />
+          </div>
 
         </div>
 

@@ -241,17 +241,17 @@ export default function Planner() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
           
           {/* Mobile Header */}
           <div className="flex items-center justify-between pb-1">
             <div>
               <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
                 <Smartphone className="w-2.5 h-2.5" />
-                Mobile Planner
+                7-Day Schedule
               </Badge>
               <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Weekly Plan
+                Wellness Plan
               </h1>
             </div>
 
@@ -259,15 +259,29 @@ export default function Planner() {
               size="sm" 
               onClick={() => generatePlan()} 
               disabled={isGenerating} 
-              className="btn-primary rounded-xl text-xs font-semibold h-8 px-3 shadow-sm gap-1"
+              className="btn-primary rounded-2xl text-xs font-semibold h-8 px-3 shadow-sm gap-1 active:scale-95"
             >
               {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              Re-sync
+              Re-sync Plan
             </Button>
           </div>
 
-          {/* Mobile Horizontal Day Picker */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          {/* Week Progress Bar Mobile */}
+          <div className="p-3.5 rounded-2xl bg-card border border-border/60 shadow-xs space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-semibold text-foreground">Weekly Completion</span>
+              <span className="font-bold text-primary">{weekProgressPercent}%</span>
+            </div>
+            <div className="w-full bg-muted/60 h-2 rounded-full overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-300"
+                style={{ width: `${weekProgressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Mobile Full-width Horizontal Day Picker */}
+          <div className="grid grid-cols-7 gap-1.5 w-full">
             {days.map((date, i) => {
               const isSelected = format(date, "yyyy-MM-dd") === selectedDateStr;
               const isToday = format(date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
@@ -277,28 +291,47 @@ export default function Planner() {
                   key={i}
                   onClick={() => setSelectedDate(date)}
                   className={cn(
-                    "flex flex-col items-center justify-center min-w-[3.6rem] h-16 rounded-2xl transition-all border flex-shrink-0 active:scale-95",
+                    "flex flex-col items-center justify-center py-2.5 rounded-2xl transition-all border active:scale-90",
                     isSelected 
-                      ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/25 scale-105" 
-                      : "bg-card text-muted-foreground border-border/70"
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm scale-105" 
+                      : "bg-card text-muted-foreground border-border/70 hover:bg-muted"
                   )}
                 >
-                  <span className="text-[10px] font-semibold uppercase">{format(date, "EEE")}</span>
-                  <span className="text-base font-bold mt-0.5">{format(date, "d")}</span>
+                  <span className="text-[9px] font-bold uppercase">{format(date, "EEEEE")}</span>
+                  <span className="text-sm font-extrabold mt-0.5">{format(date, "d")}</span>
                   {isToday && <span className="w-1 h-1 bg-current rounded-full mt-0.5" />}
                 </button>
               );
             })}
           </div>
 
+          {/* Mobile Category Filter Pills */}
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            {["all", "mental", "physical", "music", "game"].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={cn(
+                  "px-3 py-1 rounded-full text-[11px] font-bold capitalize border transition-all flex-shrink-0 active:scale-95",
+                  selectedCategory === cat
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-card border-border/70 text-muted-foreground"
+                )}
+              >
+                {cat === "all" ? "All" : cat}
+              </button>
+            ))}
+          </div>
+
           {/* Mobile Focused Day Card Stack */}
-          <div className="space-y-2.5">
+          <div className="space-y-3 w-full">
             <div className="flex items-center justify-between px-1">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <CalendarIcon className="w-3.5 h-3.5 text-primary" />
-                {format(selectedDate, "EEE, MMM d")}
+                {format(selectedDate, "EEEE, MMM d")}
               </span>
-              <span className="text-[11px] text-muted-foreground">{tasksForDay.length} activities</span>
+              <span className="text-[11px] text-muted-foreground font-semibold">{tasksForDay.length} activities</span>
             </div>
 
             {isLoading ? (
@@ -311,23 +344,23 @@ export default function Planner() {
                   <div 
                     key={item.id}
                     className={cn(
-                      "p-3.5 rounded-2xl border transition-all space-y-2.5",
+                      "p-4 rounded-3xl border transition-all space-y-3 shadow-xs",
                       item.isCompleted 
                         ? "bg-muted/30 border-transparent opacity-60" 
-                        : "bg-card border-border/80 shadow-sm"
+                        : "bg-card border-border/80"
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider", getCategoryBadgeClass(item.task.category))}>
+                      <div className="flex-1">
+                        <span className={cn("text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider", getCategoryBadgeClass(item.task.category))}>
                           {item.task.category}
                         </span>
-                        <h4 className={cn("font-bold text-sm mt-1.5", item.isCompleted && "line-through text-muted-foreground")}>
+                        <h4 className={cn("font-bold text-sm mt-1.5 text-foreground", item.isCompleted && "line-through text-muted-foreground")}>
                           {item.task.title}
                         </h4>
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.task.description}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground font-semibold flex-shrink-0">
+                      <span className="text-xs text-muted-foreground font-bold flex-shrink-0">
                         {item.task.duration}m
                       </span>
                     </div>
@@ -336,18 +369,19 @@ export default function Planner() {
                       onClick={() => completeTask({ planId: item.planId, taskId: item.id, isCompleted: !item.isCompleted })}
                       variant={item.isCompleted ? "outline" : "default"}
                       className={cn(
-                        "w-full rounded-xl text-xs font-semibold h-9",
+                        "w-full rounded-2xl text-xs font-bold h-9 shadow-xs active:scale-98",
                         !item.isCompleted && "btn-primary"
                       )}
                     >
-                      {item.isCompleted ? "✓ Completed" : "Mark Done"}
+                      {item.isCompleted ? "✓ Completed" : "Mark as Completed"}
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-10 rounded-2xl bg-card border border-border/40">
-                <p className="text-xs text-muted-foreground">No tasks scheduled for this day.</p>
+              <div className="text-center py-10 rounded-3xl bg-card border border-border/40 space-y-2">
+                <p className="text-xs font-semibold text-foreground">No tasks scheduled for this day.</p>
+                <p className="text-[11px] text-muted-foreground">Take a mindful pause or re-sync your weekly plan.</p>
               </div>
             )}
           </div>

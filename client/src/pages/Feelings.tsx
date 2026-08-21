@@ -219,13 +219,13 @@ export default function Feelings() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
           
           <div className="flex items-center justify-between pb-1">
             <div>
               <Badge variant="outline" className="rounded-full bg-purple-500/10 text-purple-600 border-purple-500/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
                 <Smartphone className="w-2.5 h-2.5" />
-                Mobile Journal
+                Journal Studio
               </Badge>
               <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Feelings Space
@@ -235,20 +235,20 @@ export default function Feelings() {
             <Button 
               size="sm" 
               onClick={() => setMobileTab("write")} 
-              className="btn-primary rounded-xl text-xs font-semibold h-8 px-3 shadow-sm gap-1"
+              className="btn-primary rounded-2xl text-xs font-semibold h-8 px-3 shadow-sm gap-1 active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" /> Write
             </Button>
           </div>
 
-          {/* Mobile Segmented Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          {/* Full-width Mobile Segmented Tabs */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-muted/40 rounded-2xl border border-border/50 w-full">
             <button
               type="button"
               onClick={() => setMobileTab("notes")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all",
-                mobileTab === "notes" ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
+                mobileTab === "notes" ? "bg-primary text-primary-foreground shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
               📖 Journal ({notes?.length || 0})
@@ -257,8 +257,8 @@ export default function Feelings() {
               type="button"
               onClick={() => setMobileTab("write")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all",
-                mobileTab === "write" ? "bg-purple-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
+                mobileTab === "write" ? "bg-purple-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
               ✍️ Write New
@@ -267,8 +267,8 @@ export default function Feelings() {
               type="button"
               onClick={() => setMobileTab("capsules")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all",
-                mobileTab === "capsules" ? "bg-pink-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
+                mobileTab === "capsules" ? "bg-pink-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
               💌 Capsules ({capsules?.length || 0})
@@ -276,90 +276,95 @@ export default function Feelings() {
           </div>
 
           {/* Mobile Tab Content */}
-          {mobileTab === "write" && (
-            <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground">New Note</span>
-                <VoiceRecorder onTranscript={(text: string) => setContent(prev => prev ? `${prev} ${text}` : text)} />
-              </div>
-              <Input 
-                placeholder="Title..." 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
-                className="rounded-xl text-xs h-9" 
-              />
-              <Textarea 
-                placeholder="What are you feeling right now?..." 
-                value={content} 
-                onChange={(e) => setContent(e.target.value)} 
-                className="min-h-[120px] rounded-xl text-xs resize-none" 
-              />
-              <Button 
-                onClick={handleSubmit} 
-                disabled={!content.trim() || isCreating}
-                className="w-full btn-primary rounded-xl h-10 text-xs font-bold"
-              >
-                {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save Journal Entry"}
-              </Button>
-            </Card>
-          )}
-
-          {mobileTab === "notes" && (
-            <div className="space-y-3">
-              {notes && notes.length > 0 ? (
-                notes.map((note) => {
-                  const sentiment = getSentimentLabel(note.sentimentScore);
-                  return (
-                    <Card key={note.id} className="border-none shadow-sm bg-card/90 rounded-2xl p-4 space-y-2 border border-border/40">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-bold text-sm text-foreground">{note.title || "Reflection"}</h4>
-                        <Badge variant="outline" className={cn("text-[9px]", sentiment.color)}>
-                          {sentiment.text}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-foreground/80 leading-relaxed italic">"{note.content}"</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {note.timestamp ? format(new Date(note.timestamp), "MMM d, yyyy") : ""}
-                      </p>
-                    </Card>
-                  );
-                })
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-xs text-muted-foreground">No journal entries yet.</p>
+          <div className="w-full">
+            {mobileTab === "write" && (
+              <Card className="border-none shadow-sm bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full animate-in fade-in duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground">New Journal Entry</span>
+                  <VoiceRecorder onTranscript={(text: string) => setContent(prev => prev ? `${prev} ${text}` : text)} />
                 </div>
-              )}
-            </div>
-          )}
+                <Input 
+                  placeholder="Title (e.g. Evening walk clarity)..." 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  className="rounded-xl text-xs h-10" 
+                />
+                <Textarea 
+                  placeholder="What emotions or moments are present right now?..." 
+                  value={content} 
+                  onChange={(e) => setContent(e.target.value)} 
+                  className="min-h-[130px] rounded-2xl text-xs resize-none leading-relaxed" 
+                />
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={!content.trim() || isCreating}
+                  className="w-full btn-primary rounded-2xl h-11 text-xs font-bold shadow-md shadow-primary/25 active:scale-98"
+                >
+                  {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save & Analyze Sentiment ✨"}
+                </Button>
+              </Card>
+            )}
 
-          {mobileTab === "capsules" && (
-            <div className="space-y-3">
-              <Button 
-                onClick={() => setIsCapsuleOpen(true)}
-                className="w-full btn-primary rounded-2xl text-xs font-bold h-10 shadow-sm gap-1.5"
-              >
-                <Mail className="w-4 h-4" /> Seal New Time Capsule
-              </Button>
+            {mobileTab === "notes" && (
+              <div className="space-y-3 w-full animate-in fade-in duration-200">
+                {notes && notes.length > 0 ? (
+                  notes.map((note) => {
+                    const sentiment = getSentimentLabel(note.sentimentScore);
+                    return (
+                      <Card key={note.id} className="border-none shadow-xs bg-card/95 rounded-3xl p-4 space-y-2 border border-border/50 w-full">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-bold text-sm text-foreground">{note.title || "Reflective Journal"}</h4>
+                          <Badge variant="outline" className={cn("text-[9px] font-semibold", sentiment.color)}>
+                            {sentiment.text}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-foreground/80 leading-relaxed italic">"{note.content}"</p>
+                        <p className="text-[10px] text-muted-foreground pt-1">
+                          {note.timestamp ? format(new Date(note.timestamp), "MMMM d, yyyy 'at' h:mm a") : ""}
+                        </p>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12 bg-card/60 rounded-3xl p-6 border border-border/40 space-y-2">
+                    <p className="text-xs font-semibold text-foreground">Your Journal is Empty</p>
+                    <p className="text-[11px] text-muted-foreground">Tap 'Write New' above to record your first thought.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-              {capsules && capsules.length > 0 ? (
-                capsules.map((cap) => (
-                  <Card key={cap.id} className="border border-purple-500/30 bg-purple-500/5 rounded-2xl p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
-                        {cap.isDelivered ? "💌 Delivered Letter" : "🔒 Sealed Capsule"}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {cap.createdAt ? format(new Date(cap.createdAt), "MMM d") : ""}
-                      </span>
-                    </div>
-                    <p className="text-xs text-foreground italic">"{cap.message}"</p>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-center text-xs text-muted-foreground py-6">No sealed time capsules.</p>
-              )}
-            </div>
-          )}
+            {mobileTab === "capsules" && (
+              <div className="space-y-3 w-full animate-in fade-in duration-200">
+                <Button 
+                  onClick={() => setIsCapsuleOpen(true)}
+                  className="w-full btn-primary rounded-2xl text-xs font-bold h-11 shadow-sm gap-1.5 active:scale-98"
+                >
+                  <Mail className="w-4 h-4" /> Seal New Time Capsule
+                </Button>
+
+                {capsules && capsules.length > 0 ? (
+                  capsules.map((cap) => (
+                    <Card key={cap.id} className="border border-purple-500/30 bg-purple-500/5 rounded-3xl p-4 space-y-2 w-full">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-purple-700 dark:text-purple-300">
+                          {cap.isDelivered ? "💌 Delivered Letter" : "🔒 Sealed Capsule"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {cap.createdAt ? format(new Date(cap.createdAt), "MMM d") : ""}
+                        </span>
+                      </div>
+                      <p className="text-xs text-foreground italic leading-relaxed">"{cap.message}"</p>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-10 rounded-3xl bg-card border border-border/40 p-6">
+                    <p className="text-xs text-muted-foreground">No sealed time capsules yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
         </div>
 

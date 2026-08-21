@@ -79,39 +79,52 @@ export default function Breathing() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
           
           <div className="pb-1">
             <Badge variant="outline" className="rounded-full bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
               <Smartphone className="w-2.5 h-2.5" />
-              Mobile Zen
+              Mindful Breathing
             </Badge>
             <h1 className="text-xl font-display font-bold bg-gradient-to-r from-blue-600 via-primary to-accent bg-clip-text text-transparent">
-              Breathwork
+              Guided Breathwork
             </h1>
           </div>
 
-          <BreathingOrb standalone={true} />
+          {/* Centered Breathing Orb Component */}
+          <div className="w-full">
+            <BreathingOrb standalone={true} />
+          </div>
 
-          {/* Mobile Educational Science Pills */}
-          <div className="space-y-2 pt-2">
-            <div className="p-3 rounded-2xl bg-card border border-border/70 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center flex-shrink-0">
+          {/* Mobile Educational Science Cards */}
+          <div className="space-y-2.5 pt-1 w-full">
+            <div className="p-3.5 rounded-3xl bg-card border border-border/70 flex items-center gap-3.5 shadow-xs">
+              <div className="w-9 h-9 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center flex-shrink-0">
                 <Brain className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">Vagus Nerve Reset</p>
-                <p className="text-[10px] text-muted-foreground">Calms heart rate in 60s</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">Slow exhalations lower heart rate in 60s</p>
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-card border border-border/70 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <div className="p-3.5 rounded-3xl bg-card border border-border/70 flex items-center gap-3.5 shadow-xs">
+              <div className="w-9 h-9 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center flex-shrink-0">
                 <Moon className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">Sleep Preparation</p>
-                <p className="text-[10px] text-muted-foreground">4-7-8 method for deep rest</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">4-7-8 rhythm clears intrusive thoughts for deep sleep</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-3xl bg-card border border-border/70 flex items-center gap-3.5 shadow-xs">
+              <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">Anti-Stress Shield</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">Breaks the fight-or-flight cortisol cycle instantly</p>
               </div>
             </div>
           </div>

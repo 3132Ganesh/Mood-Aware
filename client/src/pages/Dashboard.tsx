@@ -356,96 +356,115 @@ export default function Dashboard() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
           
-          {/* Mobile Header Banner */}
-          <div className="flex items-center justify-between pb-1">
-            <div>
-              <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
-                <Smartphone className="w-2.5 h-2.5" />
-                Mobile View
-              </Badge>
-              <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Hey, {user?.name?.split(' ')[0] || "Friend"}! 👋
-              </h1>
+          {/* Mobile Top Status Card */}
+          <div className="p-4 rounded-3xl bg-gradient-to-r from-primary/15 via-accent/10 to-primary/10 border border-primary/20 flex items-center justify-between shadow-xs">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Daily Sanctuary
+              </span>
+              <h2 className="text-lg font-display font-bold text-foreground">
+                Hi, {user?.name?.split(' ')[0] || "Friend"} ✨
+              </h2>
             </div>
 
             <Link href="/checkin">
-              <Button size="sm" className="btn-primary rounded-xl text-xs font-semibold h-8 px-3 shadow-sm gap-1.5">
+              <Button size="sm" className="btn-primary rounded-2xl text-xs font-semibold h-8 px-3.5 shadow-sm gap-1.5 active:scale-95">
                 <Heart className="w-3.5 h-3.5" />
-                Check In
+                {hasCheckedInToday ? "Checked In" : "Check In"}
               </Button>
             </Link>
           </div>
 
+          {/* Time Capsule Banner Mobile */}
+          {undeliveredCapsule && !dismissedCapsule && (
+            <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-400/40 shadow-sm space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 flex items-center gap-1">
+                  <Mail className="w-3 h-3" /> Past Self Letter
+                </span>
+                <button
+                  onClick={() => handleDismissCapsule(undeliveredCapsule.id)}
+                  className="text-[10px] text-muted-foreground hover:text-foreground font-semibold"
+                >
+                  Dismiss ✕
+                </button>
+              </div>
+              <p className="text-xs font-semibold text-foreground italic leading-relaxed">
+                "{undeliveredCapsule.message}"
+              </p>
+            </div>
+          )}
+
           {/* Mobile Action Cards Row */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <Link href="/checkin" className="p-3 rounded-2xl bg-card border border-border/70 shadow-sm active:scale-95 transition-all">
-              <div className="flex items-center justify-between mb-1.5">
+          <div className="grid grid-cols-2 gap-2.5 w-full">
+            <Link href="/checkin" className="p-3.5 rounded-2xl bg-card border border-border/70 shadow-xs active:scale-95 transition-all flex flex-col justify-between h-20">
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-foreground">Daily Mood</span>
                 {hasCheckedInToday ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Heart className="w-4 h-4 text-primary" />}
               </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {hasCheckedInToday && todaysMoodLog ? `${todaysMoodLog.moodScore}/5 ${todaysMoodLog.moodLabel || ""}` : "Not logged today"}
+              <p className="text-xs font-semibold text-muted-foreground truncate">
+                {hasCheckedInToday && todaysMoodLog ? `${todaysMoodLog.moodScore}/5 (${todaysMoodLog.moodLabel || "Done"})` : "Not logged yet"}
               </p>
             </Link>
 
             <button 
               type="button"
               onClick={() => setSwingDialogOpen(true)}
-              className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left shadow-sm active:scale-95 transition-all"
+              className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left shadow-xs active:scale-95 transition-all flex flex-col justify-between h-20"
             >
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-800 dark:text-amber-300">Mood Shift</span>
                 <Zap className="w-4 h-4 text-amber-500" />
               </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {todaySwings && todaySwings.length > 0 ? `${todaySwings.length} intraday shifts` : "Log quick change"}
+              <p className="text-xs font-semibold text-muted-foreground truncate">
+                {todaySwings && todaySwings.length > 0 ? `${todaySwings.length} logged today` : "Log shift now"}
               </p>
             </button>
           </div>
 
-          {/* Mobile Segmented Filter Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          {/* Full-width Segmented Filter Tab Slider */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-muted/40 rounded-2xl border border-border/50">
             <button
               type="button"
               onClick={() => setMobileTab("tasks")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "tasks" ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
+                mobileTab === "tasks" ? "bg-primary text-primary-foreground shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              🎯 Today's Tasks ({todaysTasks.length})
+              🎯 Tasks ({todaysTasks.length})
             </button>
             <button
               type="button"
               onClick={() => setMobileTab("garden")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "garden" ? "bg-emerald-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
+                mobileTab === "garden" ? "bg-emerald-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              🌿 Mood Garden
+              🌿 Garden
             </button>
             <button
               type="button"
               onClick={() => setMobileTab("insights")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "insights" ? "bg-purple-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
+                mobileTab === "insights" ? "bg-purple-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              ✨ AI Insights
+              ✨ Insights
             </button>
           </div>
 
-          {/* Mobile Tab Content */}
-          <div className="space-y-3">
+          {/* Animated Tab Content Slide Container */}
+          <div className="w-full">
             {mobileTab === "tasks" && (
-              <Card className="border-none shadow-md bg-card/90 rounded-3xl p-4 space-y-3 border border-border/40">
+              <Card className="border-none shadow-sm bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">Action Tasks</h3>
+                    <h3 className="text-sm font-bold text-foreground">Today's Wellness Tasks</h3>
                     <p className="text-[11px] text-muted-foreground">{completedTodayCount} of {todaysTasks.length} done ({progressPercent}%)</p>
                   </div>
                   <Link href="/planner">
@@ -456,7 +475,7 @@ export default function Dashboard() {
                 </div>
 
                 {todaysTasks.length > 0 ? (
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {todaysTasks.map((item) => (
                       <div
                         key={item.id}
@@ -466,11 +485,11 @@ export default function Dashboard() {
                           isCompleted: !item.isCompleted 
                         })}
                         className={cn(
-                          "flex items-center gap-3 p-3 rounded-2xl border transition-all active:scale-98",
-                          item.isCompleted ? "bg-muted/30 border-transparent opacity-60" : "bg-card border-border/70"
+                          "flex items-center gap-3.5 p-3.5 rounded-2xl border transition-all active:scale-98 cursor-pointer",
+                          item.isCompleted ? "bg-muted/30 border-transparent opacity-60" : "bg-card border-border/70 shadow-xs"
                         )}
                       >
-                        <button type="button" className="text-primary">
+                        <button type="button" className="text-primary flex-shrink-0">
                           {item.isCompleted ? <CheckCircle2 className="w-5 h-5 text-primary" /> : <Circle className="w-5 h-5 text-muted-foreground" />}
                         </button>
                         <div className="flex-1 min-w-0">
@@ -483,35 +502,44 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6">
-                    <p className="text-xs text-muted-foreground">No tasks scheduled for today.</p>
+                  <div className="text-center py-8 space-y-2">
+                    <p className="text-xs font-semibold text-foreground">No tasks scheduled for today.</p>
+                    <Link href="/planner">
+                      <Button size="sm" className="btn-primary rounded-xl text-xs h-8 px-4">
+                        Generate Plan
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </Card>
             )}
 
             {mobileTab === "garden" && (
-              <MoodGarden totalCheckins={totalLogs} currentStreak={Math.min(totalLogs, 7)} />
+              <div className="w-full animate-in fade-in duration-200">
+                <MoodGarden totalCheckins={totalLogs} currentStreak={Math.min(totalLogs, 7)} />
+              </div>
             )}
 
             {mobileTab === "insights" && (
-              <PredictiveInsights 
-                moods={history || []} 
-                habits={habitHistory || []} 
-              />
+              <div className="w-full animate-in fade-in duration-200">
+                <PredictiveInsights 
+                  moods={history || []} 
+                  habits={habitHistory || []} 
+                />
+              </div>
             )}
           </div>
 
           {/* Quick Breathwork Bar */}
-          <Link href="/breathing">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/15 via-primary/10 to-blue-500/15 border border-blue-500/30 flex items-center justify-between active:scale-98 transition-all">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-600 flex items-center justify-center">
-                  <Wind className="w-4 h-4" />
+          <Link href="/breathing" className="block w-full">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/15 via-primary/10 to-blue-500/15 border border-blue-500/30 flex items-center justify-between active:scale-98 transition-all shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-600 flex items-center justify-center flex-shrink-0">
+                  <Wind className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-foreground">Breathwork Sanctuary</p>
-                  <p className="text-[10px] text-muted-foreground">Tap for a 2-minute box breathing session</p>
+                  <p className="text-xs font-bold text-foreground">Guided Breathwork Sanctuary</p>
+                  <p className="text-[10px] text-muted-foreground">Tap for 2-minute box breathing</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />

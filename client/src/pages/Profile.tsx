@@ -796,7 +796,7 @@ export default function Profile() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
           
           {/* Mobile Top Header Banner */}
           <div className="flex items-center justify-between pb-1">
@@ -809,7 +809,7 @@ export default function Profile() {
               <div>
                 <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
                   <Smartphone className="w-2.5 h-2.5" />
-                  Mobile Settings
+                  Personal Space
                 </Badge>
                 <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   My Profile
@@ -820,7 +820,7 @@ export default function Profile() {
             <Button 
               size="sm" 
               onClick={() => setEditModalOpen(true)}
-              className="btn-primary rounded-xl text-xs font-semibold gap-1.5 h-8 px-3 shadow-sm"
+              className="btn-primary rounded-2xl text-xs font-semibold gap-1.5 h-8 px-3 shadow-xs active:scale-95"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               Edit
@@ -828,7 +828,7 @@ export default function Profile() {
           </div>
 
           {/* Compact Mobile Profile Card */}
-          <Card className="border-none shadow-lg bg-card/90 backdrop-blur-xl rounded-3xl overflow-hidden border border-border/50">
+          <Card className="border-none shadow-md bg-card/95 backdrop-blur-xl rounded-3xl overflow-hidden border border-border/50 w-full">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-3.5">
                 <div className="relative flex-shrink-0">
@@ -839,56 +839,30 @@ export default function Profile() {
                     ✓
                   </div>
                 </div>
-
-                <div className="space-y-0.5 min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <h2 className="text-lg font-display font-bold text-foreground truncate">
-                      {user?.name || "Mindful User"}
-                    </h2>
-                    <button 
-                      onClick={() => setNameDialogOpen(true)}
-                      className="p-1 rounded text-muted-foreground hover:text-primary"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-bold text-foreground truncate">{user?.name || "User"}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">
+                      ✨ Mindful
+                    </span>
+                    <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                      Synced
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
-                  <p className="text-[10px] text-muted-foreground/70">
-                    Member since {user?.createdAt ? format(new Date(user.createdAt), "MMM yyyy") : "Recently"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Horizontal Mini Stats Slider */}
-              <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-border/40 text-center">
-                <div className="p-2 rounded-xl bg-muted/30">
-                  <p className="text-sm font-bold font-display">{totalCheckins}</p>
-                  <p className="text-[9px] text-muted-foreground">🌟 Logs</p>
-                </div>
-                <div className="p-2 rounded-xl bg-muted/30">
-                  <p className="text-sm font-bold font-display">{totalNotes}</p>
-                  <p className="text-[9px] text-muted-foreground">📝 Notes</p>
-                </div>
-                <div className="p-2 rounded-xl bg-muted/30">
-                  <p className="text-sm font-bold font-display">{completedTasksCount}</p>
-                  <p className="text-[9px] text-muted-foreground">🎯 Done</p>
-                </div>
-                <div className="p-2 rounded-xl bg-muted/30">
-                  <p className="text-sm font-bold font-display">{totalCapsules}</p>
-                  <p className="text-[9px] text-muted-foreground">💌 Capsules</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Mobile Horizontal Segmented Pill Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          {/* Mobile Full-width Segmented 5-Pill Tab Grid */}
+          <div className="grid grid-cols-5 gap-1 p-1 bg-muted/40 rounded-2xl border border-border/50 w-full">
             <button
               type="button"
               onClick={() => setMobileTab("all")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "all" ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-0.5 rounded-xl text-[11px] font-bold transition-all text-center truncate",
+                mobileTab === "all" ? "bg-primary text-primary-foreground shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
               ⚡ All
@@ -897,8 +871,8 @@ export default function Profile() {
               type="button"
               onClick={() => setMobileTab("sleep")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "sleep" ? "bg-indigo-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-0.5 rounded-xl text-[11px] font-bold transition-all text-center truncate",
+                mobileTab === "sleep" ? "bg-indigo-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
               🌙 Sleep
@@ -907,18 +881,18 @@ export default function Profile() {
               type="button"
               onClick={() => setMobileTab("activity")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "activity" ? "bg-emerald-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-0.5 rounded-xl text-[11px] font-bold transition-all text-center truncate",
+                mobileTab === "activity" ? "bg-emerald-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              🏃 Activity
+              🏃 Move
             </button>
             <button
               type="button"
               onClick={() => setMobileTab("music")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "music" ? "bg-pink-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-0.5 rounded-xl text-[11px] font-bold transition-all text-center truncate",
+                mobileTab === "music" ? "bg-pink-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
               🎵 Audio
@@ -927,8 +901,8 @@ export default function Profile() {
               type="button"
               onClick={() => setMobileTab("goals")}
               className={cn(
-                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
-                mobileTab === "goals" ? "bg-purple-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+                "py-2 px-0.5 rounded-xl text-[11px] font-bold transition-all text-center truncate",
+                mobileTab === "goals" ? "bg-purple-500 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
               )}
             >
               🎯 Goals
