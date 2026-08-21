@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { MoodGarden } from "@/components/MoodGarden";
 import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { MoodSwingDialog } from "@/components/MoodSwingDialog";
+import { HydrationTracker } from "@/components/HydrationTracker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -223,96 +224,9 @@ export default function Dashboard() {
 
           </div>
 
-          {/* Daily Vitality Progress Rings Section (Sleep, Steps, Water) */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-headline text-stitch-primary font-bold">Daily Vitality</h2>
-              <span className="text-xs font-medium text-muted-foreground">Today's physiological telemetry</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-[1.5vw] w-full">
-              
-              {/* Ring 1: Sleep */}
-              <div className="bg-stitch-surface-container-lowest rounded-3xl p-6 flex flex-col items-center justify-center border border-border/40 shadow-xs w-full min-w-0">
-                <div className="relative w-24 h-24 mb-3">
-                  <svg className="w-full h-full -rotate-90">
-                    <circle className="text-stitch-surface-container-highest" cx="48" cy="48" fill="transparent" r="38" stroke="currentColor" strokeWidth="8" />
-                    <circle 
-                      cx="48" 
-                      cy="48" 
-                      fill="transparent" 
-                      r="38" 
-                      stroke="#55624d" 
-                      strokeWidth="8" 
-                      strokeDasharray="238.76" 
-                      strokeDashoffset="55" 
-                      strokeLinecap="round" 
-                      className="transition-all duration-500"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Moon className="w-6 h-6 text-stitch-primary" />
-                  </div>
-                </div>
-                <span className="text-xs font-label text-stitch-outline uppercase tracking-wider font-semibold">Sleep Duration</span>
-                <span className="text-xl font-headline font-bold text-stitch-on-surface mt-0.5">
-                  {todaysMoodLog?.sleepScore ? `${todaysMoodLog.sleepScore}h 00m` : "7h 20m"}
-                </span>
-              </div>
-
-              {/* Ring 2: Steps / Physical Energy */}
-              <div className="bg-stitch-surface-container-lowest rounded-3xl p-6 flex flex-col items-center justify-center border border-border/40 shadow-xs w-full min-w-0">
-                <div className="relative w-24 h-24 mb-3">
-                  <svg className="w-full h-full -rotate-90">
-                    <circle className="text-stitch-surface-container-highest" cx="48" cy="48" fill="transparent" r="38" stroke="currentColor" strokeWidth="8" />
-                    <circle 
-                      cx="48" 
-                      cy="48" 
-                      fill="transparent" 
-                      r="38" 
-                      stroke="#98a68e" 
-                      strokeWidth="8" 
-                      strokeDasharray="238.76" 
-                      strokeDashoffset="80" 
-                      strokeLinecap="round" 
-                      className="transition-all duration-500"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Footprints className="w-6 h-6 text-stitch-primary" />
-                  </div>
-                </div>
-                <span className="text-xs font-label text-stitch-outline uppercase tracking-wider font-semibold">Physical Activity</span>
-                <span className="text-xl font-headline font-bold text-stitch-on-surface mt-0.5">6,432 steps</span>
-              </div>
-
-              {/* Ring 3: Hydration & Check-in Habit */}
-              <div className="bg-stitch-surface-container-lowest rounded-3xl p-6 flex flex-col items-center justify-center border border-border/40 shadow-xs w-full min-w-0">
-                <div className="relative w-24 h-24 mb-3">
-                  <svg className="w-full h-full -rotate-90">
-                    <circle className="text-stitch-surface-container-highest" cx="48" cy="48" fill="transparent" r="38" stroke="currentColor" strokeWidth="8" />
-                    <circle 
-                      cx="48" 
-                      cy="48" 
-                      fill="transparent" 
-                      r="38" 
-                      stroke="#755754" 
-                      strokeWidth="8" 
-                      strokeDasharray="238.76" 
-                      strokeDashoffset="120" 
-                      strokeLinecap="round" 
-                      className="transition-all duration-500"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Droplets className="w-6 h-6 text-stitch-secondary" />
-                  </div>
-                </div>
-                <span className="text-xs font-label text-stitch-outline uppercase tracking-wider font-semibold">Hydration Water</span>
-                <span className="text-xl font-headline font-bold text-stitch-on-surface mt-0.5">1.8 Liters</span>
-              </div>
-
-            </div>
+          {/* Dedicated Hydration Tracker & Drink Water Notifications */}
+          <div className="w-full min-w-0">
+            <HydrationTracker />
           </div>
 
           {/* Weekly Ritual Highlight Banner */}
@@ -536,25 +450,9 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Mobile Daily Vitality Rings (3 columns) */}
-          <div className="grid grid-cols-3 gap-2 w-full">
-            <div className="p-3 rounded-2xl bg-card border border-border/70 text-center flex flex-col items-center justify-center shadow-xs">
-              <Moon className="w-4 h-4 text-stitch-primary mb-1" />
-              <span className="text-[10px] font-semibold text-muted-foreground">Sleep</span>
-              <span className="text-xs font-bold text-foreground font-headline mt-0.5">
-                {todaysMoodLog?.sleepScore ? `${todaysMoodLog.sleepScore}h` : "7.3h"}
-              </span>
-            </div>
-            <div className="p-3 rounded-2xl bg-card border border-border/70 text-center flex flex-col items-center justify-center shadow-xs">
-              <Footprints className="w-4 h-4 text-stitch-primary mb-1" />
-              <span className="text-[10px] font-semibold text-muted-foreground">Steps</span>
-              <span className="text-xs font-bold text-foreground font-headline mt-0.5">6.4k</span>
-            </div>
-            <div className="p-3 rounded-2xl bg-card border border-border/70 text-center flex flex-col items-center justify-center shadow-xs">
-              <Droplets className="w-4 h-4 text-stitch-secondary mb-1" />
-              <span className="text-[10px] font-semibold text-muted-foreground">Water</span>
-              <span className="text-xs font-bold text-foreground font-headline mt-0.5">1.8L</span>
-            </div>
+          {/* Mobile Hydration Tracker & Drink Water Notifications */}
+          <div className="w-full min-w-0">
+            <HydrationTracker compact />
           </div>
 
           {/* Mobile Action Cards Row - CSS Grid */}
