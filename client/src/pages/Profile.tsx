@@ -22,7 +22,7 @@ import {
   User, Mail, Calendar, Moon, Sun, Clock, Dumbbell, Music, Gamepad2, 
   Heart, Sparkles, Edit3, Save, RefreshCw, Check, Flame, Zap, Coffee, 
   Headphones, Compass, ShieldCheck, LogOut, SlidersHorizontal, ArrowLeft,
-  CheckCircle2, Bed, Smile, Layers, HelpCircle
+  CheckCircle2, Laptop, Smartphone, Activity, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,17 +41,17 @@ const MUSIC_APPS = [
 ];
 
 const BREAK_FREQUENCIES = [
-  { id: "30m", label: "Every 30 mins" },
-  { id: "1h", label: "Every 1 hour" },
-  { id: "2h", label: "Every 2 hours" },
-  { id: "as_needed", label: "As needed" },
+  { id: "30m", label: "Every 30 mins", short: "30m" },
+  { id: "1h", label: "Every 1 hour", short: "1 hr" },
+  { id: "2h", label: "Every 2 hours", short: "2 hrs" },
+  { id: "as_needed", label: "As needed", short: "Flexible" },
 ];
 
 const CAFFEINE_LEVELS = [
-  { id: "none", label: "None / Decaf" },
-  { id: "low", label: "1-2 cups" },
-  { id: "moderate", label: "3-4 cups" },
-  { id: "high", label: "High (5+ cups)" },
+  { id: "none", label: "None / Decaf", short: "0 cups" },
+  { id: "low", label: "1-2 cups", short: "1-2" },
+  { id: "moderate", label: "3-4 cups", short: "3-4" },
+  { id: "high", label: "High (5+ cups)", short: "5+" },
 ];
 
 const MUSIC_MOODS_LIST = [
@@ -82,6 +82,9 @@ export default function Profile() {
   const { notes } = useFeelings();
   const { capsules } = useCapsules();
   const { toast } = useToast();
+
+  // Mobile Filter Tab State
+  const [mobileTab, setMobileTab] = useState<"all" | "sleep" | "activity" | "music" | "goals">("all");
 
   // Edit Name Dialog State
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
@@ -224,475 +227,320 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Desktop Sidebar */}
       <Sidebar />
 
       <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
-        {/* Top Header Banner */}
-        <div className="p-4 sm:p-8 max-w-6xl w-full mx-auto space-y-6">
+
+        {/* ========================================================================= */}
+        {/* 1. LAPTOP / DESKTOP SCREEN UI (Visible on screens >= 1024px)              */}
+        {/* ========================================================================= */}
+        <div className="hidden lg:block p-8 max-w-7xl w-full mx-auto space-y-8">
           
-          {/* Top Bar Navigation */}
+          {/* Top Desktop Breadcrumb & Action Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link href="/dashboard">
-                <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/80">
+                <Button variant="ghost" size="icon" className="rounded-2xl hover:bg-muted/80 h-10 w-10">
                   <ArrowLeft className="w-5 h-5 text-muted-foreground" />
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Profile & Preferences
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
+                    <Laptop className="w-3 h-3" />
+                    Laptop Dashboard
+                  </Badge>
+                </div>
+                <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-0.5">
+                  Profile & Wellness Preferences
                 </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Manage your personal account details and fine-tune your wellness settings instantly.
+                <p className="text-sm text-muted-foreground">
+                  Inspect your account profile and fine-tune your wellness preferences with instant live updates.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-                <DialogTrigger asChild>
-                  <Button className="btn-primary rounded-2xl shadow-md shadow-primary/20 text-xs sm:text-sm font-semibold gap-2">
-                    <SlidersHorizontal className="w-4 h-4" />
-                    <span className="hidden sm:inline">Edit All Preferences</span>
-                    <span className="sm:hidden">Edit</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border-border bg-card/95 backdrop-blur-xl p-6">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-display font-bold flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-primary" />
-                      Edit Wellness Preferences
-                    </DialogTitle>
-                    <DialogDescription>
-                      Update your lifestyle goals, daily schedule, and relaxation preferences.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <form onSubmit={handleSaveAllPreferences} className="space-y-5 pt-2">
-                    <Tabs defaultValue="routine" className="w-full">
-                      <TabsList className="grid grid-cols-3 rounded-2xl p-1 bg-muted/60 mb-4">
-                        <TabsTrigger value="routine" className="rounded-xl text-xs font-semibold">Routine & Sleep</TabsTrigger>
-                        <TabsTrigger value="lifestyle" className="rounded-xl text-xs font-semibold">Lifestyle & Sound</TabsTrigger>
-                        <TabsTrigger value="goals" className="rounded-xl text-xs font-semibold">Goals & Notes</TabsTrigger>
-                      </TabsList>
-
-                      {/* Tab 1: Routine & Sleep */}
-                      <TabsContent value="routine" className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Typical Bedtime</Label>
-                            <Input 
-                              type="time" 
-                              value={formData.sleepTime}
-                              onChange={(e) => setFormData({ ...formData, sleepTime: e.target.value })}
-                              className="rounded-xl"
-                            />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Typical Wake Time</Label>
-                            <Input 
-                              type="time" 
-                              value={formData.wakeTime}
-                              onChange={(e) => setFormData({ ...formData, wakeTime: e.target.value })}
-                              className="rounded-xl"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold">Break Frequency at Work</Label>
-                          <Select 
-                            value={formData.breakFrequency} 
-                            onValueChange={(val) => setFormData({ ...formData, breakFrequency: val })}
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {BREAK_FREQUENCIES.map((b) => (
-                                <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold">Caffeine Intake</Label>
-                          <Select 
-                            value={formData.caffeineIntake} 
-                            onValueChange={(val) => setFormData({ ...formData, caffeineIntake: val })}
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select intake level" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {CAFFEINE_LEVELS.map((c) => (
-                                <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </TabsContent>
-
-                      {/* Tab 2: Lifestyle & Sound */}
-                      <TabsContent value="lifestyle" className="space-y-4">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold">Physical Activity Level</Label>
-                          <Select 
-                            value={formData.physicalActivity} 
-                            onValueChange={(val) => setFormData({ ...formData, physicalActivity: val })}
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select activity" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {ACTIVITY_LEVELS.map((a) => (
-                                <SelectItem key={a.id} value={a.id}>{a.icon} {a.label} ({a.desc})</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold">Preferred Music Sanctuary</Label>
-                          <Select 
-                            value={formData.musicApp} 
-                            onValueChange={(val) => setFormData({ ...formData, musicApp: val })}
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select music app" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {MUSIC_APPS.map((m) => (
-                                <SelectItem key={m.id} value={m.id}>{m.icon} {m.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="p-3.5 rounded-2xl border border-border/80 bg-muted/20 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                              <Label className="text-xs font-semibold">Relaxation Gaming Breaks</Label>
-                              <p className="text-[11px] text-muted-foreground">Suggest quick puzzle & mindful gaming breaks</p>
-                            </div>
-                            <Switch 
-                              checked={formData.playsGames}
-                              onCheckedChange={(checked) => setFormData({ ...formData, playsGames: checked })}
-                            />
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      {/* Tab 3: Goals & Notes */}
-                      <TabsContent value="goals" className="space-y-4">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold">Feedback, Reflection & Notes</Label>
-                          <Textarea 
-                            value={formData.feedback}
-                            onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
-                            placeholder="Share your personal wellness goals or suggestions for your AI plan..."
-                            className="min-h-[120px] rounded-2xl resize-none text-sm"
-                          />
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-
-                    <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-border/40">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setEditModalOpen(false)}
-                        className="rounded-xl"
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        disabled={updateProfile.isPending}
-                        className="btn-primary rounded-xl font-semibold gap-2"
-                      >
-                        {updateProfile.isPending ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Save className="w-4 h-4" />
-                        )}
-                        Save Preferences
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => setEditModalOpen(true)}
+                className="btn-primary rounded-2xl shadow-lg shadow-primary/20 text-sm font-semibold gap-2 h-11 px-5"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Edit All Preferences
+              </Button>
             </div>
           </div>
 
-          {/* User Account Overview Hero Card */}
-          <Card className="border-none shadow-xl bg-gradient-to-br from-card/90 via-card/70 to-card/40 backdrop-blur-xl rounded-3xl overflow-hidden relative border border-border/50">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-            <CardContent className="p-6 sm:p-8 relative">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                
-                {/* Avatar & Personal Identity */}
-                <div className="flex items-center gap-4 sm:gap-5">
-                  <div className="relative">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-2xl sm:text-3xl font-display font-bold text-white shadow-xl shadow-primary/30 ring-4 ring-background">
-                      {user?.name?.charAt(0).toUpperCase() || "U"}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-background flex items-center justify-center text-white text-[10px]" title="Active & Synced">
-                      ✓
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">
-                        {user?.name || "Mindful User"}
-                      </h2>
-                      <Dialog open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
-                        <DialogTrigger asChild>
-                          <button 
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                            title="Edit Name"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-sm rounded-3xl">
-                          <DialogHeader>
-                            <DialogTitle className="text-lg font-bold">Change Display Name</DialogTitle>
-                            <DialogDescription>
-                              How would you like MoodAware to greet you?
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-3 py-2">
-                            <Label className="text-xs font-semibold">Your Name</Label>
-                            <Input 
-                              value={editedName}
-                              onChange={(e) => setEditedName(e.target.value)}
-                              placeholder="Enter your name"
-                              className="rounded-xl"
-                              autoFocus
-                            />
-                          </div>
-                          <DialogFooter className="gap-2">
-                            <Button variant="outline" onClick={() => setNameDialogOpen(false)} className="rounded-xl">
-                              Cancel
-                            </Button>
-                            <Button 
-                              onClick={handleSaveName} 
-                              disabled={updateUser.isPending}
-                              className="btn-primary rounded-xl font-semibold"
-                            >
-                              {updateUser.isPending ? <RefreshCw className="w-4 h-4 animate-spin mr-1" /> : null}
-                              Save
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+          {/* Laptop 2-Column Split Layout */}
+          <div className="grid grid-cols-12 gap-8 items-start">
+            
+            {/* Left Sticky Column: User Identity Hub (~340px / 4 columns) */}
+            <div className="col-span-4 sticky top-6 space-y-6">
+              
+              {/* Identity & Account Card */}
+              <Card className="border-none shadow-xl bg-card/85 backdrop-blur-xl rounded-3xl overflow-hidden border border-border/50 relative">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none -mr-12 -mt-12" />
+                <CardContent className="p-6 relative space-y-6">
+                  
+                  {/* Avatar & Name */}
+                  <div className="flex flex-col items-center text-center space-y-3">
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-primary via-primary/90 to-accent flex items-center justify-center text-4xl font-display font-bold text-white shadow-xl shadow-primary/30 ring-4 ring-background">
+                        {user?.name?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-2 border-background flex items-center justify-center text-white text-xs font-bold shadow-md" title="Active & Synced">
+                        ✓
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-2">
+                        <h2 className="text-2xl font-display font-bold text-foreground">
+                          {user?.name || "Mindful User"}
+                        </h2>
+                        <button 
+                          onClick={() => setNameDialogOpen(true)}
+                          className="p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                          title="Edit Name"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-primary/70" />
                         {user?.email || "No email"}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-primary/70" />
-                        Member since {user?.createdAt ? format(new Date(user.createdAt), "MMM yyyy") : "Recently"}
-                      </span>
+                      </p>
+                      <p className="text-[11px] text-muted-foreground/80 flex items-center justify-center gap-1">
+                        <Calendar className="w-3 h-3 text-primary/60" />
+                        Member since {user?.createdAt ? format(new Date(user.createdAt), "MMMM yyyy") : "Recently"}
+                      </p>
                     </div>
 
-                    <div className="pt-1.5 flex items-center gap-2">
-                      <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-medium px-2.5 py-0.5">
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                      <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold px-2.5 py-0.5">
                         ✨ Mindful Explorer
                       </Badge>
-                      <Badge variant="outline" className="rounded-full bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-medium px-2.5 py-0.5 flex items-center gap-1">
+                      <Badge variant="outline" className="rounded-full bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Account Synced
+                        Synced
                       </Badge>
                     </div>
                   </div>
-                </div>
 
-                {/* Quick AI Plan Sync Action */}
-                <div className="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => generatePlan()}
-                    disabled={isGenerating}
-                    className="w-full sm:w-auto rounded-2xl text-xs font-semibold gap-2 border-primary/20 hover:bg-primary/5 hover:border-primary/40 h-10 px-4"
-                  >
-                    <RefreshCw className={cn("w-3.5 h-3.5 text-primary", isGenerating && "animate-spin")} />
-                    {isGenerating ? "Rebuilding Plan..." : "Re-sync AI Plan"}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Activity Summary Stats Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-border/40">
-                <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/30 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-sm">
-                    🌟
-                  </div>
-                  <div>
-                    <p className="text-base sm:text-lg font-bold font-display">{totalCheckins}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium">Daily Check-ins</p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/30 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold text-sm">
-                    📝
-                  </div>
-                  <div>
-                    <p className="text-base sm:text-lg font-bold font-display">{totalNotes}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium">Feelings Logged</p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/30 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-sm">
-                    🎯
-                  </div>
-                  <div>
-                    <p className="text-base sm:text-lg font-bold font-display">{completedTasksCount}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium">Tasks Mastered</p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/30 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-sm">
-                    💌
-                  </div>
-                  <div>
-                    <p className="text-base sm:text-lg font-bold font-display">{totalCapsules}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium">Time Capsules</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Instant Preferences Grid */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-display font-bold text-foreground flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-500" />
-                  Instant Preferences & Controls
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Tap any option below to change your wellness preferences immediately.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              
-              {/* Card 1: Sleep Schedule & Rest Routine */}
-              <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
-                        <Moon className="w-4 h-4" />
+                  {/* Activity Stats Matrix */}
+                  <div className="space-y-2 pt-4 border-t border-border/40">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Wellness Activity Stats</p>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="p-3 rounded-2xl bg-muted/30 border border-border/30 text-center">
+                        <p className="text-xl font-bold font-display text-foreground">{totalCheckins}</p>
+                        <p className="text-[11px] text-muted-foreground font-medium">🌟 Check-ins</p>
                       </div>
-                      <div>
-                        <CardTitle className="text-base font-bold">Sleep & Rest Schedule</CardTitle>
-                        <CardDescription className="text-xs">Your circadian rhythm targets</CardDescription>
+                      <div className="p-3 rounded-2xl bg-muted/30 border border-border/30 text-center">
+                        <p className="text-xl font-bold font-display text-foreground">{totalNotes}</p>
+                        <p className="text-[11px] text-muted-foreground font-medium">📝 Feelings</p>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-muted/30 border border-border/30 text-center">
+                        <p className="text-xl font-bold font-display text-foreground">{completedTasksCount}</p>
+                        <p className="text-[11px] text-muted-foreground font-medium">🎯 Tasks Done</p>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-muted/30 border border-border/30 text-center">
+                        <p className="text-xl font-bold font-display text-foreground">{totalCapsules}</p>
+                        <p className="text-[11px] text-muted-foreground font-medium">💌 Capsules</p>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="rounded-full text-[11px] font-semibold bg-indigo-500/10 text-indigo-600">
+                  </div>
+
+                  {/* AI Plan Sync Quick Card */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" /> AI Wellness Plan
+                      </span>
+                      <Badge variant="outline" className="text-[10px] bg-background/80 border-primary/30 text-primary">
+                        Active
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Re-generate your personalized 7-day schedule to match your latest preferences.
+                    </p>
+                    <Button 
+                      onClick={() => generatePlan()}
+                      disabled={isGenerating}
+                      className="w-full btn-primary rounded-xl text-xs font-semibold h-9 gap-2 shadow-sm"
+                    >
+                      <RefreshCw className={cn("w-3.5 h-3.5", isGenerating && "animate-spin")} />
+                      {isGenerating ? "Rebuilding 7-Day Plan..." : "Re-sync AI Wellness Plan"}
+                    </Button>
+                  </div>
+
+                  {/* Quick System Tools */}
+                  <div className="space-y-2 pt-2 border-t border-border/40">
+                    <Link href="/onboarding">
+                      <Button variant="ghost" className="w-full justify-start rounded-xl text-xs text-muted-foreground hover:text-foreground h-9">
+                        <Compass className="w-4 h-4 mr-2 text-primary" />
+                        Launch Guided Setup Wizard
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => logout()}
+                      className="w-full justify-start rounded-xl text-xs text-destructive hover:bg-destructive/10 hover:text-destructive h-9"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out Account
+                    </Button>
+                  </div>
+
+                </CardContent>
+              </Card>
+
+            </div>
+
+            {/* Right Column: Interactive Preference Stations Matrix (~8 columns) */}
+            <div className="col-span-8 space-y-6">
+
+              {/* Station 1: Sleep Schedule & Rest Routine */}
+              <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                        <Moon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg font-bold">Circadian Rhythm & Sleep Routine</CardTitle>
+                        <CardDescription className="text-xs">Your bedtime, wake schedule, and daily rest intervals</CardDescription>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="rounded-full text-xs font-semibold px-3 py-1 bg-indigo-500/10 text-indigo-600">
                       {calculateSleepWindow(currentSleep, currentWake)}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-muted/30 rounded-2xl border border-border/30">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                          <Moon className="w-3 h-3 text-indigo-400" /> Bedtime
+                <CardContent className="space-y-5">
+                  
+                  {/* Bedtime & Wake Time Inputs */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-muted/20 rounded-2xl border border-border/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1.5">
+                          <Moon className="w-4 h-4 text-indigo-500" /> Target Bedtime
                         </span>
+                        <span className="text-xs font-bold text-primary">{currentSleep}</span>
                       </div>
                       <Input 
                         type="time" 
                         value={currentSleep} 
                         onChange={(e) => handleInstantUpdate({ sleepTime: e.target.value }, `Bedtime updated to ${e.target.value}`)}
-                        className="h-8 text-sm font-semibold rounded-xl bg-card border-border/60"
+                        className="h-10 text-sm font-semibold rounded-xl bg-card border-border/60"
                       />
                     </div>
 
-                    <div className="p-3 bg-muted/30 rounded-2xl border border-border/30">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                          <Sun className="w-3 h-3 text-amber-400" /> Wake Time
+                    <div className="p-4 bg-muted/20 rounded-2xl border border-border/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1.5">
+                          <Sun className="w-4 h-4 text-amber-500" /> Target Wake Time
                         </span>
+                        <span className="text-xs font-bold text-primary">{currentWake}</span>
                       </div>
                       <Input 
                         type="time" 
                         value={currentWake} 
                         onChange={(e) => handleInstantUpdate({ wakeTime: e.target.value }, `Wake time updated to ${e.target.value}`)}
-                        className="h-8 text-sm font-semibold rounded-xl bg-card border-border/60"
+                        className="h-10 text-sm font-semibold rounded-xl bg-card border-border/60"
                       />
                     </div>
                   </div>
 
-                  {/* Break & Caffeine Chips */}
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground font-medium flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-primary" /> Break Frequency
-                      </span>
-                      <span className="font-semibold text-foreground capitalize">
-                        {BREAK_FREQUENCIES.find(b => b.id === currentBreakFreq)?.label || currentBreakFreq}
-                      </span>
+                  {/* Break Frequency & Caffeine Chips */}
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/30">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-semibold flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-primary" /> Work Break Interval
+                        </span>
+                        <span className="font-bold text-foreground">
+                          {BREAK_FREQUENCIES.find(b => b.id === currentBreakFreq)?.label || currentBreakFreq}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {BREAK_FREQUENCIES.map((freq) => {
+                          const isSelected = currentBreakFreq === freq.id;
+                          return (
+                            <button
+                              key={freq.id}
+                              type="button"
+                              onClick={() => handleInstantUpdate({ breakFrequency: freq.id }, `Break interval set to ${freq.label}`)}
+                              className={cn(
+                                "py-2 px-1.5 rounded-xl text-xs font-semibold border transition-all text-center",
+                                isSelected 
+                                  ? "bg-primary text-primary-foreground border-primary shadow-sm" 
+                                  : "bg-muted/30 border-border/60 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                              )}
+                            >
+                              {freq.short}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {BREAK_FREQUENCIES.map((freq) => {
-                        const isSelected = currentBreakFreq === freq.id;
-                        return (
-                          <button
-                            key={freq.id}
-                            type="button"
-                            onClick={() => handleInstantUpdate({ breakFrequency: freq.id }, `Break frequency set to ${freq.label}`)}
-                            className={cn(
-                              "px-2 py-1.5 rounded-xl text-[11px] font-semibold border transition-all text-center",
-                              isSelected 
-                                ? "bg-primary text-primary-foreground border-primary shadow-sm" 
-                                : "bg-muted/30 border-border/60 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                            )}
-                          >
-                            {freq.id}
-                          </button>
-                        );
-                      })}
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-semibold flex items-center gap-1.5">
+                          <Coffee className="w-3.5 h-3.5 text-amber-600" /> Daily Caffeine Intake
+                        </span>
+                        <span className="font-bold text-foreground">
+                          {CAFFEINE_LEVELS.find(c => c.id === currentCaffeine)?.label || currentCaffeine}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {CAFFEINE_LEVELS.map((c) => {
+                          const isSelected = currentCaffeine === c.id;
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => handleInstantUpdate({ caffeineIntake: c.id }, `Caffeine intake set to ${c.label}`)}
+                              className={cn(
+                                "py-2 px-1.5 rounded-xl text-xs font-semibold border transition-all text-center",
+                                isSelected 
+                                  ? "bg-amber-500/20 text-amber-900 dark:text-amber-200 border-amber-500/40 shadow-sm" 
+                                  : "bg-muted/30 border-border/60 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                              )}
+                            >
+                              {c.short}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
+
                 </CardContent>
               </Card>
 
-              {/* Card 2: Physical Activity Level */}
+              {/* Station 2: Physical Fitness & Energy */}
               <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                        <Dumbbell className="w-4 h-4" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                        <Dumbbell className="w-5 h-5" />
                       </div>
                       <div>
-                        <CardTitle className="text-base font-bold">Physical Activity</CardTitle>
-                        <CardDescription className="text-xs">Tailors workout & stretch intensity</CardDescription>
+                        <CardTitle className="text-lg font-bold">Physical Activity Level</CardTitle>
+                        <CardDescription className="text-xs">Adjusts workout intensity and mindful movement in your plan</CardDescription>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="rounded-full text-[11px] font-semibold capitalize bg-emerald-500/10 text-emerald-600">
+                    <Badge variant="secondary" className="rounded-full text-xs font-semibold px-3 py-1 capitalize bg-emerald-500/10 text-emerald-600">
                       {currentActivity}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2.5">
+                <CardContent>
+                  <div className="grid grid-cols-4 gap-3">
                     {ACTIVITY_LEVELS.map((level) => {
                       const isSelected = currentActivity === level.id;
                       return (
@@ -701,74 +549,47 @@ export default function Profile() {
                           type="button"
                           onClick={() => handleInstantUpdate({ physicalActivity: level.id }, `Activity level set to ${level.label}`)}
                           className={cn(
-                            "p-3 rounded-2xl border text-left transition-all active:scale-95 flex flex-col justify-between",
+                            "p-3.5 rounded-2xl border text-left transition-all active:scale-98 flex flex-col justify-between h-28",
                             isSelected 
-                              ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-950 dark:text-emerald-100 shadow-sm ring-1 ring-emerald-500/30" 
+                              ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-950 dark:text-emerald-100 shadow-md ring-2 ring-emerald-500/30" 
                               : "bg-muted/20 border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                           )}
                         >
-                          <div className="flex items-center justify-between w-full mb-1">
-                            <span className="text-base">{level.icon}</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 font-bold" />}
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-2xl">{level.icon}</span>
+                            {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600 font-bold" />}
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-foreground">{level.label}</p>
-                            <p className="text-[10px] text-muted-foreground">{level.desc}</p>
+                            <p className="text-sm font-bold text-foreground">{level.label}</p>
+                            <p className="text-[11px] text-muted-foreground">{level.desc}</p>
                           </div>
                         </button>
                       );
                     })}
                   </div>
-
-                  {/* Caffeine Selector */}
-                  <div className="pt-2 border-t border-border/30 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
-                      <Coffee className="w-3.5 h-3.5 text-amber-600" /> Caffeine:
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {CAFFEINE_LEVELS.map((c) => {
-                        const isSelected = currentCaffeine === c.id;
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => handleInstantUpdate({ caffeineIntake: c.id }, `Caffeine intake set to ${c.label}`)}
-                            className={cn(
-                              "px-2 py-1 rounded-xl text-[10px] font-semibold border transition-all",
-                              isSelected 
-                                ? "bg-amber-500/20 text-amber-800 dark:text-amber-200 border-amber-500/40" 
-                                : "bg-muted/30 border-border/50 text-muted-foreground hover:bg-muted"
-                            )}
-                          >
-                            {c.id}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* Card 3: Sound Sanctuary & Music */}
+              {/* Station 3: Audio Sanctuary & Music Streaming */}
               <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center">
-                        <Headphones className="w-4 h-4" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-pink-500/10 text-pink-500 flex items-center justify-center">
+                        <Headphones className="w-5 h-5" />
                       </div>
                       <div>
-                        <CardTitle className="text-base font-bold">Music Sanctuary</CardTitle>
-                        <CardDescription className="text-xs">Your audio integration for focus & calm</CardDescription>
+                        <CardTitle className="text-lg font-bold">Sound Sanctuary & Music App</CardTitle>
+                        <CardDescription className="text-xs">Preferred platform for binaural beats, focus playlists, and ambient sounds</CardDescription>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="rounded-full text-[11px] font-semibold capitalize bg-pink-500/10 text-pink-600">
+                    <Badge variant="secondary" className="rounded-full text-xs font-semibold px-3 py-1 capitalize bg-pink-500/10 text-pink-600">
                       {MUSIC_APPS.find(m => m.id === currentMusicApp)?.label || currentMusicApp}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-4 gap-3">
                     {MUSIC_APPS.map((app) => {
                       const isSelected = currentMusicApp === app.id;
                       return (
@@ -777,24 +598,24 @@ export default function Profile() {
                           type="button"
                           onClick={() => handleInstantUpdate({ musicApp: app.id }, `Music platform set to ${app.label}`)}
                           className={cn(
-                            "p-2.5 rounded-2xl border text-xs font-semibold flex items-center gap-2 transition-all active:scale-95",
+                            "p-3 rounded-2xl border text-sm font-semibold flex items-center gap-2.5 transition-all active:scale-98",
                             isSelected 
-                              ? "bg-pink-500/15 border-pink-500/40 text-pink-950 dark:text-pink-100 ring-1 ring-pink-500/30" 
+                              ? "bg-pink-500/15 border-pink-500/40 text-pink-950 dark:text-pink-100 ring-2 ring-pink-500/30 shadow-md" 
                               : "bg-muted/20 border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                           )}
                         >
-                          <span className="text-sm">{app.icon}</span>
+                          <span className="text-lg">{app.icon}</span>
                           <span className="truncate">{app.label}</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-pink-600 ml-auto" />}
+                          {isSelected && <Check className="w-4 h-4 text-pink-600 ml-auto" />}
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* Music Vibes Chips */}
-                  <div className="pt-2 border-t border-border/30">
-                    <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">Preferred Vibes</p>
-                    <div className="flex flex-wrap gap-1.5">
+                  {/* Sound Vibes Pills */}
+                  <div className="pt-3 border-t border-border/30">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Curated Sound Vibes for Your Mood</p>
+                    <div className="flex flex-wrap gap-2">
                       {MUSIC_MOODS_LIST.map((mood) => {
                         const moods = (profile?.musicMoods as string[]) || [];
                         const isSelected = moods.includes(mood);
@@ -809,9 +630,9 @@ export default function Profile() {
                               handleInstantUpdate({ musicMoods: updatedMoods }, `Sound vibes updated`);
                             }}
                             className={cn(
-                              "px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all active:scale-95",
+                              "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all active:scale-95",
                               isSelected 
-                                ? "bg-primary/20 text-primary border-primary/30" 
+                                ? "bg-primary/20 text-primary border-primary/30 shadow-sm" 
                                 : "bg-muted/30 border-border/40 text-muted-foreground hover:bg-muted"
                             )}
                           >
@@ -824,17 +645,17 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-              {/* Card 4: Relaxation Gaming & Micro-Breaks */}
+              {/* Station 4: Mindful Gaming & Micro-Breaks */}
               <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                        <Gamepad2 className="w-4 h-4" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                        <Gamepad2 className="w-5 h-5" />
                       </div>
                       <div>
-                        <CardTitle className="text-base font-bold">Gaming Micro-Breaks</CardTitle>
-                        <CardDescription className="text-xs">Interactive puzzles & stress relief</CardDescription>
+                        <CardTitle className="text-lg font-bold">Gaming Micro-Breaks for Relaxation</CardTitle>
+                        <CardDescription className="text-xs">Include quick puzzle games and cognitive de-stress breaks</CardDescription>
                       </div>
                     </div>
                     <Switch 
@@ -843,33 +664,32 @@ export default function Profile() {
                     />
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-4">
                   <div className={cn(
-                    "p-3.5 rounded-2xl border transition-all duration-300",
+                    "p-4 rounded-2xl border transition-all duration-300",
                     currentPlaysGames 
                       ? "bg-blue-500/10 border-blue-500/20 text-foreground" 
                       : "bg-muted/20 border-border/40 text-muted-foreground opacity-60"
                   )}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold flex items-center gap-1.5">
-                        🎮 {currentPlaysGames ? "Gaming Breaks Active" : "Gaming Breaks Off"}
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold flex items-center gap-2">
+                        🎮 {currentPlaysGames ? "Relaxation Gaming Active in Plan" : "Relaxation Gaming Disabled"}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {currentPlaysGames ? "Included in Plan" : "Excluded from Plan"}
-                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {currentPlaysGames ? "Included in 7-Day Plan" : "Excluded"}
+                      </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {currentPlaysGames 
-                        ? "Quick 5-15 min brain teasers and casual mini-games are scheduled in your daily wellness plan."
-                        : "Turn this on if you enjoy puzzle games or relaxing mini-games to de-stress during work."}
+                        ? "MoodAware will weave 5-15 min interactive brain teasers and casual mini-games into your daily plan to prevent burnout."
+                        : "Turn this switch on to include quick stress-relief puzzle tasks in your routine."}
                     </p>
                   </div>
 
-                  {/* Game Platforms */}
                   {currentPlaysGames && (
-                    <div className="pt-2 border-t border-border/30 space-y-1.5">
-                      <p className="text-[11px] font-semibold text-muted-foreground">Platforms & Types</p>
-                      <div className="flex flex-wrap gap-1.5">
+                    <div className="pt-2 border-t border-border/30 space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground">Select Preferred Game Styles</p>
+                      <div className="flex flex-wrap gap-2">
                         {GAME_TYPES_LIST.map((type) => {
                           const types = (profile?.gameTypes as string[]) || [];
                           const isSelected = types.includes(type);
@@ -881,12 +701,12 @@ export default function Profile() {
                                 const updatedTypes = isSelected 
                                   ? types.filter(t => t !== type)
                                   : [...types, type];
-                                handleInstantUpdate({ gameTypes: updatedTypes }, "Game preferences updated");
+                                handleInstantUpdate({ gameTypes: updatedTypes }, "Game styles updated");
                               }}
                               className={cn(
-                                "px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all",
+                                "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
                                 isSelected 
-                                  ? "bg-blue-500/20 text-blue-800 dark:text-blue-200 border-blue-500/30" 
+                                  ? "bg-blue-500/20 text-blue-900 dark:text-blue-200 border-blue-500/30" 
                                   : "bg-muted/30 border-border/40 text-muted-foreground"
                               )}
                             >
@@ -900,119 +720,661 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-            </div>
-          </div>
-
-          {/* Card 5: Goals & Feedback Vision */}
-          <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
-                    <Heart className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-bold">Wellness Intentions & Vision</CardTitle>
-                    <CardDescription className="text-xs">Your guiding focus for personalized AI guidance</CardDescription>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setEditModalOpen(true)}
-                  className="rounded-xl text-xs font-semibold h-8"
-                >
-                  <Edit3 className="w-3 h-3 mr-1" /> Edit Goals
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {WELLNESS_GOALS_LIST.map((goal) => {
-                  const currentFeedback = profile?.feedback || "";
-                  const isSelected = currentFeedback.includes(goal.label);
-                  return (
-                    <button
-                      key={goal.label}
-                      type="button"
-                      onClick={() => {
-                        const newFeedback = isSelected
-                          ? currentFeedback.replace(`[${goal.label}]`, "").trim()
-                          : `[${goal.label}] ${currentFeedback}`.trim();
-                        handleInstantUpdate({ feedback: newFeedback }, `Goal updated to ${goal.label}`);
-                      }}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-xs font-semibold border transition-all active:scale-95",
-                        isSelected 
-                          ? "bg-purple-500/20 text-purple-900 dark:text-purple-200 border-purple-500/40 shadow-sm" 
-                          : "bg-muted/20 border-border/60 text-muted-foreground hover:bg-muted"
-                      )}
+              {/* Station 5: Goals & Feedback Vision */}
+              <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                        <Heart className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg font-bold">Wellness Intentions & Vision</CardTitle>
+                        <CardDescription className="text-xs">Your core guiding goals for AI personalized recommendations</CardDescription>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setEditModalOpen(true)}
+                      className="rounded-xl text-xs font-semibold h-9 px-3"
                     >
-                      <span>{goal.emoji}</span>
-                      <span>{goal.label}</span>
-                      {isSelected && <Check className="w-3 h-3 text-purple-600 ml-1" />}
-                    </button>
-                  );
-                })}
-              </div>
+                      <Edit3 className="w-3.5 h-3.5 mr-1.5" /> Edit Goals
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2.5">
+                    {WELLNESS_GOALS_LIST.map((goal) => {
+                      const currentFeedback = profile?.feedback || "";
+                      const isSelected = currentFeedback.includes(goal.label);
+                      return (
+                        <button
+                          key={goal.label}
+                          type="button"
+                          onClick={() => {
+                            const newFeedback = isSelected
+                              ? currentFeedback.replace(`[${goal.label}]`, "").trim()
+                              : `[${goal.label}] ${currentFeedback}`.trim();
+                            handleInstantUpdate({ feedback: newFeedback }, `Goal updated to ${goal.label}`);
+                          }}
+                          className={cn(
+                            "flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-semibold border transition-all active:scale-95",
+                            isSelected 
+                              ? "bg-purple-500/20 text-purple-900 dark:text-purple-200 border-purple-500/40 shadow-sm" 
+                              : "bg-muted/20 border-border/60 text-muted-foreground hover:bg-muted"
+                          )}
+                        >
+                          <span className="text-sm">{goal.emoji}</span>
+                          <span>{goal.label}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-purple-600 ml-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-              {profile?.feedback ? (
-                <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/30 text-xs text-muted-foreground leading-relaxed mt-2">
-                  <span className="font-semibold text-foreground">Personal Notes: </span>
-                  {profile.feedback}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground italic">
-                  No personal notes added yet. Click "Edit Goals" to add your wellness expectations!
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  {profile?.feedback ? (
+                    <div className="p-4 rounded-2xl bg-muted/30 border border-border/30 text-xs text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground">Personal Reflection & Notes: </span>
+                      {profile.feedback}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">
+                      No personal notes added yet. Tap "Edit Goals" to specify your wellness vision!
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Quick Actions & System Settings */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <Card className="border-none shadow-sm bg-card/60 rounded-3xl p-4 flex items-center justify-between border border-border/30">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                  <Compass className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Guided Setup Wizard</p>
-                  <p className="text-xs text-muted-foreground">Redo step-by-step onboarding walkthrough</p>
-                </div>
-              </div>
-              <Link href="/onboarding">
-                <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold">
-                  Launch Wizard
-                </Button>
-              </Link>
-            </Card>
+            </div>
 
-            <Card className="border-none shadow-sm bg-card/60 rounded-3xl p-4 flex items-center justify-between border border-border/30">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center">
-                  <LogOut className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Account Session</p>
-                  <p className="text-xs text-muted-foreground">Sign out of this browser</p>
-                </div>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => logout()}
-                className="rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
-              >
-                Sign Out
-              </Button>
-            </Card>
           </div>
 
         </div>
+
+
+        {/* ========================================================================= */}
+        {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
+        {/* ========================================================================= */}
+        <div className="lg:hidden p-4 space-y-4 max-w-lg mx-auto w-full">
+          
+          {/* Mobile Top Header Banner */}
+          <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 hover:bg-muted/80">
+                  <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </Link>
+              <div>
+                <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
+                  <Smartphone className="w-2.5 h-2.5" />
+                  Mobile Settings
+                </Badge>
+                <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  My Profile
+                </h1>
+              </div>
+            </div>
+
+            <Button 
+              size="sm" 
+              onClick={() => setEditModalOpen(true)}
+              className="btn-primary rounded-xl text-xs font-semibold gap-1.5 h-8 px-3 shadow-sm"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Edit
+            </Button>
+          </div>
+
+          {/* Compact Mobile Profile Card */}
+          <Card className="border-none shadow-lg bg-card/90 backdrop-blur-xl rounded-3xl overflow-hidden border border-border/50">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-3.5">
+                <div className="relative flex-shrink-0">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-xl font-display font-bold text-white shadow-md shadow-primary/25">
+                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-background flex items-center justify-center text-white text-[9px] font-bold">
+                    ✓
+                  </div>
+                </div>
+
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <h2 className="text-lg font-display font-bold text-foreground truncate">
+                      {user?.name || "Mindful User"}
+                    </h2>
+                    <button 
+                      onClick={() => setNameDialogOpen(true)}
+                      className="p-1 rounded text-muted-foreground hover:text-primary"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
+                  <p className="text-[10px] text-muted-foreground/70">
+                    Member since {user?.createdAt ? format(new Date(user.createdAt), "MMM yyyy") : "Recently"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Horizontal Mini Stats Slider */}
+              <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-border/40 text-center">
+                <div className="p-2 rounded-xl bg-muted/30">
+                  <p className="text-sm font-bold font-display">{totalCheckins}</p>
+                  <p className="text-[9px] text-muted-foreground">🌟 Logs</p>
+                </div>
+                <div className="p-2 rounded-xl bg-muted/30">
+                  <p className="text-sm font-bold font-display">{totalNotes}</p>
+                  <p className="text-[9px] text-muted-foreground">📝 Notes</p>
+                </div>
+                <div className="p-2 rounded-xl bg-muted/30">
+                  <p className="text-sm font-bold font-display">{completedTasksCount}</p>
+                  <p className="text-[9px] text-muted-foreground">🎯 Done</p>
+                </div>
+                <div className="p-2 rounded-xl bg-muted/30">
+                  <p className="text-sm font-bold font-display">{totalCapsules}</p>
+                  <p className="text-[9px] text-muted-foreground">💌 Capsules</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mobile Horizontal Segmented Pill Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+            <button
+              type="button"
+              onClick={() => setMobileTab("all")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "all" ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              ⚡ All
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("sleep")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "sleep" ? "bg-indigo-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              🌙 Sleep
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("activity")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "activity" ? "bg-emerald-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              🏃 Activity
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("music")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "music" ? "bg-pink-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              🎵 Audio
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("goals")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all active:scale-95",
+                mobileTab === "goals" ? "bg-purple-500 text-white shadow-sm" : "bg-muted/50 text-muted-foreground"
+              )}
+            >
+              🎯 Goals
+            </button>
+          </div>
+
+          {/* Mobile Instant Content Cards */}
+          <div className="space-y-3.5">
+            
+            {/* Sleep Section (Mobile) */}
+            {(mobileTab === "all" || mobileTab === "sleep") && (
+              <Card className="border-none shadow-md bg-card/85 rounded-3xl p-4 space-y-3 border border-border/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                      <Moon className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-bold text-foreground">Sleep & Rest</span>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] bg-indigo-500/10 text-indigo-600">
+                    {calculateSleepWindow(currentSleep, currentWake)}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-2.5 bg-muted/20 rounded-xl space-y-1">
+                    <span className="text-[11px] text-muted-foreground font-medium">Bedtime</span>
+                    <Input 
+                      type="time" 
+                      value={currentSleep} 
+                      onChange={(e) => handleInstantUpdate({ sleepTime: e.target.value }, `Bedtime updated to ${e.target.value}`)}
+                      className="h-8 text-xs font-semibold rounded-lg bg-card"
+                    />
+                  </div>
+                  <div className="p-2.5 bg-muted/20 rounded-xl space-y-1">
+                    <span className="text-[11px] text-muted-foreground font-medium">Wake Time</span>
+                    <Input 
+                      type="time" 
+                      value={currentWake} 
+                      onChange={(e) => handleInstantUpdate({ wakeTime: e.target.value }, `Wake time updated to ${e.target.value}`)}
+                      className="h-8 text-xs font-semibold rounded-lg bg-card"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-border/30 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Break Interval:</span>
+                    <span className="font-semibold text-foreground capitalize">{currentBreakFreq}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1">
+                    {BREAK_FREQUENCIES.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => handleInstantUpdate({ breakFrequency: b.id }, `Break set to ${b.label}`)}
+                        className={cn(
+                          "py-1.5 rounded-lg text-[10px] font-semibold border text-center transition-all",
+                          currentBreakFreq === b.id 
+                            ? "bg-primary text-primary-foreground border-primary" 
+                            : "bg-muted/30 border-border/50 text-muted-foreground"
+                        )}
+                      >
+                        {b.short}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Activity Section (Mobile) */}
+            {(mobileTab === "all" || mobileTab === "activity") && (
+              <Card className="border-none shadow-md bg-card/85 rounded-3xl p-4 space-y-3 border border-border/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                      <Dumbbell className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-bold text-foreground">Activity Level</span>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] capitalize bg-emerald-500/10 text-emerald-600">
+                    {currentActivity}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {ACTIVITY_LEVELS.map((level) => {
+                    const isSelected = currentActivity === level.id;
+                    return (
+                      <button
+                        key={level.id}
+                        type="button"
+                        onClick={() => handleInstantUpdate({ physicalActivity: level.id }, `Activity set to ${level.label}`)}
+                        className={cn(
+                          "p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all active:scale-95",
+                          isSelected 
+                            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-500/30" 
+                            : "bg-muted/20 border-border/50 text-muted-foreground"
+                        )}
+                      >
+                        <span className="text-lg">{level.icon}</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold truncate text-foreground">{level.label}</p>
+                          <p className="text-[9px] text-muted-foreground truncate">{level.desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+            {/* Music & Audio Section (Mobile) */}
+            {(mobileTab === "all" || mobileTab === "music") && (
+              <Card className="border-none shadow-md bg-card/85 rounded-3xl p-4 space-y-3 border border-border/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center">
+                      <Headphones className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-bold text-foreground">Music Sanctuary</span>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] capitalize bg-pink-500/10 text-pink-600">
+                    {MUSIC_APPS.find(m => m.id === currentMusicApp)?.label || currentMusicApp}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {MUSIC_APPS.map((app) => {
+                    const isSelected = currentMusicApp === app.id;
+                    return (
+                      <button
+                        key={app.id}
+                        type="button"
+                        onClick={() => handleInstantUpdate({ musicApp: app.id }, `Music set to ${app.label}`)}
+                        className={cn(
+                          "p-2 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all active:scale-95",
+                          isSelected 
+                            ? "bg-pink-500/15 border-pink-500/40 text-pink-950 dark:text-pink-100 ring-1 ring-pink-500/30" 
+                            : "bg-muted/20 border-border/50 text-muted-foreground"
+                        )}
+                      >
+                        <span>{app.icon}</span>
+                        <span className="truncate">{app.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Gaming Toggle */}
+                <div className="pt-2 border-t border-border/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Gamepad2 className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-semibold">Gaming Micro-Breaks</span>
+                  </div>
+                  <Switch 
+                    checked={currentPlaysGames}
+                    onCheckedChange={(checked) => handleInstantUpdate({ playsGames: checked }, checked ? "Gaming breaks enabled! 🎮" : "Gaming breaks disabled")}
+                  />
+                </div>
+              </Card>
+            )}
+
+            {/* Goals & Notes Section (Mobile) */}
+            {(mobileTab === "all" || mobileTab === "goals") && (
+              <Card className="border-none shadow-md bg-card/85 rounded-3xl p-4 space-y-3 border border-border/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                      <Heart className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-bold text-foreground">Wellness Goals</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {WELLNESS_GOALS_LIST.map((goal) => {
+                    const currentFeedback = profile?.feedback || "";
+                    const isSelected = currentFeedback.includes(goal.label);
+                    return (
+                      <button
+                        key={goal.label}
+                        type="button"
+                        onClick={() => {
+                          const newFeedback = isSelected
+                            ? currentFeedback.replace(`[${goal.label}]`, "").trim()
+                            : `[${goal.label}] ${currentFeedback}`.trim();
+                          handleInstantUpdate({ feedback: newFeedback }, `Goal updated`);
+                        }}
+                        className={cn(
+                          "flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border transition-all active:scale-95",
+                          isSelected 
+                            ? "bg-purple-500/20 text-purple-900 dark:text-purple-200 border-purple-500/40" 
+                            : "bg-muted/20 border-border/50 text-muted-foreground"
+                        )}
+                      >
+                        <span>{goal.emoji}</span>
+                        <span>{goal.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+          </div>
+
+          {/* Mobile Bottom Actions */}
+          <div className="space-y-2 pt-2">
+            <Button 
+              onClick={() => generatePlan()}
+              disabled={isGenerating}
+              className="w-full btn-primary rounded-2xl text-xs font-semibold h-11 shadow-md shadow-primary/20 gap-2"
+            >
+              <RefreshCw className={cn("w-4 h-4", isGenerating && "animate-spin")} />
+              {isGenerating ? "Re-syncing AI Plan..." : "Re-sync AI Wellness Plan"}
+            </Button>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Link href="/onboarding">
+                <Button variant="outline" className="w-full rounded-xl text-xs h-9 font-medium">
+                  <Compass className="w-3.5 h-3.5 mr-1 text-primary" /> Setup Wizard
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                onClick={() => logout()}
+                className="w-full rounded-xl text-xs h-9 font-medium text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
+              >
+                <LogOut className="w-3.5 h-3.5 mr-1" /> Sign Out
+              </Button>
+            </div>
+          </div>
+
+        </div>
+
       </main>
 
+      {/* Mobile Bottom Navigation */}
       <MobileNav />
+
+      {/* Shared Dialog 1: Change Display Name */}
+      <Dialog open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
+        <DialogContent className="max-w-sm rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">Change Display Name</DialogTitle>
+            <DialogDescription>
+              How would you like MoodAware to greet you?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs font-semibold">Your Name</Label>
+            <Input 
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              placeholder="Enter your name"
+              className="rounded-xl"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setNameDialogOpen(false)} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveName} 
+              disabled={updateUser.isPending}
+              className="btn-primary rounded-xl font-semibold"
+            >
+              {updateUser.isPending ? <RefreshCw className="w-4 h-4 animate-spin mr-1" /> : null}
+              Save Name
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Shared Dialog 2: Comprehensive Edit All Preferences Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border-border bg-card/95 backdrop-blur-xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-display font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Edit Wellness Preferences
+            </DialogTitle>
+            <DialogDescription>
+              Update your lifestyle schedule, activity targets, and relaxation preferences.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveAllPreferences} className="space-y-5 pt-2">
+            <Tabs defaultValue="routine" className="w-full">
+              <TabsList className="grid grid-cols-3 rounded-2xl p-1 bg-muted/60 mb-4">
+                <TabsTrigger value="routine" className="rounded-xl text-xs font-semibold">Routine & Sleep</TabsTrigger>
+                <TabsTrigger value="lifestyle" className="rounded-xl text-xs font-semibold">Lifestyle & Sound</TabsTrigger>
+                <TabsTrigger value="goals" className="rounded-xl text-xs font-semibold">Goals & Notes</TabsTrigger>
+              </TabsList>
+
+              {/* Tab 1: Routine & Sleep */}
+              <TabsContent value="routine" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Typical Bedtime</Label>
+                    <Input 
+                      type="time" 
+                      value={formData.sleepTime}
+                      onChange={(e) => setFormData({ ...formData, sleepTime: e.target.value })}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Typical Wake Time</Label>
+                    <Input 
+                      type="time" 
+                      value={formData.wakeTime}
+                      onChange={(e) => setFormData({ ...formData, wakeTime: e.target.value })}
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Break Frequency at Work</Label>
+                  <Select 
+                    value={formData.breakFrequency} 
+                    onValueChange={(val) => setFormData({ ...formData, breakFrequency: val })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      {BREAK_FREQUENCIES.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Caffeine Intake</Label>
+                  <Select 
+                    value={formData.caffeineIntake} 
+                    onValueChange={(val) => setFormData({ ...formData, caffeineIntake: val })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Select intake level" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      {CAFFEINE_LEVELS.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
+
+              {/* Tab 2: Lifestyle & Sound */}
+              <TabsContent value="lifestyle" className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Physical Activity Level</Label>
+                  <Select 
+                    value={formData.physicalActivity} 
+                    onValueChange={(val) => setFormData({ ...formData, physicalActivity: val })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Select activity" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      {ACTIVITY_LEVELS.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.icon} {a.label} ({a.desc})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Preferred Music Sanctuary</Label>
+                  <Select 
+                    value={formData.musicApp} 
+                    onValueChange={(val) => setFormData({ ...formData, musicApp: val })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue placeholder="Select music app" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      {MUSIC_APPS.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.icon} {m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="p-3.5 rounded-2xl border border-border/80 bg-muted/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-semibold">Relaxation Gaming Breaks</Label>
+                      <p className="text-[11px] text-muted-foreground">Suggest quick puzzle & mindful gaming breaks</p>
+                    </div>
+                    <Switch 
+                      checked={formData.playsGames}
+                      onCheckedChange={(checked) => setFormData({ ...formData, playsGames: checked })}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Tab 3: Goals & Notes */}
+              <TabsContent value="goals" className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Feedback, Reflection & Notes</Label>
+                  <Textarea 
+                    value={formData.feedback}
+                    onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
+                    placeholder="Share your personal wellness goals or suggestions for your AI plan..."
+                    className="min-h-[120px] rounded-2xl resize-none text-sm"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-border/40">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setEditModalOpen(false)}
+                className="rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateProfile.isPending}
+                className="btn-primary rounded-xl font-semibold gap-2"
+              >
+                {updateProfile.isPending ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Save Preferences
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
