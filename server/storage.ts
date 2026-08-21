@@ -51,7 +51,7 @@ export interface IStorage {
   createPlan(plan: InsertPlan & { userId: number }): Promise<Plan>;
   createPlanItems(items: InsertPlanItem[]): Promise<PlanItem[]>;
   getActivePlan(userId: number): Promise<PlanWithItems | undefined>;
-  completePlanItem(itemId: number, isCompleted: boolean): Promise<PlanItem>;
+  completePlanItem(planId: number, itemId: number, isCompleted: boolean): Promise<PlanItem | undefined>;
   
   // Habits
   createHabitLog(log: InsertDailyHabit & { userId: number }): Promise<DailyHabit>;
@@ -65,7 +65,7 @@ export interface IStorage {
   createTimeCapsule(capsule: InsertTimeCapsule & { userId: number }): Promise<TimeCapsule>;
   getTimeCapsules(userId: number): Promise<TimeCapsule[]>;
   getUndeliveredCapsule(userId: number): Promise<TimeCapsule | undefined>;
-  markCapsuleDelivered(id: number): Promise<TimeCapsule | undefined>;
+  markCapsuleDelivered(id: number, userId: number): Promise<TimeCapsule | undefined>;
   
   // Seeding
   seedTasks(): Promise<void>;
@@ -255,20 +255,20 @@ export class MemStorage implements IStorage {
     return { ...plan, items };
   }
 
-  async completePlanItem(itemId: number, isCompleted: boolean): Promise<PlanItem> {
+  async completePlanItem(planId: number, itemId: number, isCompleted: boolean): Promise<PlanItem | undefined> {
     const item = this.planItems.get(itemId);
-    if (!item) {
-      const found = Array.from(this.planItems.values()).find(i => i.id === itemId || i.taskId === itemId);
-      if (found) {
-        const updated = { ...found, isCompleted };
-        this.planItems.set(found.id, updated);
-        return updated;
-      }
-      throw new Error(`Plan item ${itemId} not found`);
+    if (item && item.planId === planId) {
+      const updated = { ...item, isCompleted };
+      this.planItems.set(itemId, updated);
+      return updated;
     }
-    const updated = { ...item, isCompleted };
-    this.planItems.set(itemId, updated);
-    return updated;
+    const found = Array.from(this.planItems.values()).find(i => (i.id === itemId || i.taskId === itemId) && i.planId === planId);
+    if (found) {
+      const updated = { ...found, isCompleted };
+      this.planItems.set(found.id, updated);
+      return updated;
+    }
+    return undefined;
   }
 
   async createHabitLog(log: InsertDailyHabit & { userId: number }): Promise<DailyHabit> {
@@ -338,9 +338,9 @@ export class MemStorage implements IStorage {
       .find(c => c.userId === userId && !c.isDelivered);
   }
 
-  async markCapsuleDelivered(id: number): Promise<TimeCapsule | undefined> {
+  async markCapsuleDelivered(id: number, userId: number): Promise<TimeCapsule | undefined> {
     const capsule = this.timeCapsules.get(id);
-    if (!capsule) return undefined;
+    if (!capsule || capsule.userId !== userId) return undefined;
     const updated: TimeCapsule = {
       ...capsule,
       isDelivered: true,
@@ -474,10 +474,10 @@ export class DatabaseStorage implements IStorage {
     return { ...plan, items };
   }
 
-  async completePlanItem(itemId: number, isCompleted: boolean): Promise<PlanItem> {
+  async completePlanItem(planId: number, itemId: number, isCompleted: boolean): Promise<PlanItem | undefined> {
     const [updated] = await db.update(planItems)
       .set({ isCompleted })
-      .where(eq(planItems.id, itemId))
+      .where(and(eq(planItems.id, itemId), eq(planItems.planId, planId)))
       .returning();
     return updated;
   }
@@ -527,10 +527,10 @@ export class DatabaseStorage implements IStorage {
     return found;
   }
 
-  async markCapsuleDelivered(id: number): Promise<TimeCapsule | undefined> {
+  async markCapsuleDelivered(id: number, userId: number): Promise<TimeCapsule | undefined> {
     const [updated] = await db.update(timeCapsules)
       .set({ isDelivered: true, deliveredAt: new Date() })
-      .where(eq(timeCapsules.id, id))
+      .where(and(eq(timeCapsules.id, id), eq(timeCapsules.userId, userId)))
       .returning();
     return updated;
   }

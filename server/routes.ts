@@ -131,7 +131,10 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Forbidden: You cannot modify another user's plan" });
       }
 
-      const updated = await storage.completePlanItem(planItemId, isCompleted);
+      const updated = await storage.completePlanItem(planId, planItemId, isCompleted);
+      if (!updated) {
+        return res.status(404).json({ message: "Plan task not found" });
+      }
       res.json(updated);
     } catch (err) {
       res.status(500).json({ message: "Internal server error" });
@@ -233,7 +236,7 @@ export async function registerRoutes(
   app.patch(api.capsules.markDelivered.path, requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updated = await storage.markCapsuleDelivered(id);
+      const updated = await storage.markCapsuleDelivered(id, req.user!.id);
       if (!updated) {
         return res.status(404).json({ message: "Capsule not found" });
       }

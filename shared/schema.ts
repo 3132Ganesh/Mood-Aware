@@ -12,7 +12,7 @@ export const users = pgTable("users", {
 
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   ageGroup: text("age_group"),
   occupation: text("occupation"),
   sleepTime: text("sleep_time"),
@@ -41,7 +41,7 @@ export const tasks = pgTable("tasks", {
 
 export const moodLogs = pgTable("mood_logs", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
   moodScore: integer("mood_score").notNull(),
   moodLabel: text("mood_label"),
@@ -53,7 +53,7 @@ export const moodLogs = pgTable("mood_logs", {
 
 export const plans = pgTable("plans", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   isActive: boolean("is_active").default(true),
@@ -61,15 +61,15 @@ export const plans = pgTable("plans", {
 
 export const planItems = pgTable("plan_items", {
   id: serial("id").primaryKey(),
-  planId: integer("plan_id").notNull().references(() => plans.id),
+  planId: integer("plan_id").notNull().references(() => plans.id, { onDelete: "cascade" }),
   dayDate: date("day_date").notNull(),
-  taskId: integer("task_id").notNull().references(() => tasks.id),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
   isCompleted: boolean("is_completed").default(false),
 });
 
 export const dailyHabits = pgTable("daily_habits", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
   routineFollowed: boolean("routine_followed"),
   extraPhysicalActivity: boolean("extra_physical_activity"),
@@ -78,7 +78,7 @@ export const dailyHabits = pgTable("daily_habits", {
 
 export const feelingsNotes = pgTable("feelings_notes", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   timestamp: timestamp("timestamp").defaultNow(),
   title: text("title"),
   content: text("content").notNull(),
@@ -87,12 +87,18 @@ export const feelingsNotes = pgTable("feelings_notes", {
 
 export const timeCapsules = pgTable("time_capsules", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
   message: text("message").notNull(),
   moodScore: integer("mood_score").notNull(), // Mood score when written (e.g. 5)
   isDelivered: boolean("is_delivered").default(false),
   deliveredAt: timestamp("delivered_at"),
+});
+
+export const session = pgTable("session", {
+  sid: text("sid").primaryKey(),
+  sess: jsonb("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
 });
 
 // Insert Schemas
