@@ -1,9 +1,9 @@
 import { 
   User, InsertUser, 
   UserProfile, InsertUserProfile, 
-  Task, MoodLog, MoodSwing, Plan, PlanItem, DailyHabit, FeelingsNote, TimeCapsule,
-  InsertMoodLog, InsertMoodSwing, InsertDailyHabit, InsertFeelingsNote, InsertPlan, InsertPlanItem, InsertTimeCapsule,
-  users, userProfiles, tasks, moodLogs, moodSwings, plans, planItems, dailyHabits, feelingsNotes, timeCapsules,
+  Task, MoodLog, MoodSwing, Plan, PlanItem, DailyHabit, FeelingsNote, TimeCapsule, SleepSession,
+  InsertMoodLog, InsertMoodSwing, InsertDailyHabit, InsertFeelingsNote, InsertPlan, InsertPlanItem, InsertTimeCapsule, InsertSleepSession,
+  users, userProfiles, tasks, moodLogs, moodSwings, plans, planItems, dailyHabits, feelingsNotes, timeCapsules, sleepSessions,
   PlanWithItems
 } from "@shared/schema";
 import { db, pool } from "./db";
@@ -72,6 +72,11 @@ export interface IStorage {
   getUndeliveredCapsule(userId: number): Promise<TimeCapsule | undefined>;
   markCapsuleDelivered(id: number, userId: number): Promise<TimeCapsule | undefined>;
   
+  // Sleep
+  logSleepSession(userId: number, session: InsertSleepSession): Promise<SleepSession>;
+  getTodaySleepSession(userId: number, date: string): Promise<SleepSession | undefined>;
+  getSleepHistory(userId: number, limit?: number): Promise<SleepSession[]>;
+
   // Seeding
   seedTasks(): Promise<void>;
 }
@@ -88,6 +93,7 @@ export class MemStorage implements IStorage {
   private feelingsNotes: Map<number, FeelingsNote> = new Map();
   private timeCapsules: Map<number, TimeCapsule> = new Map();
   private moodSwings: Map<number, MoodSwing> = new Map();
+  private sleepSessions: Map<number, SleepSession> = new Map();
 
   private currentUserId = 1;
   private currentProfileId = 1;
@@ -99,6 +105,7 @@ export class MemStorage implements IStorage {
   private currentHabitId = 1;
   private currentNoteId = 1;
   private currentCapsuleId = 1;
+  private currentSleepSessionId = 1;
 
   constructor() {
     this.sessionStore = new MemoryStore({
@@ -381,7 +388,7 @@ export class MemStorage implements IStorage {
       id,
       userId: capsule.userId,
       message: capsule.message,
-      moodScore: capsule.moodScore,
+      moodScore: capsule.moodScore ?? 5,
       createdAt: new Date(),
       isDelivered: false,
       deliveredAt: null,
@@ -411,6 +418,53 @@ export class MemStorage implements IStorage {
     };
     this.timeCapsules.set(id, updated);
     return updated;
+  }
+
+  async logSleepSession(userId: number, data: InsertSleepSession): Promise<SleepSession> {
+    const cleanDate = String(data.date).split('T')[0];
+    const existing = await this.getTodaySleepSession(userId, cleanDate);
+    if (existing) {
+      const updated: SleepSession = {
+        ...existing,
+        ...data,
+        lastDeviceUse: new Date(data.lastDeviceUse),
+        firstDevicePickup: new Date(data.firstDevicePickup),
+        alignmentScore: data.alignmentScore ?? 100,
+        isConfirmed: data.isConfirmed ?? false,
+        notes: data.notes ?? null,
+      };
+      this.sleepSessions.set(existing.id, updated);
+      return updated;
+    }
+    const id = this.currentSleepSessionId++;
+    const session: SleepSession = {
+      id,
+      userId,
+      date: cleanDate,
+      createdAt: new Date(),
+      lastDeviceUse: new Date(data.lastDeviceUse),
+      firstDevicePickup: new Date(data.firstDevicePickup),
+      durationMinutes: data.durationMinutes,
+      alignmentScore: data.alignmentScore ?? 100,
+      isConfirmed: data.isConfirmed ?? false,
+      notes: data.notes ?? null,
+    };
+    this.sleepSessions.set(id, session);
+    return session;
+  }
+
+  async getTodaySleepSession(userId: number, date: string): Promise<SleepSession | undefined> {
+    const cleanDate = date.split('T')[0];
+    return Array.from(this.sleepSessions.values()).find(
+      s => s.userId === userId && String(s.date).split('T')[0] === cleanDate
+    );
+  }
+
+  async getSleepHistory(userId: number, limit = 14): Promise<SleepSession[]> {
+    return Array.from(this.sleepSessions.values())
+      .filter(s => s.userId === userId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, limit);
   }
 
   async seedTasks(): Promise<void> {
@@ -643,6 +697,54 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(timeCapsules.id, id), eq(timeCapsules.userId, userId)))
       .returning();
     return updated;
+  }
+
+  async logSleepSession(userId: number, data: InsertSleepSession): Promise<SleepSession> {
+    const cleanDate = String(data.date).split('T')[0];
+    const existing = await this.getTodaySleepSession(userId, cleanDate);
+    if (existing) {
+      const [updated] = await db.update(sleepSessions)
+        .set({
+          lastDeviceUse: new Date(data.lastDeviceUse),
+          firstDevicePickup: new Date(data.firstDevicePickup),
+          durationMinutes: data.durationMinutes,
+          alignmentScore: data.alignmentScore ?? 100,
+          isConfirmed: data.isConfirmed ?? false,
+          notes: data.notes ?? null,
+        })
+        .where(eq(sleepSessions.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(sleepSessions)
+      .values({
+        ...data,
+        userId,
+        date: cleanDate,
+        lastDeviceUse: new Date(data.lastDeviceUse),
+        firstDevicePickup: new Date(data.firstDevicePickup),
+        alignmentScore: data.alignmentScore ?? 100,
+        isConfirmed: data.isConfirmed ?? false,
+      } as any)
+      .returning();
+    return created;
+  }
+
+  async getTodaySleepSession(userId: number, date: string): Promise<SleepSession | undefined> {
+    const cleanDate = String(date).split('T')[0];
+    const [found] = await db.select()
+      .from(sleepSessions)
+      .where(and(eq(sleepSessions.userId, userId), eq(sleepSessions.date, cleanDate)))
+      .limit(1);
+    return found;
+  }
+
+  async getSleepHistory(userId: number, limit = 14): Promise<SleepSession[]> {
+    return db.select()
+      .from(sleepSessions)
+      .where(eq(sleepSessions.userId, userId))
+      .orderBy(desc(sleepSessions.date))
+      .limit(limit);
   }
 
   async seedTasks() {

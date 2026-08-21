@@ -2,12 +2,13 @@ import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { useMood, useHabits, useMoodSwings } from "@/hooks/use-tracking";
+import { useSleepTracker } from "@/hooks/use-sleep-tracker";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend } from "recharts";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Activity, Monitor, Smile, Sparkles, Zap, Laptop, Smartphone, Droplets, Sun, Heart, Flame } from "lucide-react";
+import { TrendingUp, Activity, Monitor, Smile, Sparkles, Zap, Laptop, Smartphone, Droplets, Sun, Heart, Flame, Moon, BedDouble } from "lucide-react";
 import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { HydrationTracker } from "@/components/HydrationTracker";
 import { cn } from "@/lib/utils";
@@ -15,8 +16,18 @@ import { cn } from "@/lib/utils";
 export default function Analytics() {
   const { history: moodHistory, isLoading: moodLoading } = useMood();
   const { history: habitHistory, isLoading: habitLoading } = useHabits();
+  const { history: sleepHistory, todaySession } = useSleepTracker();
   const { swings: allSwings } = useMoodSwings();
   const [chartView, setChartView] = useState<"weekly" | "monthly">("weekly");
+
+  // Calculate average sleep hours
+  const avgSleepHours = sleepHistory && sleepHistory.length > 0
+    ? (sleepHistory.reduce((a, b) => a + (b.durationMinutes / 60), 0) / sleepHistory.length).toFixed(1)
+    : todaySession ? (todaySession.durationMinutes / 60).toFixed(1) : "7.5";
+
+  const avgAlignment = sleepHistory && sleepHistory.length > 0
+    ? Math.round(sleepHistory.reduce((a, b) => a + (b.alignmentScore || 90), 0) / sleepHistory.length)
+    : todaySession?.alignmentScore || 94;
 
   // Combine and process data for charts safely
   const rawMoods = moodHistory || [];
@@ -83,39 +94,50 @@ export default function Analytics() {
             </div>
           </header>
 
-          {/* 3 Metric Highlight Bento Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-[1.5vw] w-full">
+          {/* 4 Metric Highlight Bento Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1.5vw] w-full">
             
-            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
-              <div className="w-14 h-14 rounded-2xl bg-stitch-secondary-container text-stitch-on-secondary-container flex items-center justify-center flex-shrink-0">
-                <Droplets className="w-7 h-7 text-stitch-secondary" />
+            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-5 rounded-3xl border border-border/40 flex items-center gap-3.5 min-w-0 w-full">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Moon className="w-6 h-6 text-indigo-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-xs text-stitch-outline font-semibold uppercase tracking-wider">Hydration Level</span>
-                <p className="text-2xl font-bold font-headline text-stitch-on-surface mt-0.5">2.2L Average</p>
-                <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">↑ +0.4L above hydration goal</p>
+                <span className="text-[11px] text-stitch-outline font-semibold uppercase tracking-wider">Sleep Duration</span>
+                <p className="text-xl font-bold font-headline text-stitch-on-surface mt-0.5">{avgSleepHours}h Avg</p>
+                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">{avgAlignment}% Circadian Alignment</p>
               </div>
             </Card>
 
-            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
-              <div className="w-14 h-14 rounded-2xl bg-stitch-primary-fixed text-stitch-primary flex items-center justify-center flex-shrink-0">
-                <Smile className="w-7 h-7" />
+            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-5 rounded-3xl border border-border/40 flex items-center gap-3.5 min-w-0 w-full">
+              <div className="w-12 h-12 rounded-2xl bg-stitch-secondary-container text-stitch-on-secondary-container flex items-center justify-center flex-shrink-0">
+                <Droplets className="w-6 h-6 text-stitch-secondary" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-xs text-stitch-outline font-semibold uppercase tracking-wider">Mindful Vitality</span>
-                <p className="text-2xl font-bold font-headline text-stitch-on-surface mt-0.5">{avgMood} / 5.0</p>
-                <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Stable & Calm Trajectory</p>
+                <span className="text-[11px] text-stitch-outline font-semibold uppercase tracking-wider">Hydration Level</span>
+                <p className="text-xl font-bold font-headline text-stitch-on-surface mt-0.5">2.2L Average</p>
+                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">↑ +0.4L above daily goal</p>
               </div>
             </Card>
 
-            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <Flame className="w-7 h-7" />
+            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-5 rounded-3xl border border-border/40 flex items-center gap-3.5 min-w-0 w-full">
+              <div className="w-12 h-12 rounded-2xl bg-stitch-primary-fixed text-stitch-primary flex items-center justify-center flex-shrink-0">
+                <Smile className="w-6 h-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-xs text-stitch-outline font-semibold uppercase tracking-wider">Habit Consistency</span>
-                <p className="text-2xl font-bold font-headline text-stitch-on-surface mt-0.5">{routineRate}%</p>
-                <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Top 10% Mindfulness Streak</p>
+                <span className="text-[11px] text-stitch-outline font-semibold uppercase tracking-wider">Mindful Vitality</span>
+                <p className="text-xl font-bold font-headline text-stitch-on-surface mt-0.5">{avgMood} / 5.0</p>
+                <p className="text-[10px] text-muted-foreground font-semibold mt-0.5">Calm Trajectory</p>
+              </div>
+            </Card>
+
+            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-5 rounded-3xl border border-border/40 flex items-center gap-3.5 min-w-0 w-full">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <Flame className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] text-stitch-outline font-semibold uppercase tracking-wider">Habit Streak</span>
+                <p className="text-xl font-bold font-headline text-stitch-on-surface mt-0.5">{routineRate}%</p>
+                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Top 10% Consistency</p>
               </div>
             </Card>
 
@@ -252,18 +274,30 @@ export default function Analytics() {
             <span className="leading-snug">Emotional calm maintained with consistent hydration.</span>
           </div>
 
-          {/* Mobile 3 Quick Metric Boxes */}
-          <div className="grid grid-cols-3 gap-2 w-full">
+          {/* Mobile 4 Quick Metric Boxes */}
+          <div className="grid grid-cols-2 gap-2 w-full">
             <div className="p-3 rounded-2xl bg-card border border-border/60 text-center">
-              <span className="text-[10px] text-muted-foreground font-semibold">Water</span>
+              <span className="text-[10px] text-muted-foreground font-semibold flex items-center justify-center gap-1">
+                <Moon className="w-3 h-3 text-indigo-500" /> Sleep
+              </span>
+              <p className="text-sm font-bold text-foreground font-headline mt-0.5">{avgSleepHours}h Avg</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-card border border-border/60 text-center">
+              <span className="text-[10px] text-muted-foreground font-semibold flex items-center justify-center gap-1">
+                <Droplets className="w-3 h-3 text-stitch-secondary" /> Water
+              </span>
               <p className="text-sm font-bold text-foreground font-headline mt-0.5">2.2L</p>
             </div>
             <div className="p-3 rounded-2xl bg-card border border-border/60 text-center">
-              <span className="text-[10px] text-muted-foreground font-semibold">Mood</span>
-              <p className="text-sm font-bold text-foreground font-headline mt-0.5">{avgMood}</p>
+              <span className="text-[10px] text-muted-foreground font-semibold flex items-center justify-center gap-1">
+                <Smile className="w-3 h-3 text-stitch-primary" /> Mood
+              </span>
+              <p className="text-sm font-bold text-foreground font-headline mt-0.5">{avgMood} / 5</p>
             </div>
             <div className="p-3 rounded-2xl bg-card border border-border/60 text-center">
-              <span className="text-[10px] text-muted-foreground font-semibold">Habits</span>
+              <span className="text-[10px] text-muted-foreground font-semibold flex items-center justify-center gap-1">
+                <Flame className="w-3 h-3 text-emerald-500" /> Habits
+              </span>
               <p className="text-sm font-bold text-foreground font-headline mt-0.5">{routineRate}%</p>
             </div>
           </div>

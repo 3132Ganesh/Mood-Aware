@@ -10,6 +10,7 @@ import {
   insertDailyHabitSchema, dailyHabits, 
   insertFeelingsNoteSchema, feelingsNotes,
   insertTimeCapsuleSchema, timeCapsules,
+  insertSleepSessionSchema, sleepSessions,
   type InsertUser,
   type InsertUserProfile,
   type InsertMoodLog,
@@ -17,6 +18,7 @@ import {
   type InsertDailyHabit,
   type InsertFeelingsNote,
   type InsertTimeCapsule,
+  type InsertSleepSession,
   type InsertPlan,
   type InsertPlanItem
 } from './schema';
@@ -30,6 +32,7 @@ export type {
   InsertDailyHabit,
   InsertFeelingsNote,
   InsertTimeCapsule,
+  InsertSleepSession,
   InsertPlan,
   InsertPlanItem
 };
@@ -243,6 +246,31 @@ export const api = {
       path: '/api/capsules/:id/delivered',
       responses: {
         200: z.custom<typeof timeCapsules.$inferSelect>(),
+      },
+    },
+  },
+  sleep: {
+    logSession: {
+      method: 'POST' as const,
+      path: '/api/sleep/session',
+      input: insertSleepSessionSchema,
+      responses: {
+        200: z.custom<typeof sleepSessions.$inferSelect>(),
+        201: z.custom<typeof sleepSessions.$inferSelect>(),
+      },
+    },
+    today: {
+      method: 'GET' as const,
+      path: '/api/sleep/today',
+      responses: {
+        200: z.custom<typeof sleepSessions.$inferSelect | null>(),
+      },
+    },
+    history: {
+      method: 'GET' as const,
+      path: '/api/sleep/history',
+      responses: {
+        200: z.array(z.custom<typeof sleepSessions.$inferSelect>()),
       },
     },
   },

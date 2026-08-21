@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
 import { generatePlanWithAI, analyzeSentiment } from "./openai_helper";
-import { insertMoodLogSchema, insertMoodSwingSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema, insertTimeCapsuleSchema } from "@shared/schema";
+import { insertMoodLogSchema, insertMoodSwingSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema, insertTimeCapsuleSchema, insertSleepSessionSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -302,6 +302,39 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Capsule not found" });
       }
       res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // === Sleep Tracking Routes ===
+  app.post(api.sleep.logSession.path, requireAuth, async (req, res) => {
+    try {
+      const input = insertSleepSessionSchema.parse(req.body);
+      const session = await storage.logSleepSession(req.user!.id, input);
+      res.status(200).json(session);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get(api.sleep.today.path, requireAuth, async (req, res) => {
+    try {
+      const dateStr = (req.query.date as string) || new Date().toISOString().split('T')[0];
+      const session = await storage.getTodaySleepSession(req.user!.id, dateStr);
+      res.json(session || null);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get(api.sleep.history.path, requireAuth, async (req, res) => {
+    try {
+      const history = await storage.getSleepHistory(req.user!.id, 30);
+      res.json(history);
     } catch (err) {
       res.status(500).json({ message: "Internal server error" });
     }

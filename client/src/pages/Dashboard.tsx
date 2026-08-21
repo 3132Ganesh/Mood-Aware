@@ -8,6 +8,7 @@ import { MoodGarden } from "@/components/MoodGarden";
 import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { MoodSwingDialog } from "@/components/MoodSwingDialog";
 import { HydrationTracker } from "@/components/HydrationTracker";
+import { SleepTrackerCard } from "@/components/SleepTrackerCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -218,6 +219,11 @@ export default function Dashboard() {
             <HydrationTracker />
           </div>
 
+          {/* Sleep & Circadian Tracker */}
+          <div className="w-full min-w-0">
+            <SleepTrackerCard />
+          </div>
+
           {/* Main Dashboard CSS Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-[2vw] w-full items-start">
             
@@ -415,6 +421,11 @@ export default function Dashboard() {
           {/* Hydration Tracker with Drink Water Reminder on Mobile */}
           <div className="w-full min-w-0">
             <HydrationTracker />
+          </div>
+
+          {/* Sleep Sanctuary on Mobile */}
+          <div className="w-full min-w-0">
+            <SleepTrackerCard />
           </div>
 
           {/* Quick Breathwork Bar on Mobile */}

@@ -105,9 +105,22 @@ export const timeCapsules = pgTable("time_capsules", {
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
   message: text("message").notNull(),
-  moodScore: integer("mood_score").notNull(), // Mood score when written (e.g. 5)
+  moodScore: integer("mood_score").default(5), // Mood score when written (e.g. 5)
   isDelivered: boolean("is_delivered").default(false),
   deliveredAt: timestamp("delivered_at"),
+});
+
+export const sleepSessions = pgTable("sleep_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  date: date("date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastDeviceUse: timestamp("last_device_use").notNull(),
+  firstDevicePickup: timestamp("first_device_pickup").notNull(),
+  durationMinutes: integer("duration_minutes").notNull(),
+  alignmentScore: integer("alignment_score").default(100),
+  isConfirmed: boolean("is_confirmed").default(false),
+  notes: text("notes"),
 });
 
 export const session = pgTable("session", {
@@ -127,6 +140,7 @@ export const insertPlanItemSchema = createInsertSchema(planItems).omit({ id: tru
 export const insertDailyHabitSchema = createInsertSchema(dailyHabits).omit({ id: true, userId: true, createdAt: true });
 export const insertFeelingsNoteSchema = createInsertSchema(feelingsNotes).omit({ id: true, userId: true, timestamp: true });
 export const insertTimeCapsuleSchema = createInsertSchema(timeCapsules).omit({ id: true, userId: true, createdAt: true, isDelivered: true, deliveredAt: true });
+export const insertSleepSessionSchema = createInsertSchema(sleepSessions).omit({ id: true, userId: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -140,6 +154,7 @@ export type PlanItem = typeof planItems.$inferSelect;
 export type DailyHabit = typeof dailyHabits.$inferSelect;
 export type FeelingsNote = typeof feelingsNotes.$inferSelect;
 export type TimeCapsule = typeof timeCapsules.$inferSelect;
+export type SleepSession = typeof sleepSessions.$inferSelect;
 
 export type PlanWithItems = Plan & { items: (PlanItem & { task: Task })[] };
 
@@ -152,5 +167,6 @@ export type InsertPlanItem = z.infer<typeof insertPlanItemSchema>;
 export type InsertDailyHabit = z.infer<typeof insertDailyHabitSchema>;
 export type InsertFeelingsNote = z.infer<typeof insertFeelingsNoteSchema>;
 export type InsertTimeCapsule = z.infer<typeof insertTimeCapsuleSchema>;
+export type InsertSleepSession = z.infer<typeof insertSleepSessionSchema>;
 
 export * from "./models/chat";
