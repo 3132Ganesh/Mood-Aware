@@ -3,7 +3,8 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, Wind, 
-  LogOut, User as UserIcon, Menu, X, Sparkles, Volume2, CloudRain, Waves, Bell, Settings
+  LogOut, User as UserIcon, Menu, X, Sparkles, Volume2, CloudRain, Waves, Bell, Settings,
+  SlidersHorizontal, Droplets, Moon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -25,12 +26,12 @@ export function MobileNav() {
   ];
 
   const drawerLinks = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-    { icon: Calendar, label: "7-Day Plan", href: "/planner" },
-    { icon: Heart, label: "Daily Check-in", href: "/checkin" },
+    { icon: LayoutDashboard, label: "Dashboard Sanctuary", href: "/dashboard" },
+    { icon: Calendar, label: "7-Day AI Plan", href: "/planner" },
+    { icon: Heart, label: "Daily Check-in & Calibration", href: "/checkin" },
     { icon: Wind, label: "Breathwork Sanctuary", href: "/breathing" },
-    { icon: BookHeart, label: "Feelings & Journal", href: "/feelings" },
-    { icon: BarChart2, label: "Wellness Analytics", href: "/analytics" },
+    { icon: BookHeart, label: "Feelings & Time Capsule", href: "/feelings" },
+    { icon: BarChart2, label: "Biometric Insights & Trends", href: "/analytics" },
     { icon: UserIcon, label: "Profile & Settings", href: "/profile" },
   ];
 
@@ -46,25 +47,26 @@ export function MobileNav() {
 
   return (
     <>
-      {/* Mobile Top Header with Interactive Slide Menu Trigger */}
-      <header className="lg:hidden sticky top-0 left-0 right-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border/50 px-4 py-3 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setIsDrawerOpen(true)}
-            className="p-2 -ml-1 rounded-xl hover:bg-muted active:scale-90 transition-all text-foreground"
-            aria-label="Open navigation menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-xs font-bold text-white shadow-sm">
+      {/* Mobile Top Header: Brand on Left, Wellness Hub & Menu on Opposite (Right) Side */}
+      <header className="lg:hidden sticky top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/50 px-4 py-3 flex items-center justify-between shadow-xs">
+        
+        {/* Left Side: Brand Logo & Title */}
+        <Link href="/dashboard" className="flex items-center gap-2.5 active:scale-95 transition-all">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-sm font-bold text-white shadow-sm">
             🌿
           </div>
-          <span className="font-display font-bold text-base bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            MoodAware
-          </span>
-        </div>
+          <div>
+            <span className="font-display font-bold text-base bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block leading-tight">
+              MoodAware
+            </span>
+            <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Zenith Hub
+            </span>
+          </div>
+        </Link>
 
+        {/* Opposite (Right) Side: Audio Switch, Avatar, and Wellness Hub Menu Trigger */}
         <div className="flex items-center gap-2">
           {activeSound && (
             <button
@@ -76,14 +78,29 @@ export function MobileNav() {
           )}
 
           <Link href="/profile">
-            <button className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-xs ring-2 ring-primary/20 active:scale-95 transition-all">
+            <button 
+              type="button"
+              className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-xs ring-2 ring-primary/20 active:scale-95 transition-all"
+              aria-label="Profile settings"
+            >
               {user?.name?.charAt(0).toUpperCase() || "U"}
             </button>
           </Link>
+
+          {/* Adjusted Wellness Hub Menu Button on the Opposite (Right) Side */}
+          <button
+            type="button"
+            onClick={() => setIsDrawerOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-stitch-surface-container-low border border-border/70 hover:bg-muted active:scale-95 transition-all text-foreground shadow-xs"
+            aria-label="Open Wellness Hub Menu"
+          >
+            <Menu className="w-4 h-4 text-stitch-primary" />
+            <span className="text-xs font-bold text-stitch-primary font-headline">Hub</span>
+          </button>
         </div>
       </header>
 
-      {/* Mobile Slide-In Left Drawer Backdrop */}
+      {/* Mobile Slide-In Right Drawer Backdrop */}
       <AnimatePresence>
         {isDrawerOpen && (
           <motion.div
@@ -96,34 +113,37 @@ export function MobileNav() {
         )}
       </AnimatePresence>
 
-      {/* Mobile Slide-In Left Drawer Content */}
+      {/* Mobile Slide-In Right Drawer Content (Opposite Side) */}
       <AnimatePresence>
         {isDrawerOpen && (
           <motion.aside
-            initial={{ x: "-100%" }}
+            initial={{ x: "100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed left-0 top-0 bottom-0 w-[290px] bg-card/95 backdrop-blur-2xl border-r border-border/80 shadow-2xl z-50 flex flex-col justify-between p-5 lg:hidden"
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            className="fixed right-0 top-0 bottom-0 w-[300px] bg-card/95 backdrop-blur-2xl border-l border-border/80 shadow-2xl z-50 flex flex-col justify-between p-5 lg:hidden"
           >
-            <div className="space-y-6">
-              {/* Drawer User Profile Banner */}
-              <div className="flex items-center justify-between border-b border-border/50 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-base shadow-sm">
-                    {user?.name?.charAt(0).toUpperCase() || "🌿"}
+            <div className="space-y-5 overflow-y-auto pr-1">
+              
+              {/* Drawer Top Header */}
+              <div className="flex items-center justify-between border-b border-border/50 pb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white font-bold text-base shadow-sm">
+                    🌿
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-foreground truncate max-w-[150px]">{user?.name || "Friend"}</h4>
-                    <p className="text-[11px] text-muted-foreground truncate max-w-[150px]">{user?.email || ""}</p>
+                    <h4 className="font-bold text-sm text-foreground font-headline">Wellness Hub</h4>
+                    <p className="text-[11px] text-muted-foreground">{user?.name || "Friend"}</p>
                   </div>
                 </div>
+                
                 <button 
                   type="button"
                   onClick={() => setIsDrawerOpen(false)}
-                  className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
+                  className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground active:scale-90 transition-all"
+                  aria-label="Close menu"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -139,7 +159,7 @@ export function MobileNav() {
                       className={cn(
                         "flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all",
                         isActive
-                          ? "bg-primary/10 text-primary font-bold shadow-xs"
+                          ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground active:scale-98"
                       )}
                     >
@@ -150,11 +170,21 @@ export function MobileNav() {
                 })}
               </nav>
 
-              {/* Ambient Sound Quick Switcher */}
-              <div className="p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Volume2 className="w-3.5 h-3.5 text-primary" /> Ambient Sound
-                </span>
+              {/* Ambient Soundscape Quick Switcher */}
+              <div className="p-3.5 rounded-2xl bg-stitch-surface-container-low border border-border/60 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Volume2 className="w-3.5 h-3.5 text-primary" /> Ambient Soundscape
+                  </span>
+                  {activeSound && (
+                    <button
+                      onClick={() => { soundscape.stop(); setActiveSound(null); }}
+                      className="text-[10px] text-destructive hover:underline font-semibold"
+                    >
+                      Stop
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-3 gap-1.5">
                   <button
                     type="button"
@@ -188,6 +218,7 @@ export function MobileNav() {
                   </button>
                 </div>
               </div>
+
             </div>
 
             {/* Drawer Logout */}
