@@ -59,7 +59,7 @@ export function MobileNav() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/onboarding" className="flex items-center gap-2 px-2 py-2 rounded-xl text-sm cursor-pointer">
+              <Link href="/profile" className="flex items-center gap-2 px-2 py-2 rounded-xl text-sm cursor-pointer">
                 <UserIcon className="w-4 h-4 text-muted-foreground" />
                 Profile Settings
               </Link>

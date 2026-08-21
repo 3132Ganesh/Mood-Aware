@@ -29,10 +29,10 @@ const DEFAULT_SEEDS = [
 export interface IStorage {
   sessionStore: session.Store;
   
-  // User
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser & { name: string }): Promise<User>;
+  updateUser(id: number, data: Partial<Pick<User, "name">>): Promise<User | undefined>;
   
   // Profile
   getProfile(userId: number): Promise<UserProfile | undefined>;
@@ -130,6 +130,14 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(id: number, data: Partial<Pick<User, "name">>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    const updated = { ...user, ...data };
+    this.users.set(id, updated);
+    return updated;
   }
 
   async getProfile(userId: number): Promise<UserProfile | undefined> {
@@ -440,6 +448,14 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser & { name: string }): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async updateUser(id: number, data: Partial<Pick<User, "name">>): Promise<User | undefined> {
+    const [updated] = await db.update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
   }
 
   async getProfile(userId: number): Promise<UserProfile | undefined> {

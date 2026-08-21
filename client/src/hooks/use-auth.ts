@@ -81,6 +81,25 @@ export function useAuth() {
     },
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: async (data: { name: string }) => {
+      const res = await fetch(api.auth.updateUser.path, {
+        method: api.auth.updateUser.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const message = await extractErrorMessage(res, "Failed to update user details");
+        throw new Error(message);
+      }
+      return api.auth.updateUser.responses[200].parse(await res.json());
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData([api.auth.me.path], updatedUser);
+    },
+  });
+
   return {
     user,
     isLoading,
@@ -92,6 +111,7 @@ export function useAuth() {
     isRegistering: registerMutation.isPending,
     registerError: registerMutation.error,
     logout: logoutMutation.mutate,
+    updateUser: updateUserMutation,
   };
 }
 
@@ -122,8 +142,10 @@ export function useProfile() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData([api.profile.get.path], data);
+      queryClient.invalidateQueries({ queryKey: [api.profile.get.path] });
     },
   });
 
   return { profile, isLoading, updateProfile };
 }
+

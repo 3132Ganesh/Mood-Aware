@@ -14,6 +14,7 @@ import Checkin from "@/pages/Checkin";
 import Feelings from "@/pages/Feelings";
 import Analytics from "@/pages/Analytics";
 import Breathing from "@/pages/Breathing";
+import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -70,6 +71,12 @@ function Router() {
       </Route>
       <Route path="/breathing">
         {() => <ProtectedRoute component={Breathing} />}
+      </Route>
+      <Route path="/profile">
+        {() => <ProtectedRoute component={Profile} />}
+      </Route>
+      <Route path="/settings">
+        {() => <ProtectedRoute component={Profile} />}
       </Route>
       <Route component={NotFound} />
     </Switch>

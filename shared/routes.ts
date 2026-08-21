@@ -85,6 +85,17 @@ export const api = {
         401: z.null(),
       },
     },
+    updateUser: {
+      method: 'PATCH' as const,
+      path: '/api/user',
+      input: z.object({
+        name: z.string().min(1, "Name is required"),
+      }),
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
   },
   profile: {
     get: {

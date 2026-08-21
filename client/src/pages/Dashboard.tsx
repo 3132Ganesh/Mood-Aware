@@ -357,9 +357,9 @@ export default function Dashboard() {
                   <span className="text-muted-foreground">Music Therapy</span>
                   <span className="font-semibold capitalize">{profile?.musicApp || "Active"}</span>
                 </div>
-                <Link href="/onboarding">
+                <Link href="/profile">
                   <Button variant="outline" className="w-full text-xs h-9 mt-1 rounded-xl">
-                    Update Preferences
+                    View & Edit Preferences
                   </Button>
                 </Link>
               </CardContent>

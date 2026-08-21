@@ -56,10 +56,15 @@ export function Sidebar() {
 
       <div className="p-4 border-t border-border/40 space-y-2">
         <Link 
-          href="/onboarding"
-          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-all"
+          href="/profile"
+          className={cn(
+            "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-all",
+            location === "/profile" || location === "/settings"
+              ? "bg-primary/15 text-primary font-semibold shadow-sm"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          )}
         >
-          <UserIcon className="w-4 h-4 text-muted-foreground" />
+          <UserIcon className={cn("w-4 h-4", (location === "/profile" || location === "/settings") ? "text-primary" : "text-muted-foreground")} />
           Profile Settings
         </Link>
         <button 

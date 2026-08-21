@@ -22,6 +22,28 @@ export async function registerRoutes(
     res.status(401).json({ message: "Unauthorized" });
   };
 
+  // === User Account Routes ===
+  app.patch(api.auth.updateUser.path, requireAuth, async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name || typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({ message: "Name cannot be empty" });
+      }
+      const updated = await storage.updateUser(req.user!.id, { name: name.trim() });
+      if (!updated) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      // Update session user in memory if present
+      if (req.user) {
+        req.user.name = updated.name;
+      }
+      const { password: _, ...safeUser } = updated;
+      res.json(safeUser);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // === Profile Routes ===
   app.get(api.profile.get.path, requireAuth, async (req, res) => {
     const profile = await storage.getProfile(req.user!.id);
@@ -33,7 +55,7 @@ export async function registerRoutes(
 
   app.post(api.profile.update.path, requireAuth, async (req, res) => {
     try {
-      const input = insertUserProfileSchema.parse(req.body);
+      const input = insertUserProfileSchema.partial().parse(req.body);
       const profile = await storage.createOrUpdateProfile(req.user!.id, input);
       res.json(profile);
     } catch (err) {
