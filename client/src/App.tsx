@@ -15,7 +15,6 @@ import Checkin from "@/pages/Checkin";
 import Feelings from "@/pages/Feelings";
 import Analytics from "@/pages/Analytics";
 import Breathing from "@/pages/Breathing";
-import Community from "@/pages/Community";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
 
@@ -71,9 +70,6 @@ function Router() {
         </Route>
         <Route path="/analytics">
           {() => <ProtectedRoute component={Analytics} />}
-        </Route>
-        <Route path="/community">
-          {() => <ProtectedRoute component={Community} />}
         </Route>
         <Route path="/breathing">
           {() => <ProtectedRoute component={Breathing} />}
