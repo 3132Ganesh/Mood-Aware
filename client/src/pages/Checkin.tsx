@@ -10,7 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMood, useHabits, useCapsules } from "@/hooks/use-tracking";
 import { useLocation, Link } from "wouter";
-import { Loader2, Smile, Frown, Meh, Sparkles, Zap, Heart, CheckCircle2, Wind, Mail } from "lucide-react";
+import { 
+  Loader2, Smile, Frown, Meh, Sparkles, Zap, Heart, CheckCircle2, 
+  Wind, Mail, ArrowRight, BarChart3, Moon, Activity 
+} from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -24,10 +27,15 @@ const MOOD_OPTIONS = [
 ];
 
 export default function Checkin() {
-  const { logMood, isLogging } = useMood();
-  const { logHabit } = useHabits();
-  const { createCapsule } = useCapsules();
+  const { history: moodHistory, logMood, isLogging, isLoading: isMoodLoading } = useMood();
+  const { history: habitHistory, logHabit, isLogging: isHabitLogging } = useHabits();
+  const { createCapsule, isCreating: isCapsuleCreating } = useCapsules();
   const [_, setLocation] = useLocation();
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todaysMoodLog = moodHistory?.find(m => String(m.date).split('T')[0] === todayStr);
+  const todaysHabitLog = habitHistory?.find(h => String(h.date).split('T')[0] === todayStr);
+  const alreadyCheckedInToday = Boolean(todaysMoodLog);
 
   const [moodScore, setMoodScore] = useState<number>(4);
   const [stressScore, setStressScore] = useState<number[]>([2]);
@@ -46,6 +54,11 @@ export default function Checkin() {
   const selectedMood = MOOD_OPTIONS.find(m => m.value === moodScore) || MOOD_OPTIONS[3];
 
   const handleSubmit = async () => {
+    if (alreadyCheckedInToday || isLogging || isHabitLogging) {
+      toast({ title: "Already Checked In", description: "You have already completed your reflection for today." });
+      return;
+    }
+
     try {
       await logMood({
         moodScore: moodScore,
@@ -54,11 +67,11 @@ export default function Checkin() {
         energyScore: energyScore[0],
         sleepScore: sleepScore[0],
         notes: notes,
-        date: format(new Date(), 'yyyy-MM-dd')
+        date: todayStr
       });
       
       await logHabit({
-        date: format(new Date(), 'yyyy-MM-dd'),
+        date: todayStr,
         routineFollowed: habitRoutine,
         extraPhysicalActivity: habitPhysical,
         screenTimeHours: screenTime[0]
@@ -74,8 +87,8 @@ export default function Checkin() {
 
       toast({ title: "Check-in Complete! ✨", description: "Your mood, habits, and reflections have been recorded." });
       setLocation("/dashboard");
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to save check-in.", variant: "destructive" });
+    } catch (e: any) {
+      toast({ title: "Check-in Notice", description: e?.message || "Failed to save check-in.", variant: "destructive" });
     }
   };
 
@@ -91,192 +104,245 @@ export default function Checkin() {
           <p className="text-sm text-muted-foreground">Take a moment to tune in to how you feel.</p>
         </header>
 
-        <div className="space-y-5">
-          {/* Mood Selector Card */}
-          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm overflow-hidden rounded-3xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">How are you feeling right now?</CardTitle>
-              <CardDescription>Tap an emoji that best matches your emotional state</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-5 gap-2">
-                {MOOD_OPTIONS.map((option) => {
-                  const isSelected = moodScore === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setMoodScore(option.value)}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-200 active:scale-90",
-                        isSelected 
-                          ? "bg-gradient-to-b border-primary shadow-lg shadow-primary/20 scale-105 " + option.color
-                          : "border-border/60 bg-muted/20 hover:bg-muted/40 hover:border-border"
-                      )}
-                    >
-                      <span className="text-2xl sm:text-3xl filter drop-shadow-sm select-none">{option.emoji}</span>
-                      <span className="text-xs font-semibold mt-1.5">{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Stress, Energy, Sleep Sliders */}
-              <div className="space-y-4 pt-3 border-t border-border/40">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <Label className="text-xs font-semibold">Stress Level (1 = Calm, 5 = High Stress)</Label>
-                    <span className="font-bold text-xs">{stressScore[0]} / 5</span>
+        {isMoodLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : alreadyCheckedInToday ? (
+          /* Already Checked In View */
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-primary/10 shadow-xl rounded-3xl overflow-hidden backdrop-blur-sm">
+              <CardContent className="p-6 sm:p-8 text-center space-y-6">
+                <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/20">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-2">
+                    ✓ Completed for Today
                   </div>
-                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-1" />
+                  <h3 className="text-2xl font-display font-bold text-foreground">
+                    You're All Checked In!
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+                    You have already completed your daily reflection for <span className="font-semibold text-foreground">{format(new Date(), "EEEE, MMMM do")}</span>.
+                  </p>
                 </div>
 
-                {/* High Stress Alert & Breathing Prompt */}
-                {stressScore[0] >= 4 && (
-                  <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 animate-in fade-in">
-                    <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 font-medium">
-                      <Wind className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                      <span>Stress is elevated. Take a quick 60s breathing break.</span>
-                    </div>
-                    <Link href="/breathing">
-                      <Button size="sm" variant="outline" className="rounded-xl h-7 text-xs border-amber-500/40 text-amber-700 dark:text-amber-300">
-                        Breathe Now
-                      </Button>
-                    </Link>
+                {/* Today's Recorded Highlights */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left pt-2">
+                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
+                    <span className="text-[11px] text-muted-foreground font-medium block">Mood</span>
+                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
+                      <span className="text-xl">
+                        {MOOD_OPTIONS.find(m => m.value === todaysMoodLog?.moodScore)?.emoji || "😊"}
+                      </span>
+                      {todaysMoodLog?.moodLabel || `${todaysMoodLog?.moodScore}/5`}
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
+                    <span className="text-[11px] text-muted-foreground font-medium block">Energy</span>
+                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-amber-500" /> {todaysMoodLog?.energyScore ?? "—"}/5
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
+                    <span className="text-[11px] text-muted-foreground font-medium block">Sleep</span>
+                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
+                      <Moon className="w-4 h-4 text-blue-500" /> {todaysMoodLog?.sleepScore ?? "—"} hrs
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
+                    <span className="text-[11px] text-muted-foreground font-medium block">Routine</span>
+                    <p className="text-base font-bold mt-1 text-foreground flex items-center gap-1.5">
+                      <Activity className="w-4 h-4 text-emerald-500" /> 
+                      {todaysHabitLog?.routineFollowed ? "Followed" : "Flexible"}
+                    </p>
+                  </div>
+                </div>
+
+                {todaysMoodLog?.notes && (
+                  <div className="p-4 rounded-2xl bg-card/60 border border-border/60 text-left">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                      Today's Reflection Note
+                    </span>
+                    <p className="text-sm text-foreground italic">"{todaysMoodLog.notes}"</p>
                   </div>
                 )}
 
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                  Daily reflections are restricted to once per day to keep your wellness rhythm accurate and consistent. Come back tomorrow for your next check-in!
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                  <Link href="/dashboard">
+                    <Button className="w-full sm:w-auto btn-primary rounded-2xl h-11 px-6 shadow-md shadow-primary/20">
+                      Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                  <Link href="/analytics">
+                    <Button variant="outline" className="w-full sm:w-auto rounded-2xl h-11 px-6 border-border">
+                      <BarChart3 className="w-4 h-4 mr-2" /> View Analytics
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          /* Check-in Form */
+          <div className="space-y-5">
+            {/* Mood Selector Card */}
+            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm overflow-hidden rounded-3xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">How are you feeling right now?</CardTitle>
+                <CardDescription>Tap an emoji that best matches your emotional state</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-5 gap-2">
+                  {MOOD_OPTIONS.map((option) => {
+                    const isSelected = moodScore === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setMoodScore(option.value)}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-200 active:scale-90",
+                          isSelected 
+                            ? "bg-gradient-to-b border-primary shadow-lg shadow-primary/20 scale-105 " + option.color
+                            : "border-border/60 bg-muted/20 hover:bg-muted/40 hover:border-border"
+                        )}
+                      >
+                        <span className="text-2xl sm:text-3xl filter drop-shadow-sm select-none">{option.emoji}</span>
+                        <span className="text-xs font-semibold mt-1.5">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sliders Card: Stress, Energy, Sleep */}
+            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Energy & Vitality</CardTitle>
+                <CardDescription>Calibrate your physical and mental levels</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm">
-                    <Label className="text-xs font-semibold">Energy Level (1 = Exhausted, 5 = Energized)</Label>
-                    <span className="font-bold text-xs">{energyScore[0]} / 5</span>
+                    <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Zap className="w-3.5 h-3.5 text-amber-500" /> Energy Level
+                    </Label>
+                    <span className="font-bold text-xs">{energyScore[0]}/5 ({energyScore[0] <= 2 ? "Drained" : energyScore[0] <= 4 ? "Good" : "Vibrant"})</span>
                   </div>
-                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-1" />
+                  <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-2" />
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm">
-                    <Label className="text-xs font-semibold">Hours of Sleep</Label>
+                    <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-500" /> Stress Level
+                    </Label>
+                    <span className="font-bold text-xs">{stressScore[0]}/5 ({stressScore[0] <= 2 ? "Calm" : stressScore[0] <= 3 ? "Moderate" : "Elevated"})</span>
+                  </div>
+                  <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-2" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Moon className="w-3.5 h-3.5 text-blue-500" /> Sleep Duration
+                    </Label>
                     <span className="font-bold text-xs">{sleepScore[0]} hours</span>
                   </div>
-                  <Slider value={sleepScore} onValueChange={setSleepScore} min={2} max={12} step={1} className="py-1" />
+                  <Slider value={sleepScore} onValueChange={setSleepScore} min={2} max={12} step={0.5} className="py-2" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Future Self Time Capsule Card (Offered on High Mood Days 4 or 5) */}
-          {moodScore >= 4 && (
-            <Card className="border border-purple-200 dark:border-purple-900 bg-purple-500/5 backdrop-blur-sm rounded-3xl shadow-sm overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 text-[11px] font-bold">
-                    <Mail className="w-3.5 h-3.5" /> Future Self Time Capsule
-                  </div>
-                  <Checkbox 
-                    checked={saveCapsule} 
-                    onCheckedChange={(c) => setSaveCapsule(!!c)} 
-                  />
-                </div>
-                <CardTitle className="text-sm font-bold mt-1">Send a message to your future self?</CardTitle>
-                <CardDescription className="text-xs">
-                  You're in high spirits! Write a 1-sentence reminder. We'll automatically deliver it when you have a low-energy day.
-                </CardDescription>
-              </CardHeader>
-              {saveCapsule && (
-                <CardContent className="pt-1">
-                  <Textarea
-                    placeholder="e.g. Remember you've conquered tough challenges before! Take a break, drink water, you've got this."
-                    className="text-xs rounded-2xl min-h-[70px] resize-none"
-                    value={capsuleMessage}
-                    onChange={(e) => setCapsuleMessage(e.target.value)}
-                  />
-                </CardContent>
-              )}
+              </CardContent>
             </Card>
-          )}
 
-          {/* Daily Habits & Routine Card */}
-          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Habits & Routine</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div 
-                onClick={() => setHabitRoutine(!habitRoutine)}
-                className={cn(
-                  "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
-                  habitRoutine ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
-                )}
-              >
-                <Checkbox 
-                  id="routine" 
-                  checked={habitRoutine} 
-                  onCheckedChange={(c) => setHabitRoutine(!!c)} 
+            {/* Habits Check */}
+            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Habits & Routine</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div 
+                  onClick={() => setHabitRoutine(!habitRoutine)}
+                  className={cn(
+                    "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
+                    habitRoutine ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
+                  )}
+                >
+                  <Checkbox 
+                    id="routine" 
+                    checked={habitRoutine} 
+                    onCheckedChange={(c) => setHabitRoutine(!!c)} 
+                  />
+                  <div className="grid gap-0.5 leading-tight flex-1">
+                    <span className="font-medium text-sm">Followed daily routine</span>
+                    <span className="text-xs text-muted-foreground">Stuck to regular schedule & habits</span>
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => setHabitPhysical(!habitPhysical)}
+                  className={cn(
+                    "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
+                    habitPhysical ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
+                  )}
+                >
+                  <Checkbox 
+                    id="physical" 
+                    checked={habitPhysical} 
+                    onCheckedChange={(c) => setHabitPhysical(!!c)} 
+                  />
+                  <div className="grid gap-0.5 leading-tight flex-1">
+                    <span className="font-medium text-sm">Active movement</span>
+                    <span className="text-xs text-muted-foreground">Walking, workout, or stretching</span>
+                  </div>
+                </div>
+
+                <div className="pt-3 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <Label className="text-xs text-muted-foreground">Screen Time</Label>
+                    <span className="font-bold text-xs">{screenTime[0]} hrs</span>
+                  </div>
+                  <Slider value={screenTime} onValueChange={setScreenTime} min={0} max={16} step={1} className="py-2" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Journal Notes with Voice Dictation */}
+            <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Quick Note (Optional)</CardTitle>
+                  <CardDescription>Type or speak your thoughts</CardDescription>
+                </div>
+                <VoiceRecorder 
+                  onTranscript={(spokenText) => setNotes((prev) => prev ? `${prev} ${spokenText}` : spokenText)} 
                 />
-                <div className="grid gap-0.5 leading-tight flex-1">
-                  <span className="font-medium text-sm">Followed daily routine</span>
-                  <span className="text-xs text-muted-foreground">Stuck to regular schedule & habits</span>
-                </div>
-              </div>
-
-              <div 
-                onClick={() => setHabitPhysical(!habitPhysical)}
-                className={cn(
-                  "flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer",
-                  habitPhysical ? "bg-primary/5 border-primary/40" : "bg-muted/20 border-border/60"
-                )}
-              >
-                <Checkbox 
-                  id="physical" 
-                  checked={habitPhysical} 
-                  onCheckedChange={(c) => setHabitPhysical(!!c)} 
+              </CardHeader>
+              <CardContent>
+                <Textarea 
+                  placeholder="What made you smile or stressed today? (Or tap Voice Record to speak)" 
+                  className="min-h-[90px] resize-none text-sm rounded-2xl leading-relaxed"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
                 />
-                <div className="grid gap-0.5 leading-tight flex-1">
-                  <span className="font-medium text-sm">Active movement</span>
-                  <span className="text-xs text-muted-foreground">Walking, workout, or stretching</span>
-                </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="pt-3 space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <Label className="text-xs text-muted-foreground">Screen Time</Label>
-                  <span className="font-bold text-xs">{screenTime[0]} hrs</span>
-                </div>
-                <Slider value={screenTime} onValueChange={setScreenTime} min={0} max={16} step={1} className="py-2" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Journal Notes with Voice Dictation */}
-          <Card className="border-none shadow-md bg-card/70 backdrop-blur-sm rounded-3xl">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Quick Note (Optional)</CardTitle>
-                <CardDescription>Type or speak your thoughts</CardDescription>
-              </div>
-              <VoiceRecorder 
-                onTranscript={(spokenText) => setNotes((prev) => prev ? `${prev} ${spokenText}` : spokenText)} 
-              />
-            </CardHeader>
-            <CardContent>
-              <Textarea 
-                placeholder="What made you smile or stressed today? (Or tap Voice Record to speak)" 
-                className="min-h-[90px] resize-none text-sm rounded-2xl leading-relaxed"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </CardContent>
-          </Card>
-
-          <Button 
-            onClick={handleSubmit} 
-            className="w-full btn-primary h-12 text-base font-semibold rounded-2xl shadow-lg shadow-primary/25"
-            disabled={isLogging}
-          >
-            {isLogging ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Save Check-in 🌿"}
-          </Button>
-        </div>
+            <Button 
+              onClick={handleSubmit} 
+              className="w-full btn-primary h-12 text-base font-semibold rounded-2xl shadow-lg shadow-primary/25"
+              disabled={isLogging || isHabitLogging || alreadyCheckedInToday}
+            >
+              {isLogging || isHabitLogging ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : "Save Check-in 🌿"}
+            </Button>
+          </div>
+        )}
       </main>
       <MobileNav />
     </div>

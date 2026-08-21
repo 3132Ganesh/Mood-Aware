@@ -46,6 +46,7 @@ export interface IStorage {
   createMoodLog(log: InsertMoodLog & { userId: number }): Promise<MoodLog>;
   getMoodLogs(userId: number, limit?: number): Promise<MoodLog[]>;
   getLastMoodLog(userId: number): Promise<MoodLog | undefined>;
+  getMoodLogByDate(userId: number, date: string): Promise<MoodLog | undefined>;
   
   // Plans
   createPlan(plan: InsertPlan & { userId: number }): Promise<Plan>;
@@ -56,6 +57,7 @@ export interface IStorage {
   // Habits
   createHabitLog(log: InsertDailyHabit & { userId: number }): Promise<DailyHabit>;
   getHabitLogs(userId: number, limit?: number): Promise<DailyHabit[]>;
+  getHabitLogByDate(userId: number, date: string): Promise<DailyHabit | undefined>;
   
   // Notes
   createNote(note: InsertFeelingsNote & { userId: number; sentimentScore?: number | null; timestamp?: Date | null }): Promise<FeelingsNote>;
@@ -196,6 +198,13 @@ export class MemStorage implements IStorage {
     return logs[0];
   }
 
+  async getMoodLogByDate(userId: number, date: string): Promise<MoodLog | undefined> {
+    const cleanDate = date.split('T')[0];
+    return Array.from(this.moodLogs.values()).find(
+      m => m.userId === userId && String(m.date).split('T')[0] === cleanDate
+    );
+  }
+
   async createPlan(plan: InsertPlan & { userId: number }): Promise<Plan> {
     Array.from(this.plans.entries()).forEach(([id, p]) => {
       if (p.userId === plan.userId && p.isActive) {
@@ -290,6 +299,13 @@ export class MemStorage implements IStorage {
       .filter(h => h.userId === userId)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, limit);
+  }
+
+  async getHabitLogByDate(userId: number, date: string): Promise<DailyHabit | undefined> {
+    const cleanDate = date.split('T')[0];
+    return Array.from(this.dailyHabits.values()).find(
+      h => h.userId === userId && String(h.date).split('T')[0] === cleanDate
+    );
   }
 
   async createNote(note: InsertFeelingsNote & { userId: number; sentimentScore?: number | null; timestamp?: Date | null }): Promise<FeelingsNote> {
@@ -438,6 +454,15 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
+  async getMoodLogByDate(userId: number, date: string): Promise<MoodLog | undefined> {
+    const cleanDate = date.split('T')[0];
+    const [log] = await db.select()
+      .from(moodLogs)
+      .where(and(eq(moodLogs.userId, userId), eq(moodLogs.date, cleanDate)))
+      .limit(1);
+    return log;
+  }
+
   async createPlan(plan: InsertPlan & { userId: number }): Promise<Plan> {
     await db.update(plans)
       .set({ isActive: false })
@@ -493,6 +518,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dailyHabits.userId, userId))
       .orderBy(desc(dailyHabits.date))
       .limit(limit);
+  }
+
+  async getHabitLogByDate(userId: number, date: string): Promise<DailyHabit | undefined> {
+    const cleanDate = date.split('T')[0];
+    const [log] = await db.select()
+      .from(dailyHabits)
+      .where(and(eq(dailyHabits.userId, userId), eq(dailyHabits.date, cleanDate)))
+      .limit(1);
+    return log;
   }
 
   async createNote(note: InsertFeelingsNote & { userId: number; sentimentScore?: number | null; timestamp?: Date | null }): Promise<FeelingsNote> {

@@ -21,7 +21,14 @@ export function useMood() {
         body: JSON.stringify(data),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to log mood");
+      if (!res.ok) {
+        let errorMsg = "Failed to log mood";
+        try {
+          const err = await res.json();
+          errorMsg = err.message || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
       return api.mood.log.responses[201].parse(await res.json());
     },
     onSuccess: () => {
@@ -32,7 +39,7 @@ export function useMood() {
   return { 
     history: history.data, 
     isLoading: history.isLoading, 
-    logMood: logMood.mutate,
+    logMood: logMood.mutateAsync,
     isLogging: logMood.isPending 
   };
 }
@@ -57,7 +64,14 @@ export function useHabits() {
         body: JSON.stringify(data),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to log habit");
+      if (!res.ok) {
+        let errorMsg = "Failed to log habit";
+        try {
+          const err = await res.json();
+          errorMsg = err.message || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
       return api.habits.log.responses[201].parse(await res.json());
     },
     onSuccess: () => {
@@ -65,11 +79,11 @@ export function useHabits() {
     },
   });
 
-  return {
-    history: history.data,
-    isLoading: history.isLoading,
-    logHabit: logHabit.mutate,
-    isLogging: logHabit.isPending
+  return { 
+    history: history.data, 
+    isLoading: history.isLoading, 
+    logHabit: logHabit.mutateAsync,
+    isLogging: logHabit.isPending 
   };
 }
 

@@ -16,6 +16,7 @@ import {
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ResponsiveContainer, LineChart, Line, XAxis, Tooltip, CartesianGrid } from "recharts";
+import { cn } from "@/lib/utils";
 
 const QUOTES = [
   { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
@@ -35,6 +36,8 @@ export default function Dashboard() {
   const [dismissedCapsule, setDismissedCapsule] = useState(false);
 
   const today = format(new Date(), "yyyy-MM-dd");
+  const todaysMoodLog = history?.find(m => String(m.date).split('T')[0] === today);
+  const hasCheckedInToday = Boolean(todaysMoodLog);
   
   // Filter tasks for today (timezone-safe)
   const todaysTasks = plan?.items.filter(item => {
@@ -85,9 +88,15 @@ export default function Dashboard() {
               </Button>
             </Link>
             <Link href="/checkin">
-              <Button className="btn-primary rounded-2xl text-xs sm:text-sm font-semibold h-11 shadow-md shadow-primary/25 flex items-center gap-2">
-                <Heart className="w-4 h-4" /> Daily Check-in
-              </Button>
+              {hasCheckedInToday ? (
+                <Button variant="outline" className="rounded-2xl text-xs sm:text-sm font-semibold h-11 flex items-center gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Checked In Today
+                </Button>
+              ) : (
+                <Button className="btn-primary rounded-2xl text-xs sm:text-sm font-semibold h-11 shadow-md shadow-primary/25 flex items-center gap-2">
+                  <Heart className="w-4 h-4" /> Daily Check-in
+                </Button>
+              )}
             </Link>
           </div>
         </header>
@@ -125,12 +134,14 @@ export default function Dashboard() {
         {/* Quick Summary Metric Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <Link href="/checkin" className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/40 shadow-sm transition-all active:scale-95 group">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-              <Heart className="w-4 h-4" />
+            <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform", hasCheckedInToday ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-primary/10 text-primary")}>
+              {hasCheckedInToday ? <CheckCircle2 className="w-4 h-4" /> : <Heart className="w-4 h-4" />}
             </div>
             <span className="text-xs text-muted-foreground font-medium">Today's Mood</span>
             <p className="text-base sm:text-lg font-bold mt-0.5 text-foreground truncate">
-              {history && history.length > 0 ? `${history[0].moodScore}/5 (${history[0].moodLabel || "Logged"})` : "Not logged"}
+              {hasCheckedInToday && todaysMoodLog
+                ? `${todaysMoodLog.moodScore}/5 (${todaysMoodLog.moodLabel || "Logged"})`
+                : "Not logged yet"}
             </p>
           </Link>
 

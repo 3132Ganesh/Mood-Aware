@@ -145,6 +145,10 @@ export async function registerRoutes(
   app.post(api.mood.log.path, requireAuth, async (req, res) => {
     try {
       const input = insertMoodLogSchema.parse(req.body);
+      const existing = await storage.getMoodLogByDate(req.user!.id, input.date);
+      if (existing) {
+        return res.status(400).json({ message: "You have already completed your mood check-in for today." });
+      }
       const log = await storage.createMoodLog({ ...input, userId: req.user!.id });
       res.status(201).json(log);
     } catch (err) {
@@ -164,6 +168,10 @@ export async function registerRoutes(
   app.post(api.habits.log.path, requireAuth, async (req, res) => {
     try {
       const input = insertDailyHabitSchema.parse(req.body);
+      const existing = await storage.getHabitLogByDate(req.user!.id, input.date);
+      if (existing) {
+        return res.status(400).json({ message: "You have already logged your habits for today." });
+      }
       const log = await storage.createHabitLog({ ...input, userId: req.user!.id });
       res.status(201).json(log);
     } catch (err) {
