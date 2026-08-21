@@ -7,7 +7,7 @@ import {
   PlanWithItems
 } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, ilike } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -108,7 +108,8 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(u => u.email.toLowerCase() === username.toLowerCase());
+    const clean = username.trim().toLowerCase();
+    return Array.from(this.users.values()).find(u => u.email.trim().toLowerCase() === clean);
   }
 
   async createUser(insertUser: InsertUser & { name: string }): Promise<User> {
@@ -376,7 +377,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, username));
+    const clean = username.trim();
+    const [user] = await db.select().from(users).where(ilike(users.email, clean));
     return user;
   }
 

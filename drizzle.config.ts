@@ -1,7 +1,8 @@
+import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL, ensure the database is provisioned");
+  throw new Error("DATABASE_URL is not set. Please set DATABASE_URL in your .env file or environment.");
 }
 
 export default defineConfig({

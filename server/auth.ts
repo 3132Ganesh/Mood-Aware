@@ -55,6 +55,9 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        if (!username || !password) {
+          return done(null, false, { message: "Email and password are required" });
+        }
         const normalizedUsername = username.trim().toLowerCase();
         const user = await storage.getUserByUsername(normalizedUsername);
         if (!user || !(await comparePasswords(password, user.password))) {
@@ -113,8 +116,21 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(sanitizeUser(req.user as SelectUser));
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: SelectUser | false, info: { message?: string } | undefined) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid email or password" });
+      }
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          return next(loginErr);
+        }
+        return res.status(200).json(sanitizeUser(user));
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {

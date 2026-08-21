@@ -2,6 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type InsertUser } from "@shared/routes";
 import { useLocation } from "wouter";
 
+async function extractErrorMessage(res: Response, defaultMsg: string): Promise<string> {
+  try {
+    const errorData = await res.json();
+    return errorData.message || defaultMsg;
+  } catch {
+    const text = await res.text().catch(() => "");
+    return text || res.statusText || defaultMsg;
+  }
+}
+
 export function useAuth() {
   const queryClient = useQueryClient();
   const [_, setLocation] = useLocation();
@@ -26,8 +36,8 @@ export function useAuth() {
         credentials: "include",
       });
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Login failed");
+        const message = await extractErrorMessage(res, "Invalid email or password");
+        throw new Error(message);
       }
       return api.auth.login.responses[200].parse(await res.json());
     },
@@ -46,11 +56,8 @@ export function useAuth() {
         credentials: "include",
       });
       if (!res.ok) {
-        if (res.status === 400) {
-          const error = await res.json();
-          throw new Error(error.message);
-        }
-        throw new Error("Registration failed");
+        const message = await extractErrorMessage(res, "Registration failed");
+        throw new Error(message);
       }
       return api.auth.register.responses[201].parse(await res.json());
     },
