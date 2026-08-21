@@ -17,7 +17,7 @@ import {
   ArrowRight, CheckCircle2, Circle, Sun, Music, Gamepad2, Brain, 
   Dumbbell, Sparkles, Heart, Plus, BookHeart, TrendingUp, Wind, Mail, X, Check, Zap,
   Laptop, Smartphone, SlidersHorizontal, Calendar as CalendarIcon, Flame, ChevronRight,
-  Moon, Droplets, Footprints, Stars, Activity
+  Droplets, Stars, Activity
 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,13 +34,12 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { plan, completeTask, isLoading: planLoading, generatePlan, isGenerating } = useCurrentPlan();
-  const { history, isLoading: moodLoading, logMood } = useMood();
+  const { history, isLoading: moodLoading } = useMood();
   const { history: habitHistory } = useHabits();
   const { undeliveredCapsule, markDelivered } = useCapsules();
 
   const [dismissedCapsule, setDismissedCapsule] = useState(false);
   const [swingDialogOpen, setSwingDialogOpen] = useState(false);
-  const [mobileTab, setMobileTab] = useState<"tasks" | "garden" | "insights">("tasks");
   const [quickStress, setQuickStress] = useState([3]);
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -60,16 +59,6 @@ export default function Dashboard() {
   const quote = QUOTES[new Date().getDate() % QUOTES.length];
   const totalLogs = history?.length || 0;
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "mental": return <Brain className="w-4 h-4 text-purple-500" />;
-      case "physical": return <Dumbbell className="w-4 h-4 text-emerald-500" />;
-      case "music": return <Music className="w-4 h-4 text-pink-500" />;
-      case "game": return <Gamepad2 className="w-4 h-4 text-blue-500" />;
-      default: return <Sun className="w-4 h-4 text-amber-500" />;
-    }
-  };
-
   const handleDismissCapsule = (id: number) => {
     markDelivered(id);
     setDismissedCapsule(true);
@@ -80,15 +69,15 @@ export default function Dashboard() {
       {/* Desktop Sidebar */}
       <Sidebar />
 
-      {/* Main Viewport Container with Percentage/Viewport Sizing */}
-      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full pb-[12vh] lg:pb-[5vh]">
+      {/* Main Container */}
+      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full pb-32 lg:pb-12">
 
         {/* ========================================================================= */}
-        {/* 1. LAPTOP SCREEN UI (CSS Grid Bento + Vitality Rings + Flexbox Cards)     */}
+        {/* 1. LAPTOP SCREEN UI (CSS Grid Bento + Hydration + Flexbox Cards)          */}
         {/* ========================================================================= */}
         <div className="hidden lg:block w-full max-w-[min(100%,88rem)] mx-auto px-[3vw] py-[3vh] space-y-[3vh]">
           
-          {/* Header - Flexbox Layout with Zenith Editorial Styling */}
+          {/* Header */}
           <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-[2vw] w-full min-w-0">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -105,7 +94,7 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* Quick Action Buttons - Flexbox */}
+            {/* Action Buttons */}
             <div className="flex items-center gap-3 flex-shrink-0">
               <Link href="/breathing">
                 <Button variant="outline" className="rounded-2xl text-xs font-semibold h-11 border-stitch-primary/30 text-stitch-primary hover:bg-stitch-primary/10 gap-2 px-4 shadow-xs">
@@ -135,7 +124,7 @@ export default function Dashboard() {
             </div>
           </header>
 
-          {/* Time Capsule Banner (Flexbox) */}
+          {/* Time Capsule Banner */}
           {undeliveredCapsule && !dismissedCapsule && (
             <div className="p-5 rounded-3xl bg-gradient-to-r from-stitch-secondary-container/60 via-pink-500/10 to-stitch-primary-fixed/40 border border-stitch-secondary-container shadow-sm backdrop-blur-md relative animate-in fade-in duration-300 w-full min-w-0">
               <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -164,10 +153,10 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Stitch Daily Check-In Bento Section (Breathing Focus + Stress Level Slider) */}
+          {/* Stitch Daily Check-In Bento Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-[1.5vw] w-full">
             
-            {/* Breathing Widget Bento Card */}
+            {/* Breathing Widget */}
             <Link href="/breathing" className="group block w-full">
               <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest rounded-3xl p-7 flex flex-col items-center justify-center space-y-4 transition-all hover:scale-[1.01] hover:shadow-lg border border-border/40 w-full min-w-0 h-full">
                 <div className="text-center">
@@ -185,7 +174,7 @@ export default function Dashboard() {
               </Card>
             </Link>
 
-            {/* Stress Slider Widget Bento Card */}
+            {/* Stress Slider Widget */}
             <Card className="border-none shadow-ambient bg-stitch-surface-container-low rounded-3xl p-7 flex flex-col justify-between border border-border/40 w-full min-w-0 h-full space-y-4">
               <div>
                 <span className="text-xs font-label uppercase tracking-widest text-stitch-outline">Real-Time Check-In</span>
@@ -224,34 +213,17 @@ export default function Dashboard() {
 
           </div>
 
-          {/* Dedicated Hydration Tracker & Drink Water Notifications */}
+          {/* Hydration Tracker */}
           <div className="w-full min-w-0">
             <HydrationTracker />
           </div>
 
-          {/* Weekly Ritual Highlight Banner */}
-          <div className="bg-stitch-secondary-container rounded-3xl p-7 flex items-center justify-between overflow-hidden relative shadow-xs w-full min-w-0">
-            <div className="z-10 space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/40 text-stitch-on-secondary-container text-xs font-bold mb-1">
-                <Sparkles className="w-3.5 h-3.5" /> Weekly Sanctuary Ritual
-              </div>
-              <h3 className="text-stitch-on-secondary-container font-headline text-2xl font-bold">Mindful Flow Unlocked</h3>
-              <p className="text-stitch-on-secondary-container/85 max-w-md text-sm leading-relaxed">
-                You've honored your mindfulness and breathing habits 4 days in a row this week.
-              </p>
-            </div>
-            <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none select-none">
-              <Stars className="w-48 h-48 text-stitch-on-secondary-container" />
-            </div>
-          </div>
-
-          {/* Main Dashboard CSS Grid: 12 Columns (8 Col Left Main, 4 Col Right Companion) */}
+          {/* Main Dashboard CSS Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-[2vw] w-full items-start">
             
-            {/* Left 8 Columns (Main Activities & Predictive Insights) */}
+            {/* Left 8 Columns (Activities & Insights) */}
             <div className="lg:col-span-8 space-y-[2.5vh] w-full min-w-0">
               
-              {/* Today's Activities Card (Flexbox inside) */}
               <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 w-full min-w-0">
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
                   <div className="min-w-0 flex-1">
@@ -307,13 +279,7 @@ export default function Dashboard() {
                           </div>
 
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className={cn(
-                              "text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider",
-                              item.task.category === 'mental' && "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-                              item.task.category === 'physical' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-                              item.task.category === 'music' && "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",
-                              item.task.category === 'game' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-                            )}>
+                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider bg-primary/10 text-primary">
                               {item.task.category}
                             </span>
                             <span className="text-xs text-muted-foreground font-semibold">
@@ -335,7 +301,6 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Predictive Insights AI Component */}
               <div className="w-full min-w-0">
                 <PredictiveInsights 
                   moods={history || []} 
@@ -345,15 +310,13 @@ export default function Dashboard() {
 
             </div>
 
-            {/* Right 4 Columns (Sticky Companion Widgets) */}
+            {/* Right 4 Columns */}
             <div className="lg:col-span-4 space-y-[2.5vh] w-full min-w-0 lg:sticky lg:top-6">
               
-              {/* Mood Garden Interactive Component */}
               <div className="w-full min-w-0">
                 <MoodGarden totalCheckins={totalLogs} currentStreak={Math.min(totalLogs, 7)} />
               </div>
 
-              {/* Daily Quote Card (Flexbox Layout) */}
               <Card className="bg-gradient-to-br from-stitch-primary via-stitch-primary/95 to-stitch-primary-container text-white border-none shadow-xl rounded-3xl w-full min-w-0">
                 <CardContent className="p-6 flex flex-col justify-between">
                   <div>
@@ -368,37 +331,6 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              {/* Wellness Preferences Snapshot (Flexbox item rows) */}
-              <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 w-full min-w-0">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-bold">Wellness Sanctuary</CardTitle>
-                    <Link href="/profile" className="text-xs font-semibold text-primary hover:underline">
-                      Edit
-                    </Link>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-xl">
-                    <span className="text-muted-foreground font-medium">Sleep Schedule</span>
-                    <span className="font-bold text-foreground">{profile?.sleepTime || "22:30"} - {profile?.wakeTime || "07:00"}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-xl">
-                    <span className="text-muted-foreground font-medium">Activity Rhythm</span>
-                    <span className="font-bold text-foreground capitalize">{profile?.physicalActivity || "Moderate"}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-xl">
-                    <span className="text-muted-foreground font-medium">Sound Sanctuary</span>
-                    <span className="font-bold text-foreground capitalize">{profile?.musicApp || "Spotify"}</span>
-                  </div>
-                  <Link href="/profile" className="block w-full pt-1">
-                    <Button variant="outline" className="w-full text-xs h-9 rounded-xl font-semibold">
-                      Open Profile & Settings
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-
             </div>
 
           </div>
@@ -407,35 +339,38 @@ export default function Dashboard() {
 
 
         {/* ========================================================================= */}
-        {/* 2. MOBILE SCREEN UI (CSS Grid 1-column responsive layout)                 */}
+        {/* 2. MOBILE PHONE SCREEN UI (Clean, Native Fluid Single-Column Layout)      */}
         {/* ========================================================================= */}
-        <div className="lg:hidden w-full px-[4vw] py-[2vh] space-y-[2vh] max-w-[min(100%,36rem)] mx-auto">
+        <div className="lg:hidden w-full px-4 pt-3 pb-8 space-y-4 max-w-md mx-auto">
           
-          {/* Mobile Top Status Card - Flexbox */}
-          <div className="p-4 rounded-3xl bg-gradient-to-r from-stitch-primary-fixed/40 via-stitch-surface-container-low to-stitch-secondary-container/40 border border-border/60 flex items-center justify-between shadow-xs w-full min-w-0">
-            <div className="space-y-0.5 min-w-0">
+          {/* Mobile Hero Welcome Card */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-stitch-primary-fixed/50 via-stitch-surface-container-low to-stitch-secondary-container/40 border border-border/60 shadow-xs flex items-center justify-between w-full min-w-0">
+            <div className="space-y-1 min-w-0 flex-1">
               <span className="text-[10px] font-bold text-stitch-primary uppercase tracking-wider flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Zenith Sanctuary
               </span>
-              <h2 className="text-lg font-headline font-bold text-foreground truncate">
-                Good morning, {user?.name?.split(' ')[0] || "Sarah"} ✨
+              <h2 className="text-xl font-headline font-bold text-foreground truncate">
+                Good {new Date().getHours() < 12 ? "morning" : "afternoon"}, {user?.name?.split(' ')[0] || "Friend"}
               </h2>
+              <p className="text-xs text-muted-foreground font-medium">
+                {format(new Date(), "EEEE, MMM d")}
+              </p>
             </div>
 
             <Link href="/checkin">
-              <Button size="sm" className="btn-primary rounded-2xl text-xs font-semibold h-8 px-3.5 shadow-sm gap-1.5 active:scale-95 flex-shrink-0 bg-stitch-primary hover:bg-stitch-primary/90 text-white">
+              <Button size="sm" className="rounded-2xl text-xs font-semibold h-9 px-4 shadow-sm gap-1.5 active:scale-95 flex-shrink-0 bg-stitch-primary hover:bg-stitch-primary/90 text-white">
                 <Heart className="w-3.5 h-3.5" />
                 {hasCheckedInToday ? "Checked In" : "Check In"}
               </Button>
             </Link>
           </div>
 
-          {/* Time Capsule Banner Mobile */}
+          {/* Time Capsule Message if Available */}
           {undeliveredCapsule && !dismissedCapsule && (
-            <div className="p-4 rounded-2xl bg-stitch-secondary-container/60 border border-stitch-secondary-container shadow-sm space-y-2 w-full min-w-0">
+            <div className="p-4 rounded-2xl bg-stitch-secondary-container/70 border border-stitch-secondary-container shadow-xs space-y-2 w-full min-w-0">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-stitch-secondary flex items-center gap-1">
-                  <Mail className="w-3 h-3" /> Past Self Letter
+                  <Mail className="w-3 h-3" /> Letter From Past Self
                 </span>
                 <button
                   onClick={() => handleDismissCapsule(undeliveredCapsule.id)}
@@ -444,20 +379,15 @@ export default function Dashboard() {
                   Dismiss ✕
                 </button>
               </div>
-              <p className="text-xs font-semibold text-foreground italic leading-relaxed">
+              <p className="text-xs font-medium text-foreground italic leading-relaxed">
                 "{undeliveredCapsule.message}"
               </p>
             </div>
           )}
 
-          {/* Mobile Hydration Tracker & Drink Water Notifications */}
-          <div className="w-full min-w-0">
-            <HydrationTracker compact />
-          </div>
-
-          {/* Mobile Action Cards Row - CSS Grid */}
-          <div className="grid grid-cols-2 gap-[2.5vw] w-full">
-            <Link href="/checkin" className="p-3.5 rounded-2xl bg-card border border-border/70 shadow-xs active:scale-95 transition-all flex flex-col justify-between h-20 min-w-0 w-full">
+          {/* Mobile 2-Card Row: Daily Mood Log & Mood Shift */}
+          <div className="grid grid-cols-2 gap-3 w-full">
+            <Link href="/checkin" className="p-4 rounded-3xl bg-card border border-border/70 shadow-xs active:scale-98 transition-all flex flex-col justify-between h-24 min-w-0 w-full">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-foreground">Daily Mood</span>
                 {hasCheckedInToday ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Heart className="w-4 h-4 text-stitch-primary" />}
@@ -470,7 +400,7 @@ export default function Dashboard() {
             <button 
               type="button"
               onClick={() => setSwingDialogOpen(true)}
-              className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left shadow-xs active:scale-95 transition-all flex flex-col justify-between h-20 min-w-0 w-full"
+              className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-left shadow-xs active:scale-98 transition-all flex flex-col justify-between h-24 min-w-0 w-full"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-800 dark:text-amber-300">Mood Shift</span>
@@ -482,127 +412,103 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Full-width Segmented Filter Tab Slider - CSS Grid */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-muted/40 rounded-2xl border border-border/50 w-full">
-            <button
-              type="button"
-              onClick={() => setMobileTab("tasks")}
-              className={cn(
-                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
-                mobileTab === "tasks" ? "bg-stitch-primary text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              🎯 Tasks ({todaysTasks.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileTab("garden")}
-              className={cn(
-                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
-                mobileTab === "garden" ? "bg-emerald-600 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              🌿 Garden
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileTab("insights")}
-              className={cn(
-                "py-2 px-1 rounded-xl text-xs font-bold transition-all text-center truncate",
-                mobileTab === "insights" ? "bg-purple-600 text-white shadow-xs scale-[1.02]" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              ✨ Insights
-            </button>
-          </div>
-
-          {/* Animated Tab Content Slide Container */}
+          {/* Hydration Tracker with Drink Water Reminder on Mobile */}
           <div className="w-full min-w-0">
-            {mobileTab === "tasks" && (
-              <Card className="border-none shadow-sm bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full animate-in fade-in duration-200 min-w-0">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground">Today's Wellness Tasks</h3>
-                    <p className="text-[11px] text-muted-foreground">{completedTodayCount} of {todaysTasks.length} done ({progressPercent}%)</p>
-                  </div>
-                  <Link href="/planner">
-                    <Button variant="ghost" size="sm" className="text-xs text-primary font-semibold h-7 px-2">
-                      Full Week →
-                    </Button>
-                  </Link>
-                </div>
-
-                {todaysTasks.length > 0 ? (
-                  <div className="space-y-2.5">
-                    {todaysTasks.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => completeTask({ 
-                          planId: item.planId, 
-                          taskId: item.id, 
-                          isCompleted: !item.isCompleted 
-                        })}
-                        className={cn(
-                          "flex items-center gap-3.5 p-3.5 rounded-2xl border transition-all active:scale-98 cursor-pointer w-full min-w-0",
-                          item.isCompleted ? "bg-muted/30 border-transparent opacity-60" : "bg-card border-border/70 shadow-xs"
-                        )}
-                      >
-                        <button type="button" className="text-primary flex-shrink-0">
-                          {item.isCompleted ? <CheckCircle2 className="w-5 h-5 text-stitch-primary" /> : <Circle className="w-5 h-5 text-muted-foreground" />}
-                        </button>
-                        <div className="flex-1 min-w-0">
-                          <p className={cn("text-xs font-bold truncate", item.isCompleted && "line-through text-muted-foreground")}>
-                            {item.task.title}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">{item.task.duration}m • {item.task.category}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 space-y-2">
-                    <p className="text-xs font-semibold text-foreground">No tasks scheduled for today.</p>
-                    <Link href="/planner">
-                      <Button size="sm" className="btn-primary rounded-xl text-xs h-8 px-4 bg-stitch-primary text-white">
-                        Generate Plan
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </Card>
-            )}
-
-            {mobileTab === "garden" && (
-              <div className="w-full animate-in fade-in duration-200 min-w-0">
-                <MoodGarden totalCheckins={totalLogs} currentStreak={Math.min(totalLogs, 7)} />
-              </div>
-            )}
-
-            {mobileTab === "insights" && (
-              <div className="w-full animate-in fade-in duration-200 min-w-0">
-                <PredictiveInsights 
-                  moods={history || []} 
-                  habits={habitHistory || []} 
-                />
-              </div>
-            )}
+            <HydrationTracker />
           </div>
 
-          {/* Quick Breathwork Bar - Flexbox */}
+          {/* Quick Breathwork Bar on Mobile */}
           <Link href="/breathing" className="block w-full">
-            <div className="p-3.5 rounded-2xl bg-stitch-surface-container-low border border-border/60 flex items-center justify-between active:scale-98 transition-all shadow-xs w-full min-w-0">
+            <div className="p-4 rounded-3xl bg-stitch-surface-container-low border border-border/60 flex items-center justify-between active:scale-98 transition-all shadow-xs w-full min-w-0">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-9 h-9 rounded-xl bg-stitch-primary-fixed text-stitch-primary flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-stitch-primary-fixed text-stitch-primary flex items-center justify-center flex-shrink-0 shadow-xs">
                   <Wind className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-foreground truncate">Guided Breathwork Sanctuary</p>
-                  <p className="text-[10px] text-muted-foreground truncate">Tap for 2-minute box breathing</p>
+                  <p className="text-xs font-bold text-foreground truncate">2-Minute Breathwork Sanctuary</p>
+                  <p className="text-[10px] text-muted-foreground truncate">Tap to start guided box breathing</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             </div>
           </Link>
+
+          {/* Today's Tasks Section on Mobile */}
+          <Card className="border-none shadow-sm bg-card rounded-3xl p-5 space-y-3 border border-border/50 w-full min-w-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Today's Wellness Tasks</h3>
+                <p className="text-[11px] text-muted-foreground">{completedTodayCount} of {todaysTasks.length} done ({progressPercent}%)</p>
+              </div>
+              <Link href="/planner">
+                <Button variant="ghost" size="sm" className="text-xs text-primary font-semibold h-7 px-2">
+                  Full Week →
+                </Button>
+              </Link>
+            </div>
+
+            {todaysTasks.length > 0 ? (
+              <div className="space-y-2.5">
+                {todaysTasks.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => completeTask({ 
+                      planId: item.planId, 
+                      taskId: item.id, 
+                      isCompleted: !item.isCompleted 
+                    })}
+                    className={cn(
+                      "flex items-center gap-3.5 p-3.5 rounded-2xl border transition-all active:scale-98 cursor-pointer w-full min-w-0",
+                      item.isCompleted ? "bg-muted/30 border-transparent opacity-60" : "bg-card border-border/70 shadow-xs"
+                    )}
+                  >
+                    <button type="button" className="text-primary flex-shrink-0">
+                      {item.isCompleted ? <CheckCircle2 className="w-5 h-5 text-stitch-primary" /> : <Circle className="w-5 h-5 text-muted-foreground" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn("text-xs font-bold truncate", item.isCompleted && "line-through text-muted-foreground")}>
+                        {item.task.title}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{item.task.duration}m • {item.task.category}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 space-y-2">
+                <p className="text-xs font-semibold text-foreground">No tasks scheduled for today.</p>
+                <Link href="/planner">
+                  <Button size="sm" className="btn-primary rounded-xl text-xs h-8 px-4 bg-stitch-primary text-white">
+                    Generate Plan
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </Card>
+
+          {/* Living Mood Garden on Mobile */}
+          <div className="w-full min-w-0">
+            <MoodGarden totalCheckins={totalLogs} currentStreak={Math.min(totalLogs, 7)} />
+          </div>
+
+          {/* Predictive Insights on Mobile */}
+          <div className="w-full min-w-0">
+            <PredictiveInsights 
+              moods={history || []} 
+              habits={habitHistory || []} 
+            />
+          </div>
+
+          {/* Daily Quote on Mobile */}
+          <Card className="bg-gradient-to-br from-stitch-primary to-stitch-primary-container text-white border-none shadow-sm rounded-3xl p-5 w-full min-w-0">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-semibold mb-2">
+              ✨ Daily Inspiration
+            </div>
+            <p className="text-xs italic leading-relaxed">
+              "{quote.text}"
+            </p>
+            <p className="text-[10px] mt-2 font-semibold text-right opacity-80">— {quote.author}</p>
+          </Card>
 
         </div>
 

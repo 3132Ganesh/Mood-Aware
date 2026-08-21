@@ -348,15 +348,14 @@ export default function Checkin() {
         {/* ========================================================================= */}
         {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
         {/* ========================================================================= */}
-        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
+        <div className="lg:hidden w-full px-4 pt-3 pb-8 space-y-4 max-w-md mx-auto">
           
           <div className="flex items-center justify-between pb-1">
             <div>
-              <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
-                <Smartphone className="w-2.5 h-2.5" />
-                Daily Calibration
-              </Badge>
-              <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="text-[10px] font-bold text-stitch-primary uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Calibration
+              </span>
+              <h1 className="text-xl font-headline font-bold text-foreground">
                 Daily Check-in
               </h1>
             </div>
@@ -365,7 +364,7 @@ export default function Checkin() {
 
           {alreadyCheckedInToday ? (
             /* Mobile Checked in */
-            <Card className="border-none shadow-md bg-card/95 rounded-3xl p-5 space-y-4 border border-border/50 w-full">
+            <Card className="border-none shadow-md bg-card rounded-3xl p-5 space-y-4 border border-border/50 w-full">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center text-2xl font-bold flex-shrink-0">
                   {todaysMoodLog?.moodScore ? MOOD_OPTIONS.find(m => m.value === todaysMoodLog.moodScore)?.emoji : "✓"}
@@ -376,23 +375,19 @@ export default function Checkin() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center pt-1 w-full">
+              <div className="grid grid-cols-2 gap-2 text-center pt-1 w-full">
                 <div className="p-3 bg-muted/30 rounded-2xl">
-                  <span className="text-[10px] font-semibold text-muted-foreground">⚡ Energy</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">⚡ Energy Vitality</span>
                   <p className="text-sm font-bold text-foreground mt-0.5">{todaysMoodLog?.energyScore}/5</p>
                 </div>
                 <div className="p-3 bg-muted/30 rounded-2xl">
-                  <span className="text-[10px] font-semibold text-muted-foreground">🌊 Stress</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">🌊 Stress Level</span>
                   <p className="text-sm font-bold text-amber-500 mt-0.5">{todaysMoodLog?.stressScore}/5</p>
-                </div>
-                <div className="p-3 bg-muted/30 rounded-2xl">
-                  <span className="text-[10px] font-semibold text-muted-foreground">🌙 Sleep</span>
-                  <p className="text-sm font-bold text-indigo-500 mt-0.5">{todaysMoodLog?.sleepScore}h</p>
                 </div>
               </div>
 
               {todaysMoodLog?.notes && (
-                <div className="p-3 bg-card border border-border/60 rounded-2xl text-xs italic text-foreground leading-relaxed">
+                <div className="p-3 bg-muted/20 border border-border/60 rounded-2xl text-xs italic text-foreground leading-relaxed">
                   "{todaysMoodLog.notes}"
                 </div>
               )}
@@ -415,8 +410,8 @@ export default function Checkin() {
             <div className="space-y-4 w-full">
               
               {/* Mood Grid */}
-              <Card className="border-none shadow-md bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full">
-                <p className="text-xs font-bold text-foreground">1. How are you feeling?</p>
+              <Card className="border-none shadow-md bg-card rounded-3xl p-5 space-y-3 border border-border/50 w-full">
+                <p className="text-xs font-bold text-foreground">1. How are you feeling right now?</p>
                 <div className="grid grid-cols-5 gap-1.5 w-full">
                   {MOOD_OPTIONS.map((option) => (
                     <button
@@ -438,12 +433,12 @@ export default function Checkin() {
               </Card>
 
               {/* Sliders */}
-              <Card className="border-none shadow-md bg-card/95 rounded-3xl p-4 space-y-4 border border-border/50 w-full">
-                <p className="text-xs font-bold text-foreground">2. Energy & Vitality Sliders</p>
+              <Card className="border-none shadow-md bg-card rounded-3xl p-5 space-y-4 border border-border/50 w-full">
+                <p className="text-xs font-bold text-foreground">2. Energy & Stress Sliders</p>
                 
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-muted-foreground flex items-center gap-1">⚡ Energy Level</span>
+                    <span className="text-muted-foreground flex items-center gap-1">⚡ Energy Vitality</span>
                     <span className="font-bold text-foreground">{energyScore[0]}/5</span>
                   </div>
                   <Slider value={energyScore} onValueChange={setEnergyScore} min={1} max={5} step={1} className="py-2" />
@@ -456,18 +451,10 @@ export default function Checkin() {
                   </div>
                   <Slider value={stressScore} onValueChange={setStressScore} min={1} max={5} step={1} className="py-2" />
                 </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-muted-foreground flex items-center gap-1">🌙 Sleep Duration</span>
-                    <span className="font-bold text-foreground">{sleepScore[0]} Hours</span>
-                  </div>
-                  <Slider value={sleepScore} onValueChange={setSleepScore} min={3} max={12} step={1} className="py-2" />
-                </div>
               </Card>
 
               {/* Voice & Notes */}
-              <Card className="border-none shadow-md bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full">
+              <Card className="border-none shadow-md bg-card rounded-3xl p-5 space-y-3 border border-border/50 w-full">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-foreground">3. Reflection & Voice Note</span>
                   <VoiceRecorder onTranscript={(text: string) => setNotes(prev => prev ? `${prev} ${text}` : text)} />
@@ -476,7 +463,7 @@ export default function Checkin() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Tap the mic to speak or type thoughts..."
-                  className="min-h-[80px] rounded-2xl text-xs resize-none leading-relaxed"
+                  className="min-h-[85px] rounded-2xl text-xs resize-none leading-relaxed"
                 />
               </Card>
 
