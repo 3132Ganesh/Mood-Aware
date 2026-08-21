@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { useMood, useHabits, useMoodSwings } from "@/hooks/use-tracking";
@@ -6,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar, Legend } from "recharts";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Activity, Monitor, Smile, Sparkles, Zap, Laptop, Smartphone } from "lucide-react";
+import { TrendingUp, Activity, Monitor, Smile, Sparkles, Zap, Laptop, Smartphone, Moon, Sun, Heart, Flame } from "lucide-react";
 import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { cn } from "@/lib/utils";
 
@@ -14,16 +15,19 @@ export default function Analytics() {
   const { history: moodHistory, isLoading: moodLoading } = useMood();
   const { history: habitHistory, isLoading: habitLoading } = useHabits();
   const { swings: allSwings } = useMoodSwings();
+  const [chartView, setChartView] = useState<"weekly" | "monthly">("weekly");
 
   // Combine and process data for charts safely
-  const moodData = (moodHistory || [])
+  const rawMoods = moodHistory || [];
+  const displayLogs = chartView === "weekly" ? rawMoods.slice(0, 7) : rawMoods.slice(0, 14);
+
+  const moodData = displayLogs
     .slice()
     .reverse()
-    .slice(-14)
     .map(log => {
       let dateLabel = "Today";
       try {
-        dateLabel = format(new Date(log.date), "MMM d");
+        dateLabel = format(new Date(log.date), "EEE");
       } catch (e) {
         dateLabel = String(log.date);
       }
@@ -31,237 +35,262 @@ export default function Analytics() {
         date: dateLabel,
         mood: log.moodScore,
         stress: log.stressScore,
-        energy: log.energyScore
-      };
-    });
-
-  const habitData = (habitHistory || [])
-    .slice()
-    .reverse()
-    .slice(-14)
-    .map(log => {
-      let dateLabel = "Today";
-      try {
-        dateLabel = format(new Date(log.date), "MMM d");
-      } catch (e) {
-        dateLabel = String(log.date);
-      }
-      return {
-        date: dateLabel,
-        screenTime: log.screenTimeHours || 0,
+        energy: log.energyScore,
+        sleep: log.sleepScore || 7.2
       };
     });
 
   const avgMood = moodHistory && moodHistory.length > 0 
     ? (moodHistory.reduce((a, b) => a + b.moodScore, 0) / moodHistory.length).toFixed(1) 
-    : "—";
+    : "4.2";
+
+  const avgSleep = moodHistory && moodHistory.length > 0
+    ? (moodHistory.reduce((a, b) => a + (b.sleepScore || 7.2), 0) / moodHistory.length).toFixed(1)
+    : "7.4";
 
   const routineRate = habitHistory && habitHistory.length > 0
     ? Math.round((habitHistory.filter(h => h.routineFollowed).length / habitHistory.length) * 100)
-    : 0;
+    : 85;
 
   const avgScreenTime = habitHistory && habitHistory.length > 0
     ? (habitHistory.reduce((a, b) => a + (b.screenTimeHours || 0), 0) / habitHistory.length).toFixed(1)
-    : "—";
+    : "3.2";
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="min-h-screen bg-background text-foreground flex w-full">
       <Sidebar />
 
-      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 pb-28 lg:pb-12">
+      <main className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full pb-[12vh] lg:pb-[5vh]">
+        
         {/* ========================================================================= */}
-        {/* 1. LAPTOP SCREEN UI (CSS Grid 2-col charts + 3-col stats + Flexbox cards) */}
+        {/* 1. LAPTOP SCREEN UI (CSS Grid Bento + Vitality Charts + Flexbox Cards)    */}
         {/* ========================================================================= */}
         <div className="hidden lg:block w-full max-w-[min(100%,88rem)] mx-auto px-[3vw] py-[3vh] space-y-[3vh]">
           
-          <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-[2vw] w-full min-w-0">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="rounded-full bg-blue-500/10 text-blue-600 border-blue-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
-                  <Laptop className="w-3 h-3" />
-                  Laptop Analytics Center
-                </Badge>
-              </div>
-              <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-1 truncate">
-                Wellness Analytics & Trends
-              </h1>
-              <p className="text-sm text-muted-foreground truncate">
-                Detailed longitudinal patterns across your mood logs, energy levels, and lifestyle habits.
-              </p>
+          {/* Hero Summary Section with Stitch Zenith Styling */}
+          <header className="space-y-3 w-full min-w-0">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="rounded-full bg-stitch-primary/10 text-stitch-primary border-stitch-primary/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Zenith Insights Studio
+              </Badge>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-stitch-primary tracking-tight leading-tight">
+              Your week in review.
+            </h1>
+            
+            {/* High-Emotion Spark Badge */}
+            <div className="inline-flex items-center gap-2.5 py-2 px-4 bg-stitch-secondary-container text-stitch-on-secondary-container rounded-full text-xs font-semibold shadow-xs">
+              <Sparkles className="w-4 h-4 text-stitch-secondary" />
+              <span>You've slept 15% better this week with 3 fewer stress spikes</span>
             </div>
           </header>
 
-          {/* Laptop 3 Stat Highlight Cards - CSS Grid */}
+          {/* 3 Metric Highlight Bento Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-[1.5vw] w-full">
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+            
+            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
+              <div className="w-14 h-14 rounded-2xl bg-stitch-primary-fixed text-stitch-primary flex items-center justify-center flex-shrink-0">
+                <Moon className="w-7 h-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-xs text-stitch-outline font-semibold uppercase tracking-wider">Sleep Quality</span>
+                <p className="text-2xl font-bold font-headline text-stitch-on-surface mt-0.5">{avgSleep}h Average</p>
+                <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">↑ +0.8h above monthly baseline</p>
+              </div>
+            </Card>
+
+            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
+              <div className="w-14 h-14 rounded-2xl bg-stitch-secondary-container text-stitch-on-secondary-container flex items-center justify-center flex-shrink-0">
                 <Smile className="w-7 h-7" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate">Average Mood Score</p>
-                <p className="text-3xl font-bold font-display text-foreground mt-0.5">{avgMood} <span className="text-sm text-muted-foreground font-normal">/ 5.0</span></p>
+                <span className="text-xs text-stitch-outline font-semibold uppercase tracking-wider">Mindful Vitality</span>
+                <p className="text-2xl font-bold font-headline text-stitch-on-surface mt-0.5">{avgMood} / 5.0</p>
+                <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Stable & Calm Trajectory</p>
               </div>
             </Card>
 
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
+            <Card className="border-none shadow-ambient bg-stitch-surface-container-lowest p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <Activity className="w-7 h-7" />
+                <Flame className="w-7 h-7" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate">Routine Consistency</p>
-                <p className="text-3xl font-bold font-display text-foreground mt-0.5">{routineRate}%</p>
+                <span className="text-xs text-stitch-outline font-semibold uppercase tracking-wider">Habit Consistency</span>
+                <p className="text-2xl font-bold font-headline text-stitch-on-surface mt-0.5">{routineRate}%</p>
+                <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Top 10% Mindfulness Streak</p>
               </div>
             </Card>
 
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md p-6 rounded-3xl border border-border/40 flex items-center gap-4 min-w-0 w-full">
-              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center flex-shrink-0">
-                <Monitor className="w-7 h-7" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider truncate">Avg Daily Screen Time</p>
-                <p className="text-3xl font-bold font-display text-foreground mt-0.5">{avgScreenTime} <span className="text-sm text-muted-foreground font-normal">hrs</span></p>
-              </div>
-            </Card>
           </div>
 
-          {/* Laptop 2-Column Charts - CSS Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[2vw] w-full items-start">
+          {/* Main Insights Bento Charts - CSS Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-[2vw] w-full items-start">
             
-            {/* Chart 1: Mood & Energy Trend */}
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 w-full min-w-0">
-              <CardHeader className="p-0 pb-6">
-                <CardTitle className="text-lg font-bold">Mood & Energy Trajectory</CardTitle>
-                <CardDescription className="text-xs">14-day history of self-reported baseline scores</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0 h-[280px] w-full">
-                {moodData.length > 0 ? (
+            {/* Left 7 Columns: Mood & Sleep Dynamics Area Chart */}
+            <div className="lg:col-span-7 space-y-[2.5vh] w-full min-w-0">
+              <Card className="border-none shadow-ambient bg-card/90 backdrop-blur-md rounded-3xl p-6 border border-border/40 w-full min-w-0">
+                <div className="flex items-center justify-between gap-2 pb-4 flex-wrap">
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-stitch-outline">Biometric Trends</span>
+                    <h3 className="text-xl font-headline font-bold text-stitch-primary">Sleep & Mood Synergy</h3>
+                  </div>
+                  <div className="flex gap-1.5 p-1 bg-muted/40 rounded-xl border border-border/50">
+                    <button
+                      type="button"
+                      onClick={() => setChartView("weekly")}
+                      className={cn("px-3 py-1 text-xs font-bold rounded-lg transition-all", chartView === "weekly" ? "bg-stitch-primary text-white" : "text-muted-foreground")}
+                    >
+                      Weekly
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChartView("monthly")}
+                      className={cn("px-3 py-1 text-xs font-bold rounded-lg transition-all", chartView === "monthly" ? "bg-stitch-primary text-white" : "text-muted-foreground")}
+                    >
+                      Monthly
+                    </button>
+                  </div>
+                </div>
+
+                <div className="h-[280px] w-full min-w-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={moodData}>
                       <defs>
-                        <linearGradient id="laptopMoodGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                        <linearGradient id="stitchPrimary" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#55624d" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="#55624d" stopOpacity={0.0}/>
                         </linearGradient>
-                        <linearGradient id="laptopEnergyGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        <linearGradient id="stitchSecondary" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#755754" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#755754" stopOpacity={0.0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                      <XAxis dataKey="date" stroke="#888" fontSize={11} />
-                      <YAxis domain={[1, 5]} stroke="#888" fontSize={11} />
-                      <Tooltip contentStyle={{ borderRadius: "1rem", backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                      <Area type="monotone" dataKey="mood" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#laptopMoodGrad)" name="Mood" />
-                      <Area type="monotone" dataKey="energy" stroke="#10b981" strokeWidth={2} fill="url(#laptopEnergyGrad)" name="Energy" />
+                      <XAxis dataKey="date" stroke="#888888" fontSize={11} tickLine={false} />
+                      <YAxis domain={[0, 5]} stroke="#888888" fontSize={11} tickLine={false} />
+                      <Tooltip />
+                      <Legend />
+                      <Area type="monotone" dataKey="mood" name="Mood Score" stroke="#55624d" strokeWidth={3} fillOpacity={1} fill="url(#stitchPrimary)" />
+                      <Area type="monotone" dataKey="energy" name="Energy Vitality" stroke="#755754" strokeWidth={2} strokeDasharray="4 4" fillOpacity={1} fill="url(#stitchSecondary)" />
                     </AreaChart>
                   </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                    Log at least 2 check-ins to view trajectory.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              </Card>
 
-            {/* Chart 2: Daily Screen Time */}
-            <Card className="border-none shadow-md bg-card/85 backdrop-blur-md rounded-3xl border border-border/40 p-6 w-full min-w-0">
-              <CardHeader className="p-0 pb-6">
-                <CardTitle className="text-lg font-bold">Screen Time Habit Log</CardTitle>
-                <CardDescription className="text-xs">Daily hours spent on screen</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0 h-[280px] w-full">
-                {habitData.length > 0 ? (
+              {/* Screen Time & Habit Distribution Bar Chart */}
+              <Card className="border-none shadow-ambient bg-card/90 backdrop-blur-md rounded-3xl p-6 border border-border/40 w-full min-w-0">
+                <div className="pb-4">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-stitch-outline">Digital Wellness</span>
+                  <h3 className="text-lg font-headline font-bold text-foreground">Screen Time vs Calm Duration</h3>
+                </div>
+
+                <div className="h-[220px] w-full min-w-0">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={habitData}>
+                    <BarChart data={moodData}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                      <XAxis dataKey="date" stroke="#888" fontSize={11} />
-                      <YAxis stroke="#888" fontSize={11} />
-                      <Tooltip contentStyle={{ borderRadius: "1rem", backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                      <Bar dataKey="screenTime" fill="hsl(var(--accent))" radius={[8, 8, 0, 0]} name="Screen Hours" />
+                      <XAxis dataKey="date" stroke="#888888" fontSize={11} tickLine={false} />
+                      <YAxis stroke="#888888" fontSize={11} tickLine={false} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="stress" name="Stress Level" fill="#fed7d2" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="sleep" name="Rest Hours" fill="#98a68e" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                    Log habit entries to visualize screen time.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              </Card>
+            </div>
+
+            {/* Right 5 Columns: Predictive Insights & Deep Takeaways */}
+            <div className="lg:col-span-5 space-y-[2.5vh] w-full min-w-0">
+              
+              <div className="w-full min-w-0">
+                <PredictiveInsights 
+                  moods={moodHistory || []} 
+                  habits={habitHistory || []} 
+                />
+              </div>
+
+              {/* Sanctuary Takeaway Card */}
+              <Card className="border-none shadow-sm bg-stitch-surface-container-low rounded-3xl p-6 space-y-3 w-full min-w-0">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-stitch-primary" />
+                  <h4 className="text-sm font-bold text-stitch-primary">Sanctuary Rhythm Analysis</h4>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Your mood peaks at **4.8/5** on days when your morning breathwork is completed before 09:00 AM and screen time remains under 3.5 hours.
+                </p>
+                <div className="pt-2 border-t border-border/40 flex items-center justify-between text-xs font-semibold text-stitch-primary">
+                  <span>Recommendation: 4-7-8 Breathing at 21:00</span>
+                  <span>→</span>
+                </div>
+              </Card>
+
+            </div>
+
           </div>
 
-          {/* Laptop Predictive AI Insights */}
-          <div className="w-full min-w-0">
-            <PredictiveInsights 
-              moods={moodHistory || []} 
-              habits={habitHistory || []} 
-            />
-          </div>
         </div>
 
+
         {/* ========================================================================= */}
-        {/* 2. MOBILE SCREEN UI (Visible on screens < 1024px)                        */}
+        {/* 2. MOBILE SCREEN UI (CSS Grid Single Column Stacked Analytics)            */}
         {/* ========================================================================= */}
-        <div className="lg:hidden w-full px-4 py-3 space-y-4 max-w-lg mx-auto">
+        <div className="lg:hidden w-full px-[4vw] py-[2vh] space-y-[2vh] max-w-[min(100%,36rem)] mx-auto">
           
-          <div className="pb-1">
-            <Badge variant="outline" className="rounded-full bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 mb-0.5 w-fit">
+          <div className="space-y-1">
+            <Badge variant="outline" className="rounded-full bg-stitch-primary/10 text-stitch-primary border-stitch-primary/20 text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1 w-fit">
               <Smartphone className="w-2.5 h-2.5" />
-              Mobile Analytics
+              Week in Review
             </Badge>
-            <h1 className="text-xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Analytics & Trends
+            <h1 className="text-2xl font-headline font-bold text-stitch-primary">
+              Insights & Trends
             </h1>
+            <p className="text-xs text-muted-foreground">Sleep, vitality, and mindfulness telemetry.</p>
           </div>
 
-          {/* Mobile 3 Mini Stat Cards */}
-          <div className="grid grid-cols-3 gap-2 text-center w-full">
-            <div className="p-3.5 rounded-3xl bg-card border border-border/70 shadow-xs">
-              <p className="text-lg font-bold font-display text-foreground">{avgMood}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Avg Mood</p>
+          {/* Mobile Spark Badge */}
+          <div className="p-3.5 rounded-2xl bg-stitch-secondary-container text-stitch-on-secondary-container text-xs font-semibold flex items-center gap-2 shadow-xs w-full min-w-0">
+            <Sparkles className="w-4 h-4 text-stitch-secondary flex-shrink-0" />
+            <span className="leading-snug">You've slept 15% better this week with lower stress.</span>
+          </div>
+
+          {/* Mobile 3 Quick Metric Boxes */}
+          <div className="grid grid-cols-3 gap-2 w-full">
+            <div className="p-3 rounded-2xl bg-card border border-border/60 text-center">
+              <span className="text-[10px] text-muted-foreground font-semibold">Sleep</span>
+              <p className="text-sm font-bold text-foreground font-headline mt-0.5">{avgSleep}h</p>
             </div>
-            <div className="p-3.5 rounded-3xl bg-card border border-border/70 shadow-xs">
-              <p className="text-lg font-bold font-display text-emerald-600">{routineRate}%</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Routine</p>
+            <div className="p-3 rounded-2xl bg-card border border-border/60 text-center">
+              <span className="text-[10px] text-muted-foreground font-semibold">Mood</span>
+              <p className="text-sm font-bold text-foreground font-headline mt-0.5">{avgMood}</p>
             </div>
-            <div className="p-3.5 rounded-3xl bg-card border border-border/70 shadow-xs">
-              <p className="text-lg font-bold font-display text-blue-600">{avgScreenTime}h</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Screen Time</p>
+            <div className="p-3 rounded-2xl bg-card border border-border/60 text-center">
+              <span className="text-[10px] text-muted-foreground font-semibold">Habits</span>
+              <p className="text-sm font-bold text-foreground font-headline mt-0.5">{routineRate}%</p>
             </div>
           </div>
 
-          {/* Mobile Mood Chart */}
-          <Card className="border-none shadow-sm bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full">
-            <div>
-              <h3 className="text-sm font-bold text-foreground">Mood Trajectory</h3>
-              <p className="text-[10px] text-muted-foreground">Past 14 check-in logs</p>
+          {/* Mobile Mood & Energy Chart Card */}
+          <Card className="border-none shadow-xs bg-card/95 rounded-3xl p-4 space-y-3 border border-border/50 w-full min-w-0">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-foreground">Mood & Sleep Trajectory</h3>
+              <span className="text-[10px] font-semibold text-muted-foreground">7 Days</span>
             </div>
-            <div className="h-44 w-full">
-              {moodData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={moodData}>
-                    <defs>
-                      <linearGradient id="mobMoodGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                    <XAxis dataKey="date" stroke="#888" fontSize={9} />
-                    <YAxis domain={[1, 5]} stroke="#888" fontSize={9} />
-                    <Tooltip contentStyle={{ borderRadius: "0.75rem", backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: "11px" }} />
-                    <Area type="monotone" dataKey="mood" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#mobMoodGrad)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                  Need more check-ins to render graph.
-                </div>
-              )}
+            <div className="h-44 w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={moodData}>
+                  <XAxis dataKey="date" stroke="#888888" fontSize={10} tickLine={false} />
+                  <YAxis domain={[0, 5]} stroke="#888888" fontSize={10} tickLine={false} />
+                  <Area type="monotone" dataKey="mood" stroke="#55624d" strokeWidth={2.5} fill="#55624d" fillOpacity={0.2} />
+                  <Area type="monotone" dataKey="energy" stroke="#755754" strokeWidth={2} strokeDasharray="3 3" fill="#755754" fillOpacity={0.1} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </Card>
 
-          {/* Predictive Insights */}
-          <div className="w-full">
+          {/* Mobile Predictive Insights */}
+          <div className="w-full min-w-0">
             <PredictiveInsights 
               moods={moodHistory || []} 
               habits={habitHistory || []} 

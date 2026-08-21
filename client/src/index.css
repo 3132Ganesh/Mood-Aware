@@ -99,16 +99,38 @@
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 
-  .safe-area-top {
-    padding-top: max(0.75rem, env(safe-area-inset-top));
+  .bg-zenith-gradient {
+    background: linear-gradient(135deg, #f8faf3 0%, #f2f4ed 50%, #fed7d2 100%);
   }
 
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .glass-pill {
+    background: rgba(248, 250, 243, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+
+  .dark .glass-pill {
+    background: rgba(30, 33, 29, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-nav {
+    background: rgba(248, 250, 243, 0.88);
+    backdrop-filter: blur(20px);
+  }
+
+  .dark .glass-nav {
+    background: rgba(25, 28, 24, 0.9);
+    backdrop-filter: blur(20px);
+  }
+
+  .shadow-ambient {
+    box-shadow: 0 20px 40px -10px rgba(85, 98, 77, 0.08);
+  }
+
+  .breathing-circle {
+    box-shadow: 0 0 40px rgba(85, 98, 77, 0.15);
   }
 }
 

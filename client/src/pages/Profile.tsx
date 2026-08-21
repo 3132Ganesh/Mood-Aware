@@ -247,16 +247,16 @@ export default function Profile() {
               </Link>
               <div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
+                  <Badge variant="outline" className="rounded-full bg-stitch-primary/10 text-stitch-primary border-stitch-primary/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
                     <Laptop className="w-3 h-3" />
-                    Laptop Dashboard
+                    Zenith Sanctuary Settings
                   </Badge>
                 </div>
-                <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mt-0.5">
-                  Profile & Wellness Preferences
+                <h1 className="text-3xl font-headline font-extrabold text-stitch-primary mt-0.5">
+                  Settings & Preferences
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  Inspect your account profile and fine-tune your wellness preferences with instant live updates.
+                <p className="text-sm text-stitch-on-surface-variant font-body">
+                  Refine your sanctuary to match your personal rhythm and bio-temporal patterns.
                 </p>
               </div>
             </div>
@@ -318,9 +318,9 @@ export default function Profile() {
                     </div>
 
                     <div className="flex items-center justify-center gap-2 pt-1">
-                      <Badge variant="outline" className="rounded-full bg-primary/10 text-primary border-primary/20 text-[11px] font-semibold px-2.5 py-0.5">
-                        ✨ Mindful Explorer
-                      </Badge>
+                      <div className="bg-stitch-secondary-container text-stitch-on-secondary-container px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+                        Zen Level 12
+                      </div>
                       <Badge variant="outline" className="rounded-full bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         Synced

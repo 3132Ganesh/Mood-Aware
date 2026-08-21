@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, Wind, 
-  LogOut, User as UserIcon, Menu, X, Sparkles, Volume2, CloudRain, Waves, Bell
+  LogOut, User as UserIcon, Menu, X, Sparkles, Volume2, CloudRain, Waves, Bell, Users, Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,20 +18,21 @@ export function MobileNav() {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Home", href: "/dashboard" },
-    { icon: Calendar, label: "Plan", href: "/planner" },
-    { icon: Heart, label: "Check-in", href: "/checkin", isHighlight: true },
-    { icon: BookHeart, label: "Feelings", href: "/feelings" },
     { icon: BarChart2, label: "Insights", href: "/analytics" },
+    { icon: Heart, label: "Check-in", href: "/checkin", isHighlight: true },
+    { icon: Users, label: "Community", href: "/community" },
+    { icon: Settings, label: "Settings", href: "/profile" },
   ];
 
   const drawerLinks = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+    { icon: BarChart2, label: "Insights & Trends", href: "/analytics" },
+    { icon: Users, label: "Community Sanctuary", href: "/community" },
     { icon: Calendar, label: "7-Day Plan", href: "/planner" },
     { icon: Heart, label: "Daily Check-in", href: "/checkin" },
     { icon: Wind, label: "Breathwork Sanctuary", href: "/breathing" },
     { icon: BookHeart, label: "Feelings & Journal", href: "/feelings" },
-    { icon: BarChart2, label: "Wellness Analytics", href: "/analytics" },
-    { icon: UserIcon, label: "Profile & Preferences", href: "/profile" },
+    { icon: UserIcon, label: "Profile & Settings", href: "/profile" },
   ];
 
   const toggleSound = (sound: "rain" | "waves" | "zen") => {
