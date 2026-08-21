@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { SlidingCompanionDrawer } from "@/components/SlidingCompanionDrawer";
 
 import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
@@ -49,37 +50,40 @@ function Router() {
   }
 
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/onboarding">
-        {() => <ProtectedRoute component={Onboarding} />}
-      </Route>
-      <Route path="/dashboard">
-        {() => <ProtectedRoute component={Dashboard} />}
-      </Route>
-      <Route path="/planner">
-        {() => <ProtectedRoute component={Planner} />}
-      </Route>
-      <Route path="/checkin">
-        {() => <ProtectedRoute component={Checkin} />}
-      </Route>
-      <Route path="/feelings">
-        {() => <ProtectedRoute component={Feelings} />}
-      </Route>
-      <Route path="/analytics">
-        {() => <ProtectedRoute component={Analytics} />}
-      </Route>
-      <Route path="/breathing">
-        {() => <ProtectedRoute component={Breathing} />}
-      </Route>
-      <Route path="/profile">
-        {() => <ProtectedRoute component={Profile} />}
-      </Route>
-      <Route path="/settings">
-        {() => <ProtectedRoute component={Profile} />}
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/onboarding">
+          {() => <ProtectedRoute component={Onboarding} />}
+        </Route>
+        <Route path="/dashboard">
+          {() => <ProtectedRoute component={Dashboard} />}
+        </Route>
+        <Route path="/planner">
+          {() => <ProtectedRoute component={Planner} />}
+        </Route>
+        <Route path="/checkin">
+          {() => <ProtectedRoute component={Checkin} />}
+        </Route>
+        <Route path="/feelings">
+          {() => <ProtectedRoute component={Feelings} />}
+        </Route>
+        <Route path="/analytics">
+          {() => <ProtectedRoute component={Analytics} />}
+        </Route>
+        <Route path="/breathing">
+          {() => <ProtectedRoute component={Breathing} />}
+        </Route>
+        <Route path="/profile">
+          {() => <ProtectedRoute component={Profile} />}
+        </Route>
+        <Route path="/settings">
+          {() => <ProtectedRoute component={Profile} />}
+        </Route>
+        <Route component={NotFound} />
+      </Switch>
+      {user && <SlidingCompanionDrawer />}
+    </>
   );
 }
 
