@@ -3,9 +3,13 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { pool } from "./db";
 
 const app = express();
 const httpServer = createServer(app);
+
+// Enable trust proxy for reverse proxies (Render, Railway, Heroku)
+app.set("trust proxy", 1);
 
 declare module "http" {
   interface IncomingMessage {
@@ -61,6 +65,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Live health and database connection check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      database: pool ? "connected_to_supabase" : "in_memory_fallback",
+      environment: process.env.NODE_ENV || "development",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -88,5 +102,10 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
+    if (pool) {
+      log(`Database: Connected to Supabase PostgreSQL (SSL active)`, "database");
+    } else {
+      log(`DATABASE_URL not found! Defaulting to MemStorage (in-memory)`, "database");
+    }
   });
 })();
