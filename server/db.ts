@@ -25,3 +25,30 @@ export const pool = new Pool({
 });
 
 export const db = drizzle(pool, { schema: { ...schema, ...chatSchema } });
+
+/**
+ * Auto-ensures all new schema columns exist in PostgreSQL database on boot.
+ */
+export async function ensureDbSchema(): Promise<void> {
+  if (!pool) return;
+  try {
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS career_track TEXT;
+        ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS target_goal TEXT;
+        ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS diet_goal TEXT;
+        ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS diet_preferences TEXT;
+
+        ALTER TABLE tasks ADD COLUMN IF NOT EXISTS task_type TEXT;
+        ALTER TABLE tasks ADD COLUMN IF NOT EXISTS diet_tip TEXT;
+        ALTER TABLE tasks ADD COLUMN IF NOT EXISTS difficulty TEXT;
+      `);
+      console.log("[DB] Postgres schema synced successfully.");
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.warn("[DB] Schema auto-sync warning (will proceed):", err);
+  }
+}

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, Wind, 
   LogOut, User as UserIcon, Menu, X, Sparkles, Volume2, CloudRain, Waves, Bell, Settings,
-  SlidersHorizontal, Droplets, Moon
+  SlidersHorizontal, Droplets, Moon, Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,14 +19,15 @@ export function MobileNav() {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Home", href: "/dashboard" },
-    { icon: Calendar, label: "Plan", href: "/planner" },
+    { icon: Target, label: "Goals", href: "/goals" },
     { icon: Heart, label: "Check-in", href: "/checkin", isHighlight: true },
-    { icon: BarChart2, label: "Insights", href: "/analytics" },
+    { icon: Calendar, label: "Plan", href: "/planner" },
     { icon: Settings, label: "Settings", href: "/profile" },
   ];
 
   const drawerLinks = [
     { icon: LayoutDashboard, label: "Dashboard Sanctuary", href: "/dashboard" },
+    { icon: Target, label: "Notion AI Goal Studio", href: "/goals" },
     { icon: Calendar, label: "7-Day AI Plan", href: "/planner" },
     { icon: Heart, label: "Daily Check-in & Calibration", href: "/checkin" },
     { icon: Wind, label: "Breathwork Sanctuary", href: "/breathing" },

@@ -9,6 +9,7 @@ import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { MoodSwingDialog } from "@/components/MoodSwingDialog";
 import { HydrationTracker } from "@/components/HydrationTracker";
 import { SleepTrackerCard } from "@/components/SleepTrackerCard";
+import { AgustActivityRing } from "@/components/agust/AgustActivityRing";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -227,6 +228,11 @@ export default function Dashboard() {
             <SleepTrackerCard />
           </div>
 
+          {/* Agust Activity Ring — steps & motion tracking */}
+          <div className="w-full min-w-0">
+            <AgustActivityRing />
+          </div>
+
           {/* Main Dashboard CSS Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-[2vw] w-full items-start">
             
@@ -429,6 +435,11 @@ export default function Dashboard() {
           {/* Sleep Sanctuary on Mobile */}
           <div className="w-full min-w-0">
             <SleepTrackerCard />
+          </div>
+
+          {/* Agust Activity Ring on Mobile */}
+          <div className="w-full min-w-0">
+            <AgustActivityRing />
           </div>
 
           {/* Quick Breathwork Bar on Mobile */}

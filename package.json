@@ -6,9 +6,14 @@
   "scripts": {
     "dev": "tsx server/index.ts",
     "build": "tsx script/build.ts",
+    "build:android": "tsx script/build-android.ts",
+    "android:open": "npx cap open android",
+    "android:sync": "npx cap sync android",
     "start": "node dist/index.cjs",
     "check": "tsc --noEmit",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "git:commit": "powershell -ExecutionPolicy Bypass -File script/git_commit.ps1",
+    "git:fix": "powershell -ExecutionPolicy Bypass -File script/fix_git_push.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -42,6 +47,14 @@
     "@radix-ui/react-tooltip": "^1.2.0",
     "@supabase/supabase-js": "^2.112.3",
     "@tanstack/react-query": "^5.60.5",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.2",
+    "@capacitor/local-notifications": "^6.1.0",
+    "@capacitor/push-notifications": "^6.0.2",
+    "@capacitor/motion": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.2",
+    "@capacitor/splash-screen": "^6.0.4",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.6.2",
     "chalk": "^5.6.2",
@@ -102,7 +115,9 @@
     "zod": "^3.25.76",
     "zod-validation-error": "^3.5.4"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   }

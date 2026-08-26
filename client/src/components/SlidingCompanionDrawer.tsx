@@ -8,9 +8,11 @@ import { soundscape } from "@/lib/soundscape";
 import { useMoodSwings } from "@/hooks/use-tracking";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import { 
   X, Sparkles, Wind, Volume2, VolumeX, CloudRain, Waves, Trees, 
-  Bell, Play, Pause, Zap, Check, ChevronLeft, ChevronRight, BookOpen, Heart
+  Bell, Play, Pause, Zap, Check, ChevronLeft, ChevronRight, BookOpen, Heart,
+  Target, Compass
 } from "lucide-react";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { cn } from "@/lib/utils";
@@ -219,6 +221,25 @@ export function SlidingCompanionDrawer() {
             {/* Drawer Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
               
+              {/* Quick Hub Navigation Shortcuts */}
+              <div className="p-3.5 rounded-3xl bg-gradient-to-r from-primary/10 via-accent/10 to-transparent border border-primary/20 space-y-2">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Quick Hub Launcher</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/goals" onClick={() => setIsOpen(false)}>
+                    <div className="p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/50 text-xs font-bold flex items-center gap-2 cursor-pointer transition-all hover:bg-muted">
+                      <Target className="w-4 h-4 text-primary" />
+                      <span>Notion AI Goals</span>
+                    </div>
+                  </Link>
+                  <Link href="/planner" onClick={() => setIsOpen(false)}>
+                    <div className="p-2.5 rounded-2xl bg-card border border-border/80 hover:border-primary/50 text-xs font-bold flex items-center gap-2 cursor-pointer transition-all hover:bg-muted">
+                      <Compass className="w-4 h-4 text-accent" />
+                      <span>Daily Planner</span>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
               {/* 1. Interactive Ambient Soundscape Engine */}
               <div className="p-4 rounded-3xl bg-muted/30 border border-border/70 space-y-3">
                 <div className="flex items-center justify-between">

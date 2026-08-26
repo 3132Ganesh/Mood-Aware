@@ -6,6 +6,8 @@ import { api, errorSchemas } from "@shared/routes";
 import { z } from "zod";
 import { generatePlanWithAI, analyzeSentiment } from "./openai_helper";
 import { insertMoodLogSchema, insertMoodSwingSchema, insertDailyHabitSchema, insertUserProfileSchema, insertFeelingsNoteSchema, insertTimeCapsuleSchema, insertSleepSessionSchema } from "@shared/schema";
+import { registerAgustRoutes } from "./agust_routes";
+import { registerGoalRoutes } from "./goal_routes";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -58,11 +60,12 @@ export async function registerRoutes(
       const input = insertUserProfileSchema.partial().parse(req.body);
       const profile = await storage.createOrUpdateProfile(req.user!.id, input);
       res.json(profile);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });
       }
-      res.status(500).json({ message: "Internal server error" });
+      console.error("[ProfileUpdateError]", err);
+      res.status(500).json({ message: err?.message || "Internal server error updating profile" });
     }
   });
 
@@ -83,22 +86,35 @@ export async function registerRoutes(
 
   app.post(api.plans.generate.path, requireAuth, async (req, res) => {
     try {
-      const userProfile = await storage.getProfile(req.user!.id);
-      const lastMood = await storage.getLastMoodLog(req.user!.id);
-      const allTasks = await storage.getAllTasks();
-
+      let userProfile = await storage.getProfile(req.user!.id);
       if (!userProfile) {
-        return res.status(400).json({ message: "Complete profile first" });
+        userProfile = await storage.createOrUpdateProfile(req.user!.id, {
+          careerTrack: "software_engineer",
+          targetGoal: "Software Engineer",
+          dietGoal: "balanced_energy",
+          dietPreferences: "High Protein & Hydration",
+        });
+      }
+
+      const lastMood = await storage.getLastMoodLog(req.user!.id);
+      let allTasks = await storage.getAllTasks();
+
+      if (!allTasks || allTasks.length === 0) {
+        await storage.seedTasks();
+        allTasks = await storage.getAllTasks();
       }
 
       // Default mood if none exists
       const moodData = lastMood || { moodScore: 3, moodLabel: "Neutral", stressScore: 3, energyScore: 3, notes: "" };
 
+      const customKey = req.headers["x-openrouter-key"] as string | undefined;
+      const customModel = req.headers["x-openrouter-model"] as string | undefined;
+
       // Generate Plan using AI
-      const aiPlan = await generatePlanWithAI(userProfile, moodData, allTasks);
+      const aiPlan = await generatePlanWithAI(userProfile, moodData, allTasks, customKey, customModel);
       
-      if (!aiPlan || !aiPlan.days) {
-        return res.status(500).json({ message: "Failed to generate plan" });
+      if (!aiPlan || !aiPlan.days || aiPlan.days.length === 0) {
+        return res.status(500).json({ message: "Failed to generate AI plan structure" });
       }
 
       // Create Plan record
@@ -134,9 +150,9 @@ export async function registerRoutes(
       // Return the created plan (client will likely refetch 'current')
       res.status(201).json(newPlan);
 
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Internal server error" });
+    } catch (err: any) {
+      console.error("[PlanGenerationError]", err);
+      res.status(500).json({ message: err?.message || "Internal server error during plan generation" });
     }
   });
 
@@ -327,21 +343,29 @@ export async function registerRoutes(
       const session = await storage.getTodaySleepSession(req.user!.id, dateStr);
       res.json(session || null);
     } catch (err) {
-      res.status(500).json({ message: "Internal server error" });
+      console.warn("[SleepTodayError] returning null fallback:", err);
+      res.json(null);
     }
   });
 
   app.get(api.sleep.history.path, requireAuth, async (req, res) => {
     try {
       const history = await storage.getSleepHistory(req.user!.id, 30);
-      res.json(history);
+      res.json(history || []);
     } catch (err) {
-      res.status(500).json({ message: "Internal server error" });
+      console.warn("[SleepHistoryError] returning [] fallback:", err);
+      res.json([]);
     }
   });
 
   // Seed tasks on startup
   await storage.seedTasks();
+
+  // Register Agust AI routes
+  registerAgustRoutes(app);
+
+  // Register AI Goal Planner routes
+  registerGoalRoutes(app);
 
   return httpServer;
 }

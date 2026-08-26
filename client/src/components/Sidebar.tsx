@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, Calendar, BarChart2, Heart, BookHeart, Wind, 
-  LogOut, User as UserIcon, ChevronLeft, ChevronRight, Sparkles, Volume2
+  LogOut, User as UserIcon, ChevronLeft, ChevronRight, Sparkles, Volume2, Target
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { soundscape } from "@/lib/soundscape";
@@ -17,9 +17,10 @@ export function Sidebar() {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", badge: "Live" },
+    { icon: Target, label: "AI Goal Studio", href: "/goals", isSpecial: true },
     { icon: BarChart2, label: "Insights", href: "/analytics" },
     { icon: Calendar, label: "My Plan", href: "/planner" },
-    { icon: Heart, label: "Daily Check-in", href: "/checkin", isSpecial: true },
+    { icon: Heart, label: "Daily Check-in", href: "/checkin" },
     { icon: Wind, label: "Breathwork", href: "/breathing" },
     { icon: BookHeart, label: "Feelings Space", href: "/feelings" },
   ];

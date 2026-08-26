@@ -2,8 +2,11 @@ import {
   User, InsertUser, 
   UserProfile, InsertUserProfile, 
   Task, MoodLog, MoodSwing, Plan, PlanItem, DailyHabit, FeelingsNote, TimeCapsule, SleepSession,
+  UserGoal, GoalRoadmap, GoalCheckpoint, UserGoalWithDetails,
   InsertMoodLog, InsertMoodSwing, InsertDailyHabit, InsertFeelingsNote, InsertPlan, InsertPlanItem, InsertTimeCapsule, InsertSleepSession,
+  InsertUserGoal, InsertGoalRoadmap, InsertGoalCheckpoint,
   users, userProfiles, tasks, moodLogs, moodSwings, plans, planItems, dailyHabits, feelingsNotes, timeCapsules, sleepSessions,
+  userGoals, goalRoadmaps, goalCheckpoints,
   PlanWithItems
 } from "@shared/schema";
 import { db, pool } from "./db";
@@ -16,14 +19,28 @@ const MemoryStore = createMemoryStore(session);
 const PostgresSessionStore = connectPg(session);
 
 const DEFAULT_SEEDS = [
-  { id: 1, title: "5-min Meditation", category: "mental", duration: 5, difficulty: "easy", description: "Sit quietly and focus on your breath.", timeHint: "morning" },
-  { id: 2, title: "Gratitude Journaling", category: "mental", duration: 10, difficulty: "easy", description: "Write down 3 things you are grateful for.", timeHint: "morning" },
-  { id: 3, title: "Light Stretching", category: "physical", duration: 10, difficulty: "easy", description: "Stretch your arms, legs, and back.", timeHint: "afternoon" },
-  { id: 4, title: "20-min Walk", category: "physical", duration: 20, difficulty: "medium", description: "Go for a brisk walk outside.", timeHint: "afternoon" },
-  { id: 5, title: "Listen to 'Calm' Playlist", category: "music", duration: 15, difficulty: "easy", description: "Relax with some soothing music.", timeHint: "evening" },
-  { id: 6, title: "High Energy Dance", category: "music", duration: 10, difficulty: "medium", description: "Dance to your favorite upbeat song.", timeHint: "afternoon" },
-  { id: 7, title: "Puzzle Game Session", category: "game", duration: 15, difficulty: "easy", description: "Play a relaxing puzzle game.", timeHint: "evening" },
-  { id: 8, title: "Deep Breathing", category: "mental", duration: 5, difficulty: "easy", description: "Box breathing technique.", timeHint: "morning" },
+  // --- EASY (🟢 Daily Micro-Habits & Nutrition) ---
+  { id: 1, title: "5-min Meditation & Mind Reset", category: "mental", duration: 5, difficulty: "easy", taskType: "mind", dietTip: null, description: "Sit quietly and focus on box breathing.", timeHint: "morning" },
+  { id: 2, title: "Hydration Goal: 500ml Water", category: "diet", duration: 2, difficulty: "easy", taskType: "diet", dietTip: "Drink a glass of water right after waking up to boost metabolism.", description: "Kickstart your day with pure hydration.", timeHint: "morning" },
+  { id: 3, title: "Software Concept: Read 1 Tech Article", category: "career", duration: 10, difficulty: "easy", taskType: "career", dietTip: null, description: "Read a short system design or clean code snippet.", timeHint: "morning" },
+  { id: 4, title: "Data Analyst: Review 1 SQL Command", category: "career", duration: 5, difficulty: "easy", taskType: "career", dietTip: null, description: "Review JOINs, GROUP BY, or Window functions.", timeHint: "afternoon" },
+  { id: 5, title: "Product Tip: Inspect 1 Favorite App UI", category: "career", duration: 10, difficulty: "easy", taskType: "career", dietTip: null, description: "Analyze user flow & friction points in an app you use.", timeHint: "afternoon" },
+  { id: 6, title: "Protein Nudge: Eat 20g Protein Snack", category: "diet", duration: 5, difficulty: "easy", taskType: "diet", dietTip: "Boiled eggs, Greek yogurt, or protein shake keeps energy steady.", description: "Refuel your body mid-day.", timeHint: "afternoon" },
+  { id: 7, title: "10-min Evening Decompression", category: "mental", duration: 10, difficulty: "easy", taskType: "mind", dietTip: null, description: "Unplug screens 30 mins before sleep and journal key wins.", timeHint: "evening" },
+
+  // --- MEDIUM (🟡 Weekday Skill & Fitness Workouts) ---
+  { id: 8, title: "20-min Brisk Walk or Core Stretch", category: "physical", duration: 20, difficulty: "medium", taskType: "fitness", dietTip: "Stay hydrated during exercise.", description: "Elevate your heart rate and loosen tight muscles.", timeHint: "afternoon" },
+  { id: 9, title: "Software Eng: Solve 1 Coding Problem", category: "career", duration: 25, difficulty: "medium", taskType: "career", dietTip: null, description: "Practice 1 algorithmic problem (Strings/Arrays).", timeHint: "afternoon" },
+  { id: 10, title: "Data Science: Clean a CSV Dataset", category: "career", duration: 25, difficulty: "medium", taskType: "career", dietTip: null, description: "Handle missing values and plot simple histograms with Pandas.", timeHint: "afternoon" },
+  { id: 11, title: "Product: Write 1 User Story & PRD outline", category: "career", duration: 20, difficulty: "medium", taskType: "career", dietTip: null, description: "Define acceptance criteria for a new feature.", timeHint: "morning" },
+  { id: 12, title: "Cybersecurity: Study 1 Network Vulnerability", category: "career", duration: 20, difficulty: "medium", taskType: "career", dietTip: null, description: "Learn OWASP Top 10 mitigation strategies.", timeHint: "afternoon" },
+  { id: 13, title: "Balanced Meal Prep: Color-Rich Plate", category: "diet", duration: 15, difficulty: "medium", taskType: "diet", dietTip: "Combine greens, lean protein, and complex carbs for steady focus.", description: "Prepare a clean meal for optimal recovery.", timeHint: "afternoon" },
+
+  // --- HARD (🔴 Weekend Milestone Projects & Deep Challenges) ---
+  { id: 14, title: "Weekend Project: Build 1 Micro-Feature", category: "career", duration: 45, difficulty: "hard", taskType: "career", dietTip: null, description: "Implement a full API route + React component for your portfolio project.", timeHint: "afternoon" },
+  { id: 15, title: "Data Dashboard: Build Interactive Chart", category: "career", duration: 45, difficulty: "hard", taskType: "career", dietTip: null, description: "Transform raw data into a visual dashboard.", timeHint: "afternoon" },
+  { id: 16, title: "Full Body Workout Session", category: "physical", duration: 45, difficulty: "hard", taskType: "fitness", dietTip: "Consume 25-30g protein within 45 mins post-workout.", description: "High-intensity cardio or strength training challenge.", timeHint: "morning" },
+  { id: 17, title: "Weekly Goal & Mindset Audit", category: "mental", duration: 30, difficulty: "hard", taskType: "mind", dietTip: null, description: "Review past 7 days, identify habit blockers, set next week's focus.", timeHint: "evening" },
 ];
 
 export interface IStorage {
@@ -76,6 +93,17 @@ export interface IStorage {
   logSleepSession(userId: number, session: InsertSleepSession): Promise<SleepSession>;
   getTodaySleepSession(userId: number, date: string): Promise<SleepSession | undefined>;
   getSleepHistory(userId: number, limit?: number): Promise<SleepSession[]>;
+
+  // Goals & Roadmaps
+  createGoal(goal: InsertUserGoal & { userId: number }): Promise<UserGoal>;
+  getUserGoals(userId: number): Promise<UserGoalWithDetails[]>;
+  getGoalById(goalId: number, userId: number): Promise<UserGoalWithDetails | undefined>;
+  deleteGoal(goalId: number, userId: number): Promise<boolean>;
+  createGoalRoadmap(roadmap: InsertGoalRoadmap & { userId: number }): Promise<GoalRoadmap>;
+  getGoalRoadmap(goalId: number): Promise<GoalRoadmap | undefined>;
+  createGoalCheckpoints(checkpoints: InsertGoalCheckpoint[]): Promise<GoalCheckpoint[]>;
+  getGoalCheckpoints(goalId: number): Promise<GoalCheckpoint[]>;
+  toggleCheckpoint(checkpointId: number, userId: number, isCompleted: boolean): Promise<GoalCheckpoint | undefined>;
 
   // Seeding
   seedTasks(): Promise<void>;
@@ -470,6 +498,142 @@ export class MemStorage implements IStorage {
   async seedTasks(): Promise<void> {
     // Seeded in constructor
   }
+
+  // --- Goals & Roadmaps ---
+  private userGoalsMap: Map<number, UserGoal> = new Map();
+  private goalRoadmapsMap: Map<number, GoalRoadmap> = new Map();
+  private goalCheckpointsMap: Map<number, GoalCheckpoint> = new Map();
+  private currentGoalId = 1;
+  private currentRoadmapId = 1;
+  private currentCheckpointId = 1;
+
+  async createGoal(goal: InsertUserGoal & { userId: number }): Promise<UserGoal> {
+    const id = this.currentGoalId++;
+    const created: UserGoal = {
+      id,
+      userId: goal.userId,
+      title: goal.title,
+      category: goal.category,
+      description: goal.description || null,
+      targetDeadline: goal.targetDeadline || "30 Days",
+      skillLevel: goal.skillLevel || "scratch",
+      status: goal.status || "active",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.userGoalsMap.set(id, created);
+    return created;
+  }
+
+  async getUserGoals(userId: number): Promise<UserGoalWithDetails[]> {
+    const goals = Array.from(this.userGoalsMap.values())
+      .filter(g => g.userId === userId)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+    const result: UserGoalWithDetails[] = [];
+    for (const goal of goals) {
+      const roadmap = await this.getGoalRoadmap(goal.id);
+      const checkpoints = await this.getGoalCheckpoints(goal.id);
+      const completedCount = checkpoints.filter(c => c.isCompleted).length;
+      const progressPercent = checkpoints.length > 0 ? Math.round((completedCount / checkpoints.length) * 100) : 0;
+
+      result.push({
+        ...goal,
+        roadmap,
+        checkpoints,
+        progressPercent,
+      });
+    }
+    return result;
+  }
+
+  async getGoalById(goalId: number, userId: number): Promise<UserGoalWithDetails | undefined> {
+    const goal = this.userGoalsMap.get(goalId);
+    if (!goal || goal.userId !== userId) return undefined;
+    const roadmap = await this.getGoalRoadmap(goal.id);
+    const checkpoints = await this.getGoalCheckpoints(goal.id);
+    const completedCount = checkpoints.filter(c => c.isCompleted).length;
+    const progressPercent = checkpoints.length > 0 ? Math.round((completedCount / checkpoints.length) * 100) : 0;
+    return {
+      ...goal,
+      roadmap,
+      checkpoints,
+      progressPercent,
+    };
+  }
+
+  async deleteGoal(goalId: number, userId: number): Promise<boolean> {
+    const goal = this.userGoalsMap.get(goalId);
+    if (!goal || goal.userId !== userId) return false;
+    this.userGoalsMap.delete(goalId);
+    Array.from(this.goalRoadmapsMap.entries()).forEach(([id, r]) => {
+      if (r.goalId === goalId) this.goalRoadmapsMap.delete(id);
+    });
+    Array.from(this.goalCheckpointsMap.entries()).forEach(([id, c]) => {
+      if (c.goalId === goalId) this.goalCheckpointsMap.delete(id);
+    });
+    return true;
+  }
+
+  async createGoalRoadmap(roadmap: InsertGoalRoadmap & { userId: number }): Promise<GoalRoadmap> {
+    Array.from(this.goalRoadmapsMap.entries()).forEach(([id, r]) => {
+      if (r.goalId === roadmap.goalId) this.goalRoadmapsMap.delete(id);
+    });
+    const id = this.currentRoadmapId++;
+    const created: GoalRoadmap = {
+      id,
+      goalId: roadmap.goalId,
+      userId: roadmap.userId,
+      title: roadmap.title,
+      aiSelfTrainedSummary: roadmap.aiSelfTrainedSummary || null,
+      phases: roadmap.phases,
+      recommendedTools: roadmap.recommendedTools || null,
+      searchQueries: roadmap.searchQueries || null,
+      createdAt: new Date(),
+    };
+    this.goalRoadmapsMap.set(id, created);
+    return created;
+  }
+
+  async getGoalRoadmap(goalId: number): Promise<GoalRoadmap | undefined> {
+    return Array.from(this.goalRoadmapsMap.values()).find(r => r.goalId === goalId);
+  }
+
+  async createGoalCheckpoints(checkpoints: InsertGoalCheckpoint[]): Promise<GoalCheckpoint[]> {
+    const createdList: GoalCheckpoint[] = [];
+    for (const cp of checkpoints) {
+      const id = this.currentCheckpointId++;
+      const created: GoalCheckpoint = {
+        id,
+        roadmapId: cp.roadmapId,
+        goalId: cp.goalId,
+        phaseIndex: cp.phaseIndex,
+        title: cp.title,
+        instruction: cp.instruction || null,
+        isCompleted: cp.isCompleted ?? false,
+        dueDate: cp.dueDate || null,
+      };
+      this.goalCheckpointsMap.set(id, created);
+      createdList.push(created);
+    }
+    return createdList;
+  }
+
+  async getGoalCheckpoints(goalId: number): Promise<GoalCheckpoint[]> {
+    return Array.from(this.goalCheckpointsMap.values())
+      .filter(c => c.goalId === goalId)
+      .sort((a, b) => a.phaseIndex - b.phaseIndex || a.id - b.id);
+  }
+
+  async toggleCheckpoint(checkpointId: number, userId: number, isCompleted: boolean): Promise<GoalCheckpoint | undefined> {
+    const cp = this.goalCheckpointsMap.get(checkpointId);
+    if (!cp) return undefined;
+    const goal = this.userGoalsMap.get(cp.goalId);
+    if (!goal || goal.userId !== userId) return undefined;
+    const updated = { ...cp, isCompleted };
+    this.goalCheckpointsMap.set(checkpointId, updated);
+    return updated;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -751,6 +915,104 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getAllTasks();
     if (existing.length > 0) return;
     await db.insert(tasks).values(DEFAULT_SEEDS.map(({ id, ...rest }) => rest));
+  }
+
+  // --- Goals & Roadmaps ---
+  async createGoal(goal: InsertUserGoal & { userId: number }): Promise<UserGoal> {
+    const [created] = await db.insert(userGoals).values(goal as any).returning();
+    return created;
+  }
+
+  async getUserGoals(userId: number): Promise<UserGoalWithDetails[]> {
+    const goalsList = await db.select()
+      .from(userGoals)
+      .where(eq(userGoals.userId, userId))
+      .orderBy(desc(userGoals.createdAt));
+
+    const result: UserGoalWithDetails[] = [];
+    for (const goal of goalsList) {
+      const roadmap = await this.getGoalRoadmap(goal.id);
+      const checkpoints = await this.getGoalCheckpoints(goal.id);
+      const completedCount = checkpoints.filter(c => c.isCompleted).length;
+      const progressPercent = checkpoints.length > 0 ? Math.round((completedCount / checkpoints.length) * 100) : 0;
+
+      result.push({
+        ...goal,
+        roadmap,
+        checkpoints,
+        progressPercent,
+      });
+    }
+    return result;
+  }
+
+  async getGoalById(goalId: number, userId: number): Promise<UserGoalWithDetails | undefined> {
+    const [goal] = await db.select()
+      .from(userGoals)
+      .where(and(eq(userGoals.id, goalId), eq(userGoals.userId, userId)))
+      .limit(1);
+
+    if (!goal) return undefined;
+
+    const roadmap = await this.getGoalRoadmap(goal.id);
+    const checkpoints = await this.getGoalCheckpoints(goal.id);
+    const completedCount = checkpoints.filter(c => c.isCompleted).length;
+    const progressPercent = checkpoints.length > 0 ? Math.round((completedCount / checkpoints.length) * 100) : 0;
+
+    return {
+      ...goal,
+      roadmap,
+      checkpoints,
+      progressPercent,
+    };
+  }
+
+  async deleteGoal(goalId: number, userId: number): Promise<boolean> {
+    const [deleted] = await db.delete(userGoals)
+      .where(and(eq(userGoals.id, goalId), eq(userGoals.userId, userId)))
+      .returning();
+    return !!deleted;
+  }
+
+  async createGoalRoadmap(roadmap: InsertGoalRoadmap & { userId: number }): Promise<GoalRoadmap> {
+    await db.delete(goalRoadmaps).where(eq(goalRoadmaps.goalId, roadmap.goalId));
+    const [created] = await db.insert(goalRoadmaps).values(roadmap as any).returning();
+    return created;
+  }
+
+  async getGoalRoadmap(goalId: number): Promise<GoalRoadmap | undefined> {
+    const [found] = await db.select()
+      .from(goalRoadmaps)
+      .where(eq(goalRoadmaps.goalId, goalId))
+      .limit(1);
+    return found;
+  }
+
+  async createGoalCheckpoints(checkpoints: InsertGoalCheckpoint[]): Promise<GoalCheckpoint[]> {
+    if (!checkpoints || checkpoints.length === 0) return [];
+    await db.delete(goalCheckpoints).where(eq(goalCheckpoints.goalId, checkpoints[0].goalId));
+    return db.insert(goalCheckpoints).values(checkpoints as any).returning();
+  }
+
+  async getGoalCheckpoints(goalId: number): Promise<GoalCheckpoint[]> {
+    return db.select()
+      .from(goalCheckpoints)
+      .where(eq(goalCheckpoints.goalId, goalId))
+      .orderBy(goalCheckpoints.phaseIndex, goalCheckpoints.id);
+  }
+
+  async toggleCheckpoint(checkpointId: number, userId: number, isCompleted: boolean): Promise<GoalCheckpoint | undefined> {
+    const [cp] = await db.select().from(goalCheckpoints).where(eq(goalCheckpoints.id, checkpointId)).limit(1);
+    if (!cp) return undefined;
+
+    const [goal] = await db.select().from(userGoals).where(and(eq(userGoals.id, cp.goalId), eq(userGoals.userId, userId))).limit(1);
+    if (!goal) return undefined;
+
+    const [updated] = await db.update(goalCheckpoints)
+      .set({ isCompleted })
+      .where(eq(goalCheckpoints.id, checkpointId))
+      .returning();
+    return updated;
   }
 }
 

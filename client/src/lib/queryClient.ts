@@ -12,9 +12,16 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const customKey = localStorage.getItem("agust_openrouter_key") || "";
+  const customModel = localStorage.getItem("agust_openrouter_model") || "";
+
+  const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
+  if (customKey) headers["x-openrouter-key"] = customKey;
+  if (customModel) headers["x-openrouter-model"] = customModel;
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,7 +36,15 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const customKey = localStorage.getItem("agust_openrouter_key") || "";
+    const customModel = localStorage.getItem("agust_openrouter_model") || "";
+
+    const headers: Record<string, string> = {};
+    if (customKey) headers["x-openrouter-key"] = customKey;
+    if (customModel) headers["x-openrouter-model"] = customModel;
+
     const res = await fetch(queryKey.join("/") as string, {
+      headers,
       credentials: "include",
     });
 

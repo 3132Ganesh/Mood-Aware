@@ -25,6 +25,8 @@ import {
   CheckCircle2, Laptop, Smartphone, Activity, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AgustPersonaSelector } from "@/components/agust/AgustPersonaSelector";
+import { OpenRouterKeyWidget } from "@/components/agust/OpenRouterKeyWidget";
 
 const ACTIVITY_LEVELS = [
   { id: "sedentary", label: "Sedentary", desc: "Little exercise", icon: "🛋️" },
@@ -402,6 +404,9 @@ export default function Profile() {
 
             {/* Right Column: Interactive Preference Stations Matrix (~8 columns) */}
             <div className="col-span-8 space-y-6">
+
+              {/* OpenRouter AI Key Configuration Widget */}
+              <OpenRouterKeyWidget />
 
               {/* Station 1: Sleep Schedule & Rest Routine */}
               <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
@@ -789,11 +794,30 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-            </div>
+              {/* Station 6: Agust AI Companion */}
+              <Card className="border-none shadow-md bg-card/80 backdrop-blur-md rounded-3xl border border-border/40">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-lg">
+                      🤖
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold">Agust — Your AI Manager</CardTitle>
+                      <CardDescription className="text-xs">Choose your AI companion character, name, and goals</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AgustPersonaSelector />
+                </CardContent>
+              </Card>
 
-          </div>
+            </div> {/* Closes Right Column (line 405) */}
 
-        </div>
+          </div> {/* Closes 2-column Grid (line 280) */}
+
+        </div> {/* Closes Desktop Container (line 242) */}
+
 
 
         {/* ========================================================================= */}

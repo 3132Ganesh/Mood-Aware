@@ -21,6 +21,11 @@ export const userProfiles = pgTable("user_profiles", {
   caffeineIntake: text("caffeine_intake"),
   physicalActivity: text("physical_activity"),
   musicApp: text("music_app"),
+  // Career Track & Personalized Diet Goals
+  careerTrack: text("career_track"),
+  targetGoal: text("target_goal"),
+  dietGoal: text("diet_goal"),
+  dietPreferences: text("diet_preferences"),
   // Stored as JSON arrays
   musicMoods: text("music_moods").array(),
   playsGames: boolean("plays_games"),
@@ -33,9 +38,11 @@ export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  category: text("category").notNull(), // mental, physical, music, game
+  category: text("category").notNull(), // mental, physical, music, game, career, diet
   duration: integer("duration"), // minutes
-  difficulty: text("difficulty"), // easy, medium
+  difficulty: text("difficulty"), // easy, medium, hard
+  taskType: text("task_type"), // career, fitness, diet, mind
+  dietTip: text("diet_tip"), // Nutrition / Diet habit recommendation
   timeHint: text("time_hint"), // morning, afternoon, evening
 });
 
@@ -123,6 +130,42 @@ export const sleepSessions = pgTable("sleep_sessions", {
   notes: text("notes"),
 });
 
+export const userGoals = pgTable("user_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  category: text("category").notNull(), // professional, personal, upskill, diet, health
+  description: text("description"),
+  targetDeadline: text("target_deadline"), // e.g. "30 Days", "3 Months", "2026-12-31"
+  skillLevel: text("skill_level").default("scratch"), // scratch, intermediate, advanced
+  status: text("status").default("active"), // active, completed, paused
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const goalRoadmaps = pgTable("goal_roadmaps", {
+  id: serial("id").primaryKey(),
+  goalId: integer("goal_id").notNull().references(() => userGoals.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  aiSelfTrainedSummary: text("ai_self_trained_summary"),
+  phases: jsonb("phases").notNull(), // JSON array of phases
+  recommendedTools: jsonb("recommended_tools"), // JSON array of fast learning tools
+  searchQueries: jsonb("search_queries"), // JSON array of web search queries
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const goalCheckpoints = pgTable("goal_checkpoints", {
+  id: serial("id").primaryKey(),
+  roadmapId: integer("roadmap_id").notNull().references(() => goalRoadmaps.id, { onDelete: "cascade" }),
+  goalId: integer("goal_id").notNull().references(() => userGoals.id, { onDelete: "cascade" }),
+  phaseIndex: integer("phase_index").notNull(),
+  title: text("title").notNull(),
+  instruction: text("instruction"),
+  isCompleted: boolean("is_completed").default(false),
+  dueDate: text("due_date"),
+});
+
 export const session = pgTable("session", {
   sid: text("sid").primaryKey(),
   sess: jsonb("sess").notNull(),
@@ -141,6 +184,9 @@ export const insertDailyHabitSchema = createInsertSchema(dailyHabits).omit({ id:
 export const insertFeelingsNoteSchema = createInsertSchema(feelingsNotes).omit({ id: true, userId: true, timestamp: true });
 export const insertTimeCapsuleSchema = createInsertSchema(timeCapsules).omit({ id: true, userId: true, createdAt: true, isDelivered: true, deliveredAt: true });
 export const insertSleepSessionSchema = createInsertSchema(sleepSessions).omit({ id: true, userId: true, createdAt: true });
+export const insertUserGoalSchema = createInsertSchema(userGoals).omit({ id: true, userId: true, createdAt: true, updatedAt: true });
+export const insertGoalRoadmapSchema = createInsertSchema(goalRoadmaps).omit({ id: true, userId: true, createdAt: true });
+export const insertGoalCheckpointSchema = createInsertSchema(goalCheckpoints).omit({ id: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -155,6 +201,9 @@ export type DailyHabit = typeof dailyHabits.$inferSelect;
 export type FeelingsNote = typeof feelingsNotes.$inferSelect;
 export type TimeCapsule = typeof timeCapsules.$inferSelect;
 export type SleepSession = typeof sleepSessions.$inferSelect;
+export type UserGoal = typeof userGoals.$inferSelect;
+export type GoalRoadmap = typeof goalRoadmaps.$inferSelect;
+export type GoalCheckpoint = typeof goalCheckpoints.$inferSelect;
 
 export type PlanWithItems = Plan & { items: (PlanItem & { task: Task })[] };
 
@@ -168,5 +217,15 @@ export type InsertDailyHabit = z.infer<typeof insertDailyHabitSchema>;
 export type InsertFeelingsNote = z.infer<typeof insertFeelingsNoteSchema>;
 export type InsertTimeCapsule = z.infer<typeof insertTimeCapsuleSchema>;
 export type InsertSleepSession = z.infer<typeof insertSleepSessionSchema>;
+export type InsertUserGoal = z.infer<typeof insertUserGoalSchema>;
+export type InsertGoalRoadmap = z.infer<typeof insertGoalRoadmapSchema>;
+export type InsertGoalCheckpoint = z.infer<typeof insertGoalCheckpointSchema>;
+
+export type UserGoalWithDetails = UserGoal & {
+  roadmap?: GoalRoadmap | null;
+  checkpoints?: GoalCheckpoint[];
+  progressPercent?: number;
+};
 
 export * from "./models/chat";
+
